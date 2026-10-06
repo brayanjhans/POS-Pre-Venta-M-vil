@@ -118,6 +118,52 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onGoToCas
     URL.revokeObjectURL(url);
   };
 
+  const handlePrintPDF = () => {
+    const ticketHtml = document.getElementById('ticket-preview-container')?.innerHTML;
+    if (!ticketHtml) return;
+    
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Ticket ${order.id}</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <style>
+            @page { margin: 0; }
+            body { 
+              background: white; 
+              color: black; 
+              width: ${paperWidth === '58mm' ? '58mm' : '80mm'}; 
+              margin: 0 auto; 
+              padding: 10px;
+              -webkit-print-color-adjust: exact;
+              color-adjust: exact;
+            }
+            .border-dashed { border-style: dashed !important; border-color: #000 !important; }
+            .bg-amber-50, .bg-amber-100\\/60 { background-color: transparent !important; border: 1px solid #000 !important; }
+            .text-stone-400, .text-stone-500, .text-stone-600 { color: #000 !important; }
+            img { mix-blend-mode: normal !important; }
+          </style>
+        </head>
+        <body>
+          <div class="font-mono text-[11px] leading-tight text-black">
+            ${ticketHtml}
+          </div>
+          <script>
+            setTimeout(() => {
+              window.print();
+              window.close();
+            }, 1000);
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-xs animate-in fade-in">
       <div 
@@ -210,11 +256,12 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onGoToCas
         </div>
 
         {/* Contenido */}
-        <div className="flex-1 overflow-y-auto p-4 bg-stone-950 flex justify-center">
+        <div className="flex-1 overflow-y-auto p-4 bg-stone-950 flex justify-center items-start">
           {activeTab === 'preview' ? (
             /* Papel Térmico Renderizado con textura realista */
             <div 
-              className={`bg-[#fffef7] text-stone-900 font-mono shadow-2xl p-5 border border-amber-200/80 select-none rounded-sm ${
+              id="ticket-preview-container"
+              className={`h-max bg-[#fffef7] text-stone-900 font-mono shadow-2xl p-5 border border-amber-200/80 select-none rounded-sm ${
                 paperWidth === '58mm' ? 'w-[285px] text-[11px]' : 'w-[390px] text-[12px]'
               }`}
               style={{
@@ -424,11 +471,11 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onGoToCas
             </button>
             <button
               type="button"
-              onClick={() => alert(`Enviando ${escPosBytes.length} bytes a la miniticketera térmica Bluetooth de ${paperWidth}...`)}
+              onClick={handlePrintPDF}
               className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-stone-950 text-xs font-black flex items-center gap-2 transition shadow-lg shadow-amber-500/20 active:scale-98 cursor-pointer"
             >
               <Printer className="w-4 h-4 stroke-[2.5]" />
-              Imprimir Ticket Físico
+              Imprimir Ticket / PDF
             </button>
           </div>
         </div>
