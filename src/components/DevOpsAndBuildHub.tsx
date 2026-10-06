@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 export const DevOpsAndBuildHub: React.FC = () => {
-  const [activeTab, setActiveTab] = React.useState<'database' | 'git' | 'apk'>('database');
+  const [activeTab, setActiveTab] = React.useState<'database' | 'git' | 'apk' | 'guide'>('database');
   const [sqlTab, setSqlTab] = React.useState<'postgres' | 'sqlite' | 'seed'>('postgres');
   const [copiedKey, setCopiedKey] = React.useState<string | null>(null);
 
@@ -234,6 +234,66 @@ eas build -p android --profile preview
 # -> Un enlace directo de descarga del archivo .apk
 # -> Un Código QR para escanearlo con el celular e instalarlo al instante`;
 
+  const fullMarkdownGuide = `# 📖 GUÍA MAESTRA PASO A PASO: CREACIÓN DE BASE DE DATOS Y GENERACIÓN DE APK ANDROID
+### Sistema de POS Pre-Venta & Toma de Pedidos para Golosinas y Bebidas
+
+## PARTE 1: CÓMO CREAR LA BASE DE DATOS
+
+### Opción 1.1: PostgreSQL (Servidor Central en Supabase / Neon / Cloud SQL)
+1. Entra a Supabase (supabase.com) o Neon.tech y crea tu base de datos gratuita.
+2. Abre la pestaña "SQL Editor" -> "New Query".
+3. Copia y pega el contenido del archivo 'database/schema_postgresql.sql' y presiona RUN.
+   (Esto creará las tablas: products, product_presentations, customers, sellers, orders, order_items y el Trigger de stock).
+4. Copia y pega el contenido del archivo 'database/seed_candy_beverages.sql' y presiona RUN.
+   (Esto cargará los productos iniciales: Inka Kola, Sublime, Oreo, Bon Bon Bum).
+
+### Opción 1.2: SQLite Local en el Celular Android (Offline)
+- El archivo 'database/schema_sqlite_mobile.sql' se utiliza con 'expo-sqlite' en React Native.
+- Permite al preventista escanear códigos de barras a ultra velocidad (<1ms) sin conexión a internet.
+
+---
+
+## PARTE 2: CÓMO GENERAR EL ARCHIVO APK DE ANDROID (.apk)
+
+### Requisitos:
+- Node.js instalado (v18+)
+- Cuenta gratuita en expo.dev
+
+### Comandos para Generar el APK en la Nube con 1 Solo Paso:
+\`\`\`bash
+# 1. Instalar la CLI de Expo
+npm install -g eas-cli
+
+# 2. Iniciar sesión con tu cuenta de expo.dev
+eas login
+
+# 3. Compilar el APK instalable directo
+eas build -p android --profile preview
+\`\`\`
+
+- ¿Por qué genera un .apk directo?
+Porque 'eas.json' está preconfigurado con: "buildType": "apk" dentro del perfil "preview".
+Al terminar, la terminal te dará el enlace directo de descarga del .apk y un Código QR.
+
+### Cómo Instalar en el Celular Android:
+1. Pasa el archivo .apk descargado al celular por WhatsApp o USB.
+2. Toca el archivo .apk en el celular.
+3. Activa "Permitir instalar aplicaciones de orígenes desconocidos".
+4. Presiona "Instalar".
+
+---
+
+## PARTE 3: COMANDOS DE GIT PARA HACER COMMIT
+
+\`\`\`bash
+git init
+git branch -M main
+git add .
+git commit -m "feat: arquitectura pos preventa, base de datos y configuracion de apk"
+git remote add origin https://github.com/tu-usuario/pos-preventa-golosinas.git
+git push -u origin main
+\`\`\``;
+
   return (
     <div className="w-full max-w-5xl bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in text-slate-100">
       {/* Header */}
@@ -287,6 +347,17 @@ eas build -p android --profile preview
           >
             <Smartphone className="w-4 h-4" />
             <span>3. Generar APK</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('guide')}
+            className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+              activeTab === 'guide' ? 'bg-white text-emerald-950 shadow-md font-black' : 'text-white/80 hover:text-white'
+            }`}
+          >
+            <FileCode className="w-4 h-4" />
+            <span>4. Manual .MD</span>
           </button>
         </div>
       </div>
@@ -601,6 +672,38 @@ eas build -p android --profile preview
               <p className="text-xs text-zinc-300 leading-relaxed">
                 También puedes abrir la URL compartida de esta aplicación (<code className="text-emerald-400">https://ais-pre-tmeagwdsayfzd2uefxbuer-96810044296.us-east1.run.app</code>) desde el navegador Google Chrome en cualquier teléfono Android y seleccionar <strong>"Agregar a la pantalla principal"</strong>. Se instalará con su propio icono de golosinas, abrirá a pantalla completa sin barra de navegación y funcionará con la pistola lectora HID y la ticketera térmica.
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 4: MANUAL COMPLETO .MD */}
+        {/* ========================================================================= */}
+        {activeTab === 'guide' && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-4">
+              <div>
+                <h3 className="text-base font-black text-white flex items-center gap-2">
+                  <FileCode className="w-5 h-5 text-amber-400" />
+                  <span>GUIA_COMPLETA_INSTALACION_BD_Y_APK.md</span>
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  Documento maestro con todos los pasos guiados para generar la Base de Datos y compilar el APK.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => copyToClipboard(fullMarkdownGuide, 'guide_full')}
+                className="px-4 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer shadow-md"
+              >
+                {copiedKey === 'guide_full' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedKey === 'guide_full' ? '¡Manual Completo Copiado!' : 'Copiar Archivo .MD Completo'}</span>
+              </button>
+            </div>
+
+            <div className="bg-zinc-950 p-5 rounded-2xl border border-zinc-800 font-mono text-xs text-zinc-300 max-h-[500px] overflow-y-auto leading-relaxed shadow-inner">
+              <pre className="whitespace-pre-wrap">{fullMarkdownGuide}</pre>
             </div>
           </div>
         )}
