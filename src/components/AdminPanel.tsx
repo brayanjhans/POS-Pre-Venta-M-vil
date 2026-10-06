@@ -40,8 +40,8 @@ export const AdminPanel: React.FC<Props> = ({
 }) => {
   // Estado de autenticación
   const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false);
-  const [email, setEmail] = React.useState<string>('admin@golosinas.com');
-  const [password, setPassword] = React.useState<string>('admin123');
+  const [email, setEmail] = React.useState<string>('jhans');
+  const [password, setPassword] = React.useState<string>('admin');
   const [loginError, setLoginError] = React.useState<string | null>(null);
 
   // Estados del panel
@@ -84,13 +84,13 @@ export const AdminPanel: React.FC<Props> = ({
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (
-      (email === 'admin@golosinas.com' && password === 'admin123') ||
+      (email === 'jhans' && password === 'admin') ||
       password === '1234'
     ) {
       setIsAuthenticated(true);
       setLoginError(null);
     } else {
-      setLoginError('Credenciales incorrectas. Usa admin@golosinas.com / admin123 o PIN 1234');
+      setLoginError('Credenciales incorrectas. Usa jhans / admin o PIN 1234');
     }
   };
 
@@ -320,14 +320,14 @@ export const AdminPanel: React.FC<Props> = ({
         <div className="mt-5 pt-4 border-t border-slate-200 text-center">
           <p className="text-[11px] text-slate-400 mb-2">Credenciales demostrativas:</p>
           <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px] font-mono text-slate-600">
-            <div>User: <strong>admin@golosinas.com</strong></div>
-            <div>Clave: <strong>admin123</strong> (o PIN <strong>1234</strong>)</div>
+            <div>User: <strong>jhans</strong></div>
+            <div>Clave: <strong>admin</strong> (o PIN <strong>1234</strong>)</div>
           </div>
           <button
             type="button"
             onClick={() => {
-              setEmail('admin@golosinas.com');
-              setPassword('admin123');
+              setEmail('jhans');
+              setPassword('admin');
               setIsAuthenticated(true);
             }}
             className="mt-3 text-xs font-bold text-[#16a34a] hover:underline"
