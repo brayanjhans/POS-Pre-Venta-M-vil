@@ -887,14 +887,6 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
             </div>
           )}
 
-          {/* LOGO SAT AL PIE (Modo Kiosk) */}
-          {deviceMode === 'kiosk' && (
-            <div className="bg-zinc-950 py-1 text-center text-[10px] font-black text-slate-400 tracking-widest flex items-center justify-center gap-1 border-t border-zinc-800">
-              <span>GS</span>
-              <span className="text-white font-bold">SAT</span>
-              <span className="text-[9px] text-zinc-500 font-normal">POS TERMINAL</span>
-            </div>
-          )}
         </div>
 
         {/* ========================================================================= */}
