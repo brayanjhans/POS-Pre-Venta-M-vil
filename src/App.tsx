@@ -121,230 +121,37 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-[#16a34a] selection:text-white">
-      {/* Top Navbar Principal */}
-      <header className="sticky top-0 z-40 bg-zinc-900 border-b border-zinc-800 px-4 lg:px-8 py-3">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#16a34a] flex items-center justify-center text-white font-black text-xl shadow-md shadow-emerald-900/30">
-              🍬
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base font-black text-white tracking-wide uppercase">
-                  POS Pre-Venta & Kiosk Golosinas
-                </h1>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                  Android & SAT Terminal
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">
-                Golosinas & Bebidas · Buscador +500 productos · Panel Admin con Login · ESC/POS QR
-              </p>
-            </div>
-          </div>
+    <div className="h-screen w-screen overflow-hidden bg-white text-slate-900 flex flex-col font-sans selection:bg-[#16a34a] selection:text-white">
+      {activeTab === 'simulator' && (
+        <AndroidPhoneSimulator 
+          products={products}
+          orders={orders}
+          onOrderCreated={handleOrderCreated}
+          onOpenAdmin={() => setActiveTab('admin')}
+          onGoToCashier={(orderId) => setActiveTab('cashier')}
+        />
+      )}
 
-          {/* Navegación Superior */}
-          <nav className="flex items-center gap-1.5 bg-zinc-950 p-1 rounded-xl border border-zinc-800 overflow-x-auto text-xs">
-            <button
-              type="button"
-              onClick={() => setActiveTab('simulator')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-black transition whitespace-nowrap ${
-                activeTab === 'simulator'
-                  ? 'bg-[#16a34a] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Smartphone className="w-3.5 h-3.5" />
-              <span>Terminal POS (Pre-Venta)</span>
-            </button>
+      {activeTab === 'cashier' && (
+        <CashierCheckoutSimulator
+          orders={orders}
+          products={products}
+          onOrderPaid={handleOrderPaid}
+          onOpenMobileTerminal={() => setActiveTab('simulator')}
+        />
+      )}
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('cashier')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-black transition whitespace-nowrap relative ${
-                activeTab === 'cashier'
-                  ? 'bg-[#15803d] text-white shadow-md'
-                  : 'text-amber-300 hover:text-white'
-              }`}
-            >
-              <QrCode className="w-3.5 h-3.5 text-amber-400" />
-              <span>Caja Central (Cobro QR)</span>
-              {pendingOrdersCount > 0 && (
-                <span className="bg-[#ea580c] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full ml-0.5 animate-pulse">
-                  {pendingOrdersCount}
-                </span>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('devops')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-black transition whitespace-nowrap ${
-                activeTab === 'devops'
-                  ? 'bg-[#15803d] text-white shadow-md'
-                  : 'text-amber-300 hover:text-white'
-              }`}
-            >
-              <FolderGit2 className="w-3.5 h-3.5 text-amber-400" />
-              <span>BD, Git & APK Hub</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('admin')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-black transition whitespace-nowrap ${
-                activeTab === 'admin'
-                  ? 'bg-[#16a34a] text-white shadow-md'
-                  : 'text-amber-400 hover:text-amber-300'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Panel Admin (Login & Subir)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('step1')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-black transition whitespace-nowrap ${
-                activeTab === 'step1'
-                  ? 'bg-[#16a34a] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span>Paso 1: Esquema BD</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('step2')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-black transition whitespace-nowrap ${
-                activeTab === 'step2'
-                  ? 'bg-[#16a34a] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Radio className="w-3.5 h-3.5" />
-              <span>Paso 2: Hook Pistola HID</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('roadmap')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-black transition whitespace-nowrap ${
-                activeTab === 'roadmap'
-                  ? 'bg-[#16a34a] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <ListOrdered className="w-3.5 h-3.5" />
-              <span>Plan de 5 Pasos</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('api')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-black transition whitespace-nowrap ${
-                activeTab === 'api'
-                  ? 'bg-[#16a34a] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Server className="w-3.5 h-3.5" />
-              <span>FastAPI Backend</span>
-            </button>
-          </nav>
-        </div>
-      </header>
-
-      {/* Área de Trabajo Principal */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 flex flex-col items-center">
-        {activeTab === 'simulator' && (
-          <div className="w-full flex flex-col items-center space-y-4">
-            <div className="text-center max-w-2xl mb-1">
-              <h2 className="text-lg md:text-xl font-black text-white flex items-center justify-center gap-2">
-                <span>Terminal de Toma de Pedidos & Pre-Venta</span>
-              </h2>
-              <p className="text-xs text-slate-400 mt-1">
-                Nav bar con pestañas funcionales <strong>CATÁLOGO</strong> y <strong>OFERTAS</strong>, botón lateral ☰ con acceso directo al <strong>Panel Admin</strong>, buscador para cientos de productos, lector láser HID y simulación de cámara.
-              </p>
-            </div>
-
-            <AndroidPhoneSimulator 
-              products={products}
-              orders={orders}
-              onOrderCreated={handleOrderCreated}
-              onOpenAdmin={() => setActiveTab('admin')}
-              onGoToCashier={(orderId) => setActiveTab('cashier')}
-            />
-          </div>
-        )}
-
-        {activeTab === 'cashier' && (
-          <div className="w-full flex justify-center py-2">
-            <CashierCheckoutSimulator
-              orders={orders}
-              products={products}
-              onOrderPaid={handleOrderPaid}
-              onOpenMobileTerminal={() => setActiveTab('simulator')}
-            />
-          </div>
-        )}
-
-        {activeTab === 'devops' && (
-          <div className="w-full flex justify-center py-2">
-            <DevOpsAndBuildHub />
-          </div>
-        )}
-
-        {activeTab === 'admin' && (
-          <div className="w-full flex justify-center py-2">
-            <AdminPanel
-              products={products}
-              onAddProduct={handleAddProduct}
-              onUpdateProduct={handleUpdateProduct}
-              onDeleteProduct={handleDeleteProduct}
-              onToggleActive={handleToggleActive}
-              orders={orders}
-              onCloseAdmin={() => setActiveTab('simulator')}
-            />
-          </div>
-        )}
-
-        {activeTab === 'step1' && (
-          <div className="w-full max-w-5xl space-y-6">
-            <SchemaInspector />
-          </div>
-        )}
-
-        {activeTab === 'step2' && (
-          <div className="w-full max-w-5xl space-y-6">
-            <Step2HookInspector />
-          </div>
-        )}
-
-        {activeTab === 'roadmap' && (
-          <div className="w-full max-w-5xl space-y-6">
-            <RoadmapInspector onSelectStep={(step) => {
-              if (step === 1) setActiveTab('step1');
-            }} />
-          </div>
-        )}
-
-        {activeTab === 'api' && (
-          <div className="w-full max-w-5xl space-y-6">
-            <FastApiSpec />
-          </div>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-zinc-950 border-t border-zinc-800 py-3 px-6 text-center text-xs text-slate-500">
-        <p>
-          Sistema POS Pre-Venta Golosinas y Bebidas · React Native (Expo) + NativeWind + Panel Admin con Login + ESC/POS QR
-        </p>
-      </footer>
+      {activeTab === 'admin' && (
+        <AdminPanel
+          products={products}
+          onAddProduct={handleAddProduct}
+          onUpdateProduct={handleUpdateProduct}
+          onDeleteProduct={handleDeleteProduct}
+          onToggleActive={handleToggleActive}
+          orders={orders}
+          onCloseAdmin={() => setActiveTab('simulator')}
+        />
+      )}
     </div>
   );
 }
