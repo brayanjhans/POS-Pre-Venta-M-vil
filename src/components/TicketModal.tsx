@@ -109,7 +109,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onGoToCas
   };
 
   const handleDownloadBin = () => {
-    const blob = new Blob([escPosBytes], { type: 'application/octet-stream' });
+    const blob = new Blob([escPosBytes as unknown as BlobPart], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

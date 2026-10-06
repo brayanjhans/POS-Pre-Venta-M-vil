@@ -30,6 +30,9 @@ jobs:
 
     - name: 5. Compilar Web (Vite)
       run: npm run build
+      env:
+        CI: false
+        VITE_CONFIG_NATIVE_IGNORE_WARNING: true
 
     - name: 6. Sincronizar Capacitor con Android
       run: npx cap sync android
