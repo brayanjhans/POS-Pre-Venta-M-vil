@@ -17,7 +17,7 @@ jobs:
     - name: 2. Configurar Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 22
 
     - name: 3. Configurar Java JDK
       uses: actions/setup-java@v4
