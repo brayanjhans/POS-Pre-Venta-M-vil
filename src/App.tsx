@@ -6,6 +6,7 @@ import { RoadmapInspector } from './components/RoadmapInspector';
 import { FastApiSpec } from './components/FastApiSpec';
 import { Step2HookInspector } from './components/Step2HookInspector';
 import { CashierCheckoutSimulator } from './components/CashierCheckoutSimulator';
+import { DevOpsAndBuildHub } from './components/DevOpsAndBuildHub';
 import { INITIAL_PRODUCTS, ExtendedProduct } from './data/mockProducts';
 import { Order } from './types/pos';
 import { 
@@ -17,7 +18,8 @@ import {
   Package,
   Plus,
   Radio,
-  QrCode
+  QrCode,
+  FolderGit2
 } from 'lucide-react';
 
 export default function App() {
@@ -62,7 +64,7 @@ export default function App() {
       qrPayload: 'PED-00891',
     }
   ]);
-  const [activeTab, setActiveTab] = React.useState<'simulator' | 'cashier' | 'admin' | 'step1' | 'step2' | 'roadmap' | 'api'>('simulator');
+  const [activeTab, setActiveTab] = React.useState<'simulator' | 'cashier' | 'admin' | 'devops' | 'step1' | 'step2' | 'roadmap' | 'api'>('simulator');
 
   const pendingOrdersCount = orders.filter(o => o.status === 'PENDIENTE_PAGO').length;
 
@@ -179,6 +181,19 @@ export default function App() {
 
             <button
               type="button"
+              onClick={() => setActiveTab('devops')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-black transition whitespace-nowrap ${
+                activeTab === 'devops'
+                  ? 'bg-[#15803d] text-white shadow-md'
+                  : 'text-amber-300 hover:text-white'
+              }`}
+            >
+              <FolderGit2 className="w-3.5 h-3.5 text-amber-400" />
+              <span>BD, Git & APK Hub</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab('admin')}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-black transition whitespace-nowrap ${
                 activeTab === 'admin'
@@ -276,6 +291,12 @@ export default function App() {
               onOrderPaid={handleOrderPaid}
               onOpenMobileTerminal={() => setActiveTab('simulator')}
             />
+          </div>
+        )}
+
+        {activeTab === 'devops' && (
+          <div className="w-full flex justify-center py-2">
+            <DevOpsAndBuildHub />
           </div>
         )}
 
