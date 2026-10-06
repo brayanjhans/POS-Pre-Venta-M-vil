@@ -44,17 +44,29 @@ export class EscPosBuilder {
     return this;
   }
 
-  // Agregar texto crudo en ASCII / Windows-1252
+  // Agregar texto crudo mapeado a Code Page 437 (estándar ESC/POS para impresoras térmicas)
   text(str: string): this {
     for (let i = 0; i < str.length; i++) {
-      const charCode = str.charCodeAt(i);
-      // Reemplazo básico de caracteres especiales para evitar basura en terminales genéricas
-      if (charCode === 241) { // ñ
-        this.buffer.push(0xA4);
-      } else if (charCode === 209) { // Ñ
-        this.buffer.push(0xA5);
-      } else {
-        this.buffer.push(charCode & 0xFF);
+      const c = str.charCodeAt(i);
+      // Mapeo de caracteres del español Unicode → Code Page 437
+      switch (c) {
+        case 225: this.buffer.push(0xA0); break; // á
+        case 233: this.buffer.push(0x82); break; // é
+        case 237: this.buffer.push(0xA1); break; // í
+        case 243: this.buffer.push(0xA2); break; // ó
+        case 250: this.buffer.push(0xA3); break; // ú
+        case 241: this.buffer.push(0xA4); break; // ñ
+        case 209: this.buffer.push(0xA5); break; // Ñ
+        case 193: this.buffer.push(0x41); break; // Á → A (sin equivalente CP437)
+        case 201: this.buffer.push(0x45); break; // É → E
+        case 205: this.buffer.push(0x49); break; // Í → I
+        case 211: this.buffer.push(0x4F); break; // Ó → O
+        case 218: this.buffer.push(0x55); break; // Ú → U
+        case 252: this.buffer.push(0x81); break; // ü
+        case 220: this.buffer.push(0x9A); break; // Ü
+        case 191: this.buffer.push(0xA8); break; // ¿
+        case 161: this.buffer.push(0xAD); break; // ¡
+        default:  this.buffer.push(c & 0xFF);    break;
       }
     }
     return this;

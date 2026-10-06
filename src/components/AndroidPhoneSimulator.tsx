@@ -32,19 +32,14 @@ import {
   Monitor, 
   Smartphone, 
   Lock, 
-  ChevronRight, 
   ChevronUp,
   Package, 
   ShieldCheck, 
   Sparkles,
-  ArrowRight,
-  TrendingUp,
   Volume2,
   VolumeX,
   Camera,
-  History,
   Receipt,
-  Percent,
   UserCheck
 } from 'lucide-react';
 
@@ -100,6 +95,9 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
   const [paymentTerm, setPaymentTerm] = React.useState<'Contado' | 'Crédito 7 días' | 'Crédito 15 días'>('Contado');
   const [discountPercent, setDiscountPercent] = React.useState<number>(0);
 
+  // Ref para mantener la versión más reciente de handleScanBarcode sin recrear el listener del escáner
+  const handleScanBarcodeRef = React.useRef<(barcode: string) => void>(() => {});
+
   const customersList = [
     { name: 'Bodega San Martín', ruc: '10458921821', route: 'Ruta 1 - Centro' },
     { name: 'Minimarket El Trébol', ruc: '20601234567', route: 'Ruta 2 - Norte' },
@@ -129,13 +127,14 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
     }, 2200);
   };
 
-  // Configuración del listener global de pistola de código de barras (HID)
+  // Listener único del escáner HID. Usa handleScanBarcodeRef para siempre llamar
+  // la versión más reciente del callback sin destruir/recrear el listener en cada render.
   React.useEffect(() => {
     const scanner = new BarcodeScannerListener({
       maxIntervalMs: 65,
       minBarcodeLength: 3,
       onScan: (barcode) => {
-        handleScanBarcode(barcode);
+        handleScanBarcodeRef.current(barcode);
       },
     });
 
@@ -143,7 +142,8 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
     return () => {
       scanner.stop();
     };
-  }, [products, cart]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleScanBarcode = (barcode: string) => {
     const cleanBarcode = barcode.trim();
@@ -204,6 +204,9 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
     setLastScannedFeedback({ text: `✓ ${product.name} (1 UND)`, error: false });
     setTimeout(() => setLastScannedFeedback(null), 2500);
   };
+
+  // Sincronizar ref con la versión más reciente de handleScanBarcode en cada render
+  handleScanBarcodeRef.current = handleScanBarcode;
 
   const handleProductCardClick = (product: ExtendedProduct) => {
     const existing = cart.find(i => i.product.id === product.id);

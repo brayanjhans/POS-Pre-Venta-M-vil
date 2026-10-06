@@ -15,8 +15,6 @@ import {
   ListOrdered, 
   Server, 
   ShieldCheck,
-  Package,
-  Plus,
   Radio,
   QrCode,
   FolderGit2
@@ -47,7 +45,7 @@ export default function App() {
           baseUnitsDeducted: 24,
         },
         {
-          productId: 'prod_002',
+          productId: 'prod_008',
           productName: 'Chocolate Sublime Clásico 30g',
           presentationType: 'pack',
           presentationLabel: 'Display cerrado (24 barras)',
@@ -80,8 +78,8 @@ export default function App() {
     setProducts(prev => prev.filter(p => p.id !== productId));
   };
 
-  const handleToggleActive = (productId: string) => {
-    // Implementado para visibilidad
+  const handleToggleActive = (_productId: string) => {
+    // TODO: Implementar toggle de visibilidad cuando se agregue isActive al tipo ExtendedProduct
   };
 
   const handleOrderCreated = (order: Order) => {
@@ -220,9 +218,9 @@ export default function App() {
 
             <button
               type="button"
-              onClick={() => setActiveTab('step2' as any)}
+              onClick={() => setActiveTab('step2')}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-black transition whitespace-nowrap ${
-                (activeTab as any) === 'step2'
+                activeTab === 'step2'
                   ? 'bg-[#16a34a] text-white shadow-md'
                   : 'text-slate-400 hover:text-white'
               }`}

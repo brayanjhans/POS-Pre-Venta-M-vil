@@ -64,7 +64,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in" onClick={onClose}>
       <div 
         className="w-full max-w-md bg-white border-t-4 border-[#16a34a] rounded-t-3xl p-5 shadow-2xl flex flex-col max-h-[92vh] overflow-y-auto animate-in slide-in-from-bottom duration-200"
         onClick={e => e.stopPropagation()}

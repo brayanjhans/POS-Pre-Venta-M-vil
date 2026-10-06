@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">POS Pre-Venta</string>
+    <string name="title_activity_main">POS Pre-Venta</string>
+    <string name="package_name">com.preventa.golosinas</string>
+    <string name="custom_url_scheme">com.preventa.golosinas</string>
+</resources>

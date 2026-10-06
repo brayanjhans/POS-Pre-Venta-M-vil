@@ -22,8 +22,10 @@ export function playBarcodeBeep() {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioCtx) return;
 
-    if (!audioContext || audioContext.state === 'suspended') {
+    if (!audioContext) {
       audioContext = new AudioCtx();
+    } else if (audioContext.state === 'suspended') {
+      audioContext.resume();
     }
 
     const osc = audioContext.createOscillator();
@@ -54,7 +56,11 @@ export function playSuccessChime() {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioCtx) return;
 
-    if (!audioContext) audioContext = new AudioCtx();
+    if (!audioContext) {
+      audioContext = new AudioCtx();
+    } else if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
 
     const now = audioContext.currentTime;
     const osc1 = audioContext.createOscillator();

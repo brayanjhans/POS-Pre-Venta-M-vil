@@ -11,20 +11,10 @@ import {
   Edit3, 
   Save, 
   X, 
-  Check, 
-  Package, 
-  Layers, 
-  Sparkles, 
-  Barcode, 
   Upload, 
   FileSpreadsheet, 
   CheckCircle2, 
   AlertCircle,
-  TrendingUp,
-  Tag,
-  Eye,
-  EyeOff,
-  RefreshCw,
   ShoppingBag,
   ArrowLeft
 } from 'lucide-react';
@@ -116,8 +106,11 @@ export const AdminPanel: React.FC<Props> = ({
       return;
     }
 
+    const timestamp = Date.now();
+    const productId = `prod_${timestamp}`;
+
     const newProd: ExtendedProduct = {
-      id: `prod_${Date.now()}`,
+      id: productId,
       barcode: formData.barcode.trim(),
       name: formData.name.trim(),
       category: formData.category,
@@ -135,8 +128,8 @@ export const AdminPanel: React.FC<Props> = ({
       isPromo: formData.isPromo,
       presentations: {
         unit: {
-          id: `pres_${Date.now()}_u`,
-          productId: `prod_${Date.now()}`,
+          id: `pres_${timestamp}_u`,
+          productId,
           type: 'unit',
           label: `Unidad (1 ${formData.baseUnitName})`,
           shortLabel: 'UND',
@@ -145,8 +138,8 @@ export const AdminPanel: React.FC<Props> = ({
           isDefault: true,
         },
         half: {
-          id: `pres_${Date.now()}_h`,
-          productId: `prod_${Date.now()}`,
+          id: `pres_${timestamp}_h`,
+          productId,
           type: 'half',
           label: `Medio paquete (${formData.halfFactor} ${formData.baseUnitName}s)`,
           shortLabel: `MED (${formData.halfFactor}u)`,
@@ -154,8 +147,8 @@ export const AdminPanel: React.FC<Props> = ({
           price: Number(formData.halfPrice),
         },
         pack: {
-          id: `pres_${Date.now()}_p`,
-          productId: `prod_${Date.now()}`,
+          id: `pres_${timestamp}_p`,
+          productId,
           type: 'pack',
           label: `Paquete completo (${formData.packFactor} ${formData.baseUnitName}s)`,
           shortLabel: `PAQ (${formData.packFactor}u)`,

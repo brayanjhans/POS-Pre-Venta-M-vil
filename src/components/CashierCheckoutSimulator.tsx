@@ -4,17 +4,11 @@ import { ExtendedProduct } from '../data/mockProducts';
 import { playBarcodeBeep, playSuccessChime } from '../utils/audioBeep';
 import { 
   QrCode, 
-  Search, 
   DollarSign, 
   CreditCard, 
   Smartphone, 
   CheckCircle2, 
-  Printer, 
-  Clock, 
-  AlertCircle, 
-  RotateCcw,
-  Sparkles,
-  ArrowRight
+  Clock
 } from 'lucide-react';
 
 interface Props {
@@ -35,7 +29,6 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
   const [paymentMethod, setPaymentMethod] = React.useState<'Efectivo' | 'Yape' | 'Tarjeta'>('Efectivo');
   const [cashGiven, setCashGiven] = React.useState<string>('50');
   const [checkoutComplete, setCheckoutComplete] = React.useState<boolean>(false);
-  const [searchFilter, setSearchFilter] = React.useState<string>('');
 
   const pendingOrders = orders.filter(o => o.status === 'PENDIENTE_PAGO');
   const paidOrders = orders.filter(o => o.status === 'PAGADO');
