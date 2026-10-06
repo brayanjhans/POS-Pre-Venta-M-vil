@@ -81,7 +81,19 @@ export default function App() {
   };
 
   const handleToggleActive = (_productId: string) => {
-    // TODO: Implementar toggle de visibilidad cuando se agregue isActive al tipo ExtendedProduct
+    // TODO: Implementar toggle de visibilidad
+  };
+
+  const handleAddPromo = (newPromo: PromoBanner) => {
+    setPromos(prev => [newPromo, ...prev]);
+  };
+
+  const handleUpdatePromo = (updatedPromo: PromoBanner) => {
+    setPromos(prev => prev.map(p => p.id === updatedPromo.id ? updatedPromo : p));
+  };
+
+  const handleDeletePromo = (promoId: string) => {
+    setPromos(prev => prev.filter(p => p.id !== promoId));
   };
 
   const handleOrderCreated = (order: Order) => {
@@ -152,6 +164,9 @@ export default function App() {
           onUpdateProduct={handleUpdateProduct}
           onDeleteProduct={handleDeleteProduct}
           onToggleActive={handleToggleActive}
+          onAddPromo={handleAddPromo}
+          onUpdatePromo={handleUpdatePromo}
+          onDeletePromo={handleDeletePromo}
           orders={orders}
           onCloseAdmin={() => setActiveTab('simulator')}
         />

@@ -16,7 +16,8 @@ import {
   CheckCircle2, 
   AlertCircle,
   ShoppingBag,
-  ArrowLeft
+  ArrowLeft,
+  Star
 } from 'lucide-react';
 
 interface Props {
@@ -26,6 +27,9 @@ interface Props {
   onUpdateProduct: (product: ExtendedProduct) => void;
   onDeleteProduct: (productId: string) => void;
   onToggleActive: (productId: string) => void;
+  onAddPromo: (promo: PromoBanner) => void;
+  onUpdatePromo: (promo: PromoBanner) => void;
+  onDeletePromo: (promoId: string) => void;
   orders: Order[];
   onCloseAdmin: () => void;
 }
@@ -36,6 +40,10 @@ export const AdminPanel: React.FC<Props> = ({
   onUpdateProduct,
   onDeleteProduct,
   onToggleActive,
+  promos = [],
+  onAddPromo,
+  onUpdatePromo,
+  onDeletePromo,
   orders,
   onCloseAdmin,
 }) => {
@@ -46,7 +54,7 @@ export const AdminPanel: React.FC<Props> = ({
   const [loginError, setLoginError] = React.useState<string | null>(null);
 
   // Estados del panel
-  const [adminTab, setAdminTab] = React.useState<'products' | 'new_product' | 'bulk_upload' | 'orders'>('products');
+  const [adminTab, setAdminTab] = React.useState<'products' | 'new_product' | 'bulk_upload' | 'orders' | 'promos' | 'new_promo'>('products');
   const [searchQuery, setSearchQuery] = React.useState<string>('');
   const [selectedCategory, setSelectedCategory] = React.useState<string>('Todos');
   const [feedbackMsg, setFeedbackMsg] = React.useState<string | null>(null);
@@ -80,6 +88,29 @@ export const AdminPanel: React.FC<Props> = ({
     packFactor: 24,
     packPrice: 20.00,
     isPromo: false,
+  });
+
+  // Formulario de nueva promoción / combo
+  const [promoFormData, setPromoFormData] = React.useState<{
+    title: string;
+    subtitle: string;
+    badgeText: string;
+    tag: string;
+    discountBadge: string;
+    originalPrice: number;
+    offerPrice: number;
+    savingText: string;
+    associatedBarcodes: string;
+  }>({
+    title: '',
+    subtitle: '',
+    badgeText: 'PROMOCIÓN DESTACADA',
+    tag: 'OFERTA MAYORISTA',
+    discountBadge: '',
+    originalPrice: 0,
+    offerPrice: 0,
+    savingText: '¡Ahorras S/ 0.00!',
+    associatedBarcodes: '',
   });
 
   const handleLogin = (e: React.FormEvent) => {
@@ -178,6 +209,43 @@ export const AdminPanel: React.FC<Props> = ({
       packFactor: 24,
       packPrice: 20.00,
       isPromo: false,
+    });
+  };
+
+  const handleCreatePromo = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!promoFormData.title.trim()) {
+      alert('El título de la promoción es obligatorio.');
+      return;
+    }
+
+    const newPromo: PromoBanner = {
+      id: `promo_${Date.now()}`,
+      title: promoFormData.title.trim(),
+      subtitle: promoFormData.subtitle.trim(),
+      badgeText: promoFormData.badgeText.trim() || 'PROMOCIÓN',
+      tag: promoFormData.tag.trim(),
+      discountBadge: promoFormData.discountBadge.trim(),
+      originalPrice: Number(promoFormData.originalPrice) || 0,
+      offerPrice: Number(promoFormData.offerPrice) || 0,
+      savingText: promoFormData.savingText.trim(),
+      associatedBarcodes: promoFormData.associatedBarcodes.split(',').map(bc => bc.trim()).filter(bc => bc !== ''),
+    };
+
+    onAddPromo(newPromo);
+    setFeedbackMsg(`✓ Promoción "${newPromo.title}" creada exitosamente.`);
+    setTimeout(() => setFeedbackMsg(null), 3000);
+    setAdminTab('promos');
+    setPromoFormData({
+      title: '',
+      subtitle: '',
+      badgeText: 'PROMOCIÓN DESTACADA',
+      tag: 'OFERTA MAYORISTA',
+      discountBadge: '',
+      originalPrice: 0,
+      offerPrice: 0,
+      savingText: '¡Ahorras S/ 0.00!',
+      associatedBarcodes: '',
     });
   };
 
@@ -446,6 +514,18 @@ export const AdminPanel: React.FC<Props> = ({
             }`}
           >
             Pre-Ventas Emitidas ({orders.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setAdminTab('promos')}
+            className={`px-3 py-1.5 rounded-lg font-black transition flex items-center gap-1 ${
+              adminTab === 'promos' || adminTab === 'new_promo'
+                ? 'bg-[#059669] text-white shadow-xs'
+                : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-200 border border-emerald-200'
+            }`}
+          >
+            <Star className="w-3.5 h-3.5 stroke-[3]" />
+            Promociones & Combos
           </button>
         </div>
 
@@ -856,6 +936,227 @@ export const AdminPanel: React.FC<Props> = ({
               </div>
             )}
           </div>
+        )}
+
+        {/* TAB 5: GESTIÓN DE PROMOCIONES Y COMBOS */}
+        {adminTab === 'promos' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-black text-slate-900 uppercase">
+                  Gestión de Promociones y Combos Activos
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Estas promociones aparecen en la pasarela principal del Catálogo y en la pestaña Ofertas.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAdminTab('new_promo')}
+                className="px-4 py-2 bg-[#059669] hover:bg-[#047857] text-white font-black text-xs uppercase rounded-xl shadow-md transition active:scale-95 flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                Crear Nueva Promo
+              </button>
+            </div>
+
+            {promos.length === 0 ? (
+              <div className="py-12 text-center text-slate-400">
+                No hay promociones configuradas actualmente.
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {promos.map((promo) => (
+                  <div key={promo.id} className="relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white p-4 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase bg-[#10b981] text-white px-2 py-0.5 rounded">
+                          {promo.badgeText}
+                        </span>
+                        {promo.discountBadge && (
+                          <span className="text-[10px] font-black bg-red-100 text-red-700 px-2 py-0.5 rounded">
+                            {promo.discountBadge}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-sm font-black text-slate-900 leading-tight uppercase">
+                        {promo.title}
+                      </h4>
+                      <p className="text-xs text-slate-500 line-clamp-2">
+                        {promo.subtitle}
+                      </p>
+                      <div className="pt-2 text-[10px] text-slate-400 font-mono">
+                        Códigos de barra incluidos: {promo.associatedBarcodes.join(', ')}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-slate-400 line-through">S/ {promo.originalPrice.toFixed(2)}</span>
+                        <span className="text-lg font-black text-amber-600 font-mono leading-none">
+                          S/ {promo.offerPrice.toFixed(2)}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if(confirm('¿Eliminar esta promoción?')) {
+                            onDeletePromo(promo.id);
+                          }
+                        }}
+                        className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition"
+                        title="Eliminar Promo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 6: CREAR NUEVA PROMOCIÓN */}
+        {adminTab === 'new_promo' && (
+          <form onSubmit={handleCreatePromo} className="space-y-4 max-w-2xl mx-auto">
+            <h3 className="text-sm font-black text-slate-900 uppercase border-b border-slate-200 pb-2">
+              Crear Nueva Promoción / Combo
+            </h3>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Título Principal (*):</label>
+                <input
+                  required
+                  type="text"
+                  placeholder="Ej: COMBO INKA KOLA + SUBLIME"
+                  value={promoFormData.title}
+                  onChange={(e) => setPromoFormData({...promoFormData, title: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 font-semibold"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Subtítulo / Descripción:</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Gaseosa helada + display completo..."
+                  value={promoFormData.subtitle}
+                  onChange={(e) => setPromoFormData({...promoFormData, subtitle: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Etiqueta Principal:</label>
+                <input
+                  type="text"
+                  value={promoFormData.badgeText}
+                  onChange={(e) => setPromoFormData({...promoFormData, badgeText: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Tag Secundario:</label>
+                <input
+                  type="text"
+                  value={promoFormData.tag}
+                  onChange={(e) => setPromoFormData({...promoFormData, tag: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Etiqueta Descuento (Roja):</label>
+                <input
+                  type="text"
+                  placeholder="Ej: -20% OFF"
+                  value={promoFormData.discountBadge}
+                  onChange={(e) => setPromoFormData({...promoFormData, discountBadge: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <h4 className="text-[11px] font-black uppercase text-slate-500">Precios</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-slate-600 block">Precio Original (S/):</label>
+                    <input
+                      type="number"
+                      step="0.10"
+                      min="0"
+                      value={promoFormData.originalPrice}
+                      onChange={(e) => setPromoFormData({...promoFormData, originalPrice: parseFloat(e.target.value) || 0})}
+                      className="w-full border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-600 block">Precio Oferta (S/):</label>
+                    <input
+                      required
+                      type="number"
+                      step="0.10"
+                      min="0"
+                      value={promoFormData.offerPrice}
+                      onChange={(e) => setPromoFormData({...promoFormData, offerPrice: parseFloat(e.target.value) || 0})}
+                      className="w-full border border-emerald-500 bg-emerald-50 rounded px-2 py-1 text-xs font-mono font-black text-emerald-800"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] text-slate-600 block">Texto de ahorro:</label>
+                  <input
+                    type="text"
+                    value={promoFormData.savingText}
+                    onChange={(e) => setPromoFormData({...promoFormData, savingText: e.target.value})}
+                    className="w-full border border-slate-300 rounded px-2 py-1 text-[10px]"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <h4 className="text-[11px] font-black uppercase text-slate-500">Productos del Combo</h4>
+                <div>
+                  <label className="text-[10px] text-slate-600 block mb-1">
+                    Códigos de Barra (separados por comas):
+                  </label>
+                  <textarea
+                    required
+                    rows={3}
+                    placeholder="Ej: 7750182001011, 7750885002012"
+                    value={promoFormData.associatedBarcodes}
+                    onChange={(e) => setPromoFormData({...promoFormData, associatedBarcodes: e.target.value})}
+                    className="w-full border border-slate-300 rounded px-2 py-1.5 text-[10px] font-mono resize-none"
+                  />
+                  <p className="text-[9px] text-slate-400 mt-1">
+                    Al tocar "Añadir Combo", estos códigos se escanearán y añadirán al carrito de forma automática.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setAdminTab('promos')}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2.5 bg-[#059669] hover:bg-[#047857] text-white font-black text-xs uppercase rounded-xl shadow-md transition active:scale-95 flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Guardar Promoción
+              </button>
+            </div>
+          </form>
         )}
       </div>
     </div>
