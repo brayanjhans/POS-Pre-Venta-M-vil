@@ -283,10 +283,10 @@ export const AdminPanel: React.FC<Props> = ({
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
-              Correo Electrónico
+              Usuario
             </label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-hidden focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] font-medium"
