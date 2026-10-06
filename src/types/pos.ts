@@ -73,3 +73,16 @@ export interface Order {
   paidAt?: string;
   paymentMethod?: string;
 }
+
+export interface PromoBanner {
+  id: string;
+  badgeText: string;
+  tag: string;
+  discountBadge: string;
+  title: string;
+  subtitle: string;
+  originalPrice: number;
+  offerPrice: number;
+  savingText: string;
+  associatedBarcodes: string[]; // Barcodes of the products to add to cart when "AÑADIR COMBO" is clicked
+}

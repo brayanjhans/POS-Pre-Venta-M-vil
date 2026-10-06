@@ -1,5 +1,5 @@
 import React from 'react';
-import { CartItem, PresentationType, Order } from '../types/pos';
+import { CartItem, PresentationType, Order, PromoBanner } from '../types/pos';
 import { ExtendedProduct } from '../data/mockProducts';
 import { BottomSheetPresentation } from './BottomSheetPresentation';
 import { TicketModal } from './TicketModal';
@@ -45,6 +45,7 @@ import {
 
 interface Props {
   products: ExtendedProduct[];
+  promos?: PromoBanner[];
   orders?: Order[];
   onOrderCreated?: (order: Order) => void;
   onOpenAdmin?: () => void;
@@ -53,6 +54,7 @@ interface Props {
 
 export const AndroidPhoneSimulator: React.FC<Props> = ({ 
   products,
+  promos = [],
   orders = [],
   onOrderCreated,
   onOpenAdmin,
@@ -345,80 +347,72 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
       <div className="w-full h-full flex flex-col overflow-hidden select-none bg-white relative">
 
         {/* HEADER LIMPIO: Botón ☰, CATÁLOGO, OFERTAS, CÁMARA, MIS PEDIDOS y ADMIN */}
-        <div className="bg-[#16a34a] text-white px-3 md:px-4 py-2 flex items-center justify-between shadow-md z-30">
-          <div className="flex items-center gap-2 md:gap-3">
+        <div className="bg-[#059669] text-white px-3 md:px-4 py-2 flex items-center justify-between shadow-md z-30">
+          <div className="flex items-center gap-2">
             <button 
               type="button"
               onClick={() => setIsDrawerOpen(true)}
-              className="p-1.5 rounded-lg hover:bg-white/10 transition active:scale-95 text-white cursor-pointer"
+              className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition active:scale-95 text-white cursor-pointer"
               title="Abrir menú"
             >
               <Menu className="w-5 h-5 stroke-[2.5]" />
             </button>
 
-            {/* Pestañas CATÁLOGO y OFERTAS */}
-            <div className="flex items-center gap-1.5 font-black tracking-wider text-xs md:text-sm uppercase">
+            {/* Pestañas estilo Pill */}
+            <div className="flex items-center bg-white rounded-full p-1 shadow-inner overflow-hidden">
               <button
                 type="button"
                 onClick={() => setActiveScreenTab('catalogo')}
-                className={`px-3 py-1 rounded-md transition ${
+                className={`px-3 py-1 rounded-full font-black text-[10px] uppercase flex items-center gap-1 transition ${
                   activeScreenTab === 'catalogo' 
-                    ? 'bg-white/20 text-white font-black underline decoration-2 underline-offset-4 shadow-2xs' 
-                    : 'text-white/80 hover:text-white'
+                    ? 'text-slate-900 bg-slate-100 shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
+                <LayoutGrid className="w-3.5 h-3.5" />
                 CATÁLOGO
               </button>
               <button
                 type="button"
                 onClick={() => setActiveScreenTab('ofertas')}
-                className={`px-3 py-1 rounded-md transition flex items-center gap-1 ${
+                className={`px-3 py-1 rounded-full font-black text-[10px] uppercase flex items-center gap-1 transition ${
                   activeScreenTab === 'ofertas' 
-                    ? 'bg-white/20 text-white font-black underline decoration-2 underline-offset-4 shadow-2xs' 
-                    : 'text-white/80 hover:text-white'
+                    ? 'text-amber-600 bg-amber-50 shadow-sm' 
+                    : 'text-slate-500 hover:text-amber-600'
                 }`}
               >
-                <Flame className="w-3.5 h-3.5 text-amber-300" />
-                <span>OFERTAS</span>
+                🔥 OFERTAS
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsCameraScannerOpen(true)}
+                className="px-3 py-1 rounded-full font-black text-[10px] uppercase text-slate-500 hover:text-slate-900 flex items-center gap-1 transition"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                CÁMARA
               </button>
             </div>
           </div>
 
-          {/* Acciones de la barra superior: Escáner Cámara, Mis Preventas y Admin */}
           <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setIsCameraScannerOpen(true)}
-              className="p-1.5 bg-black/20 hover:bg-black/35 text-white rounded-lg transition active:scale-95 border border-white/20 flex items-center gap-1 cursor-pointer"
-              title="Simulador de Escaneo por Cámara / Láser"
-            >
-              <Camera className="w-4 h-4 text-emerald-200" />
-              <span className="hidden sm:inline text-[10px] font-black uppercase">CÁMARA</span>
-            </button>
-
+            {/* Botón CAJA S/ 0.00 */}
             <button
               type="button"
               onClick={() => setIsOrderHistoryOpen(true)}
-              className="p-1.5 bg-black/20 hover:bg-black/35 text-white rounded-lg transition active:scale-95 border border-white/20 relative flex items-center gap-1 cursor-pointer"
-              title="Mis Preventas de Hoy"
+              className="px-3 py-1 bg-[#064e3b] hover:bg-[#022c22] rounded-xl flex items-center gap-1.5 transition border border-[#047857]"
             >
-              <Receipt className="w-4 h-4 text-amber-300" />
-              {orders.length > 0 && (
-                <span className="bg-[#ea580c] text-white font-black text-[9px] px-1 rounded-full border border-white/40">
-                  {orders.length}
-                </span>
-              )}
+              <div className="text-[10px] font-black uppercase leading-tight text-emerald-100">CAJA<br/>
+                <span className="text-white text-xs">S/ 0.00</span>
+              </div>
             </button>
-
+            
             {onOpenAdmin && (
               <button
                 type="button"
                 onClick={onOpenAdmin}
-                className="px-2.5 py-1.5 bg-black/25 hover:bg-black/40 text-white font-black text-xs rounded-lg transition flex items-center gap-1 border border-white/20 cursor-pointer"
-                title="Panel de Administrador (Login & Catálogo)"
+                className="p-1.5 bg-black/25 hover:bg-black/40 text-white rounded-lg transition border border-white/20 cursor-pointer"
               >
-                <Lock className="w-3.5 h-3.5 text-amber-300" />
-                <span>ADMIN</span>
+                <Lock className="w-4 h-4 text-amber-300" />
               </button>
             )}
           </div>
@@ -577,10 +571,10 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase whitespace-nowrap transition ${
+                  className={`px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase whitespace-nowrap transition border ${
                     selectedCategory === cat
-                      ? 'bg-[#16a34a] text-white shadow-xs'
-                      : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+                      ? 'bg-[#059669] border-[#059669] text-white shadow-md'
+                      : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-300'
                   }`}
                 >
                   {cat}
@@ -652,47 +646,68 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
 
         {/* CATÁLOGO DE PRODUCTOS SCROLLABLE */}
         <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-slate-50 pb-28">
-          {/* PROMOCIÓN DESTACADA MAYORISTA */}
-          {!searchQuery && selectedCategory === 'Todos' && (
-            <div className="relative rounded-2xl overflow-hidden shadow-lg border border-slate-800 bg-slate-950 text-white">
-              <div className="p-4 md:p-5 relative z-10 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black tracking-widest uppercase bg-[#16a34a] text-white px-2.5 py-0.5 rounded-md">
-                    PROMOCIÓN DESTACADA
-                  </span>
-                  <span className="text-[10px] font-bold text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-600/40">
-                    OFERTA MAYORISTA
-                  </span>
-                </div>
+          {/* SECCIÓN DE PROMOCIONES DINÁMICAS (CARRUSEL O LISTA COMPLETA) */}
+          {!searchQuery && promos.length > 0 && (activeScreenTab === 'ofertas' || selectedCategory === 'Todos') && (
+            <div className={activeScreenTab === 'ofertas' ? "flex flex-col gap-4" : "flex overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-none pb-2"}>
+              {promos.map((promo) => (
+                <div key={promo.id} className={`relative rounded-3xl overflow-hidden shadow-lg border-2 border-slate-800 bg-gradient-to-br from-slate-900 to-[#064e3b] text-white ${activeScreenTab === 'ofertas' ? 'w-full' : 'min-w-[300px] sm:min-w-[340px] snap-center shrink-0'}`}>
+                  <div className="p-5 relative z-10 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1 text-[10px] font-black tracking-widest uppercase bg-[#10b981] text-white px-2 py-1 rounded-full">
+                          <span className="w-1.5 h-1.5 bg-white rounded-full block" />
+                          {promo.badgeText}
+                        </span>
+                        {promo.tag && (
+                          <span className="text-[9px] font-black text-amber-300 border border-amber-500/50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            {promo.tag}
+                          </span>
+                        )}
+                      </div>
+                      {promo.discountBadge && (
+                        <span className="text-[11px] font-black text-white bg-red-500 px-2 py-1 rounded-full shadow-sm">
+                          {promo.discountBadge}
+                        </span>
+                      )}
+                    </div>
 
-                <h3 className="text-base md:text-xl font-black leading-tight text-white">
-                  COMBO INKA KOLA 500ML (12u) + CHOCOLATE SUBLIME (24u)
-                </h3>
-                <p className="text-xs text-slate-300">
-                  Gaseosa helada + display completo de chocolate con maní.
-                </p>
+                    <h3 className="text-lg md:text-xl font-black leading-tight text-white uppercase mt-2">
+                      {promo.title}
+                    </h3>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      {promo.subtitle}
+                    </p>
 
-                <div className="flex items-center justify-between pt-1">
-                  <div>
-                    <span className="text-[10px] text-slate-400 block uppercase">PRECIO ESPECIAL</span>
-                    <span className="text-xl md:text-2xl font-black text-amber-400 font-mono">S/ 62.00</span>
+                    <div className="flex items-end justify-between pt-2">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-400 line-through font-bold">
+                            S/ {promo.originalPrice.toFixed(2)}
+                          </span>
+                          <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/50 px-1.5 py-0.5 rounded">
+                            {promo.savingText}
+                          </span>
+                        </div>
+                        <div className="text-3xl font-black text-amber-400 font-mono mt-0.5 flex items-start gap-1">
+                          <span className="text-lg mt-1 text-amber-500">S/</span>
+                          {promo.offerPrice.toFixed(2)}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          promo.associatedBarcodes.forEach(bc => handleScanBarcode(bc));
+                        }}
+                        className="px-4 py-2.5 bg-[#10b981] hover:bg-[#059669] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4 stroke-[3]" />
+                        <span>AÑADIR COMBO</span>
+                      </button>
+                    </div>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleScanBarcode('7750182001011');
-                      handleScanBarcode('7750885002012');
-                    }}
-                    className="px-4 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                    <span>AÑADIR COMBO</span>
-                  </button>
                 </div>
-              </div>
-
-              <div className="absolute inset-0 bg-gradient-to-r from-black via-zinc-900/90 to-emerald-950/40 pointer-events-none" />
+              ))}
             </div>
           )}
 
@@ -714,60 +729,67 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                   <div
                     key={product.id}
                     onClick={() => handleProductCardClick(product)}
-                    className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-xs hover:shadow-md hover:border-[#16a34a] transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98]"
+                    className="bg-white rounded-[20px] overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg hover:border-[#059669] transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98]"
                   >
                     {/* Cintillo de Categoría Verde */}
-                    <div className="bg-[#16a34a] text-white px-2.5 py-1 text-[10px] font-black uppercase tracking-wider flex items-center justify-between">
-                      <span className="truncate">{product.category}</span>
+                    <div className="bg-[#059669] text-white px-3 py-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-white rounded-full block" />
+                        <span className="truncate">{product.category}</span>
+                      </div>
                       {product.isPromo && (
-                        <span className="bg-amber-400 text-slate-950 text-[9px] px-1 rounded font-black">
+                        <span className="bg-amber-400 text-slate-950 text-[9px] px-1.5 py-0.5 rounded-md font-black">
                           OFERTA
                         </span>
                       )}
                     </div>
 
                     {/* Cuerpo de la tarjeta */}
-                    <div className="p-3 space-y-2 flex-1 flex flex-col justify-between">
+                    <div className="p-3 space-y-3 flex-1 flex flex-col justify-between">
                       <div>
-                        <div className="h-16 w-full rounded-xl bg-slate-100 flex items-center justify-center p-2 mb-2 relative overflow-hidden group-hover:scale-105 transition-transform">
-                          <div className="text-3xl filter drop-shadow">
+                        <div className="h-24 w-full rounded-2xl bg-gradient-to-b from-emerald-50 to-white border border-emerald-100 flex flex-col items-center justify-center p-2 relative group-hover:scale-105 transition-transform">
+                          <div className="text-4xl filter drop-shadow-md mb-1">
                             {product.category === 'Bebidas' ? '🥤' :
                              product.category === 'Chocolates' ? '🍫' :
                              product.category === 'Galletas' ? '🍪' :
                              product.category === 'Snacks' ? '🍿' : '🍬'}
                           </div>
-                          <span className="absolute bottom-1 right-1.5 text-[9px] font-bold text-slate-500 bg-white/90 px-1 rounded">
+                          <span className="absolute bottom-1 bg-white border border-slate-200 shadow-sm px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-600">
                             {product.packagingType}
                           </span>
                         </div>
 
-                        <h4 className="text-xs font-bold text-slate-900 leading-tight line-clamp-2">
-                          {product.name}
-                        </h4>
-
-                        {product.flavorNote && (
-                          <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
-                            {product.flavorNote}
-                          </p>
-                        )}
+                        <div className="mt-2 text-center">
+                          <h4 className="text-xs font-black text-slate-900 leading-tight line-clamp-2">
+                            {product.name}
+                          </h4>
+                          {product.flavorNote && (
+                            <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
+                              {product.flavorNote}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Pastilla "DESDE S/..." y Botón "+" con animación */}
                       <div className="pt-2 border-t border-slate-100">
-                        <div className="flex items-center justify-between text-[9px] text-slate-400 font-bold mb-1">
-                          <span>Unidad</span>
-                          <span className="text-emerald-700">Paq x{product.piecesPerPack}</span>
+                        <div className="flex items-center justify-center gap-1 text-[9px] font-bold text-slate-500 mb-2">
+                          <span className="border border-slate-200 rounded px-1.5 py-0.5">Unidad</span>
+                          <span className="text-slate-300">|</span>
+                          <span className="text-slate-400">Paq x{product.piecesPerPack}</span>
                         </div>
 
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="bg-[#ea580c] text-white px-2 py-0.5 rounded-lg text-xs font-black tracking-tight shadow-xs">
-                            DESDE S/ {minPrice.toFixed(2)}
-                          </span>
+                        <div className="flex items-center justify-between gap-1 bg-amber-50 rounded-xl px-2 py-1.5 border border-amber-100">
+                          <div className="flex flex-col">
+                            <span className="text-[8px] text-amber-700 font-black uppercase">PRECIO</span>
+                            <span className="text-amber-700 text-xs font-black tracking-tight font-mono">
+                              S/ {minPrice.toFixed(2)}
+                            </span>
+                          </div>
 
                           <button
                             type="button"
                             onClick={(e) => handleQuickAddUnit(e, product)}
-                            className="w-7 h-7 bg-[#16a34a] hover:bg-[#15803d] text-white rounded-lg flex items-center justify-center font-black active:scale-90 transition shadow-xs cursor-pointer group-hover:ring-2 group-hover:ring-emerald-300"
+                            className="w-8 h-8 bg-[#059669] hover:bg-[#047857] text-white rounded-full flex items-center justify-center font-black active:scale-90 transition shadow-md cursor-pointer group-hover:ring-2 group-hover:ring-emerald-300"
                             title="Añadir 1 Unidad al Carrito"
                           >
                             <Plus className="w-4 h-4 stroke-[3]" />
@@ -821,72 +843,57 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
         {/* ========================================================================= */}
         {/* EL CARRITO UBICADO ABAJO (ZONA ERGONÓMICA DE PULGAR) CON ANIMACIÓN */}
         {/* ========================================================================= */}
-        <div className="absolute bottom-0 left-0 right-0 z-30">
-          {cart.length === 0 ? (
-            /* Barra inferior tranquila cuando el carrito está vacío */
-            <div className="bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-2.5 flex items-center justify-between text-xs text-slate-500">
-              <div className="flex items-center gap-2">
-                <ShoppingCart className="w-4 h-4 text-slate-400" />
-                <span className="font-semibold">Carrito vacío · Escanea con la pistola</span>
+        <div className="absolute bottom-0 left-0 right-0 z-30 bg-emerald-50 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-[32px] border-t border-emerald-100">
+          <div 
+            onClick={() => setIsCartDrawerOpen(true)}
+            className={`p-4 flex items-center justify-between gap-3 cursor-pointer transition-all duration-300 ${
+              isCartBouncing ? 'scale-[1.02] bg-emerald-100' : 'hover:bg-emerald-100/50'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="relative w-12 h-12 bg-[#c6f6d5] text-[#059669] rounded-2xl flex items-center justify-center border border-[#86efac] shadow-inner">
+                <ShoppingCart className={`w-5 h-5 ${isCartBouncing ? 'animate-bounce' : ''}`} />
+                <span className="absolute -top-1.5 -right-1.5 bg-slate-400 text-white font-black text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                  {cart.length}
+                </span>
               </div>
-              <span className="text-[10px] bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full font-bold border border-emerald-200">
-                Pistola HID lista
-              </span>
-            </div>
-          ) : (
-            /* DOCK FLOTANTE ANIMADO DEL CARRITO EN LA PARTE INFERIOR */
-            <div 
-              onClick={() => setIsCartDrawerOpen(true)}
-              className={`mx-3 mb-3 p-3 bg-slate-900 text-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-2 border-[#16a34a] flex items-center justify-between gap-3 cursor-pointer transition-all duration-300 ${
-                isCartBouncing 
-                  ? 'scale-105 ring-4 ring-emerald-400 shadow-emerald-900/50 bg-slate-950' 
-                  : 'hover:bg-slate-800 active:scale-98'
-              }`}
-            >
-              {/* Ícono de carrito con insignia rebotante animada */}
-              <div className="flex items-center gap-3">
-                <div className={`relative p-2.5 rounded-xl bg-[#16a34a] text-white shadow-md transition-transform ${
-                  isCartBouncing ? 'scale-125' : ''
-                }`}>
-                  <ShoppingCart className="w-5 h-5 stroke-[2.5]" />
-                  {/* Badge contador animado */}
-                  <span className={`absolute -top-1.5 -right-1.5 bg-[#dc2626] text-white font-black text-[10px] px-1.5 py-0.2 rounded-full border border-white shadow-xs ${
-                    isCartBouncing ? 'animate-ping' : ''
-                  }`}>
-                    {cart.length}
+
+              <div className="flex flex-col">
+                <span className="text-[13px] font-black text-slate-900 leading-tight">
+                  {cart.length === 0 ? 'Carrito vacío' : `${cart.length} Productos añadidos`}
+                </span>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${cart.length === 0 ? 'bg-[#059669]' : 'bg-emerald-500'}`} />
+                  <span className="text-[10px] text-slate-500 font-bold">
+                    {cart.length === 0 ? 'Lector HID sincronizado' : `${totalBaseUnits} unidades base en total`}
                   </span>
                 </div>
+              </div>
+            </div>
 
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-slate-300">Total Pre-Venta:</span>
-                    <span className="text-base font-black text-amber-400 font-mono">
-                      S/ {totalAmount.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-slate-400 flex items-center gap-1">
-                    <span>{cart.length} productos</span>
-                    <span>·</span>
-                    <span className="text-emerald-400 font-semibold">{totalBaseUnits} unds base</span>
-                  </div>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col items-end">
+                <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">
+                  SUBTOTAL
+                </span>
+                <span className="text-base font-black text-slate-900 font-mono leading-tight">
+                  S/ {totalAmount.toFixed(2)}
+                </span>
               </div>
 
-              {/* Botón táctil para desplegar y emitir pedido */}
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsCartDrawerOpen(true);
                 }}
-                className="px-3.5 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md flex items-center gap-1.5 transition active:scale-95"
+                className="px-4 py-3 bg-[#059669] hover:bg-[#047857] text-white font-black text-xs rounded-2xl shadow-md transition active:scale-95 flex items-center gap-1.5"
               >
-                <span>VER PEDIDO</span>
-                <ChevronUp className="w-4 h-4 stroke-[3]" />
+                <span>Ver Pedido</span>
+                <span className="text-[10px] font-bold">❯</span>
               </button>
             </div>
-          )}
-
+          </div>
         </div>
 
         {/* ========================================================================= */}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ExtendedProduct } from '../data/mockProducts';
-import { Order, PresentationType } from '../types/pos';
+import { Order, PresentationType, PromoBanner } from '../types/pos';
 import { 
   ShieldCheck, 
   Lock, 
@@ -21,6 +21,7 @@ import {
 
 interface Props {
   products: ExtendedProduct[];
+  promos?: PromoBanner[];
   onAddProduct: (product: ExtendedProduct) => void;
   onUpdateProduct: (product: ExtendedProduct) => void;
   onDeleteProduct: (productId: string) => void;

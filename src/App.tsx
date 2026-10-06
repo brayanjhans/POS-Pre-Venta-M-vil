@@ -8,7 +8,8 @@ import { Step2HookInspector } from './components/Step2HookInspector';
 import { CashierCheckoutSimulator } from './components/CashierCheckoutSimulator';
 import { DevOpsAndBuildHub } from './components/DevOpsAndBuildHub';
 import { INITIAL_PRODUCTS, ExtendedProduct } from './data/mockProducts';
-import { Order } from './types/pos';
+import { INITIAL_PROMOS } from './data/mockPromos';
+import { Order, PromoBanner } from './types/pos';
 import { 
   Database, 
   Smartphone, 
@@ -22,6 +23,7 @@ import {
 
 export default function App() {
   const [products, setProducts] = React.useState<ExtendedProduct[]>(INITIAL_PRODUCTS);
+  const [promos, setPromos] = React.useState<PromoBanner[]>(INITIAL_PROMOS);
   const [orders, setOrders] = React.useState<Order[]>([
     {
       id: 'PED-00891',
@@ -125,6 +127,7 @@ export default function App() {
       {activeTab === 'simulator' && (
         <AndroidPhoneSimulator 
           products={products}
+          promos={promos}
           orders={orders}
           onOrderCreated={handleOrderCreated}
           onOpenAdmin={() => setActiveTab('admin')}
@@ -144,6 +147,7 @@ export default function App() {
       {activeTab === 'admin' && (
         <AdminPanel
           products={products}
+          promos={promos}
           onAddProduct={handleAddProduct}
           onUpdateProduct={handleUpdateProduct}
           onDeleteProduct={handleDeleteProduct}
