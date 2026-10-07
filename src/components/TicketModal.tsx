@@ -165,10 +165,10 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onGoToCas
         </div>
 
         {/* Contenido (Ticket con efecto de papel) */}
-        <div className="flex-1 overflow-y-auto bg-slate-50/50 p-6 flex flex-col items-center">
-          
-          {/* Selector de Papel */}
-          <div className="flex bg-slate-200/50 p-1.5 rounded-xl w-max mb-6 shadow-inner">
+        <div className="flex-1 overflow-y-auto bg-slate-50/50 p-6">
+          <div className="flex flex-col items-center w-full pb-8">
+            {/* Selector de Papel */}
+            <div className="flex bg-slate-200/50 p-1.5 rounded-xl w-max mb-6 shadow-inner">
             <button
               onClick={() => setPaperWidth('58mm')}
               className={`px-4 py-1.5 rounded-lg text-xs font-bold transition duration-200 ${paperWidth === '58mm' ? 'bg-white text-slate-800 shadow-sm ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700'}`}
@@ -266,9 +266,10 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onGoToCas
             </div>
           </div>
         </div>
+        </div>
 
         {/* Footer Actions Claras y Modernas */}
-        <div className="p-5 bg-white border-t border-slate-100 rounded-b-3xl">
+        <div className="p-5 bg-white border-t border-slate-100 rounded-b-3xl shrink-0">
           {onGoToCashier && (
             <button
               type="button"
