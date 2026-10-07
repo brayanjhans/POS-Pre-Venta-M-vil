@@ -12,12 +12,18 @@ import {
   Save, 
   X, 
   Upload, 
-  FileSpreadsheet, 
-  CheckCircle2, 
+  FileSpreadsheet,
+  CheckCircle2,
   AlertCircle,
   ShoppingBag,
   ArrowLeft,
-  Star
+  Star,
+  Menu,
+  LayoutDashboard,
+  TrendingUp,
+  Calendar,
+  Package,
+  Clock
 } from 'lucide-react';
 
 interface Props {
@@ -54,7 +60,8 @@ export const AdminPanel: React.FC<Props> = ({
   const [loginError, setLoginError] = React.useState<string | null>(null);
 
   // Estados del panel
-  const [adminTab, setAdminTab] = React.useState<'products' | 'new_product' | 'bulk_upload' | 'orders' | 'promos' | 'new_promo'>('products');
+  const [isMenuOpen, setIsMenuOpen] = React.useState<boolean>(false);
+  const [adminTab, setAdminTab] = React.useState<'dashboard' | 'products' | 'new_product' | 'bulk_upload' | 'orders' | 'promos' | 'new_promo'>('dashboard');
   const [searchQuery, setSearchQuery] = React.useState<string>('');
   const [selectedCategory, setSelectedCategory] = React.useState<string>('Todos');
   const [feedbackMsg, setFeedbackMsg] = React.useState<string | null>(null);
@@ -420,24 +427,31 @@ export const AdminPanel: React.FC<Props> = ({
 
   // PANEL ADMINISTRADOR AUTENTICADO
   return (
-    <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-800 animate-in fade-in">
+    <div className="w-full h-full max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden text-slate-800 animate-in fade-in relative">
       {/* Top Header del Panel */}
-      <div className="bg-[#16a34a] text-white p-4 md:p-6 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-[#16a34a] text-white p-4 md:p-6 flex flex-wrap items-center justify-between gap-4 z-20">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-white font-black">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(true)}
+            className="p-2 bg-white/20 hover:bg-white/30 rounded-xl text-white transition active:scale-95 lg:hidden"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+          <div className="w-10 h-10 bg-white/20 rounded-xl hidden md:flex items-center justify-center text-white font-black">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg md:text-xl font-black uppercase tracking-tight">
-                Panel Administrador · Catálogo & Inventario
+                Panel Administrador
               </h2>
-              <span className="text-[10px] bg-white text-emerald-950 font-black px-2 py-0.5 rounded-full">
+              <span className="hidden md:inline text-[10px] bg-white text-emerald-950 font-black px-2 py-0.5 rounded-full">
                 ADMIN CONECTADO
               </span>
             </div>
-            <p className="text-xs text-white/80">
-              Gestión centralizada de productos, precios Unidad/Medio/Paquete y stock
+            <p className="text-xs text-white/80 hidden md:block">
+              Gestión centralizada de productos, promociones y reportes
             </p>
           </div>
         </div>
@@ -466,79 +480,150 @@ export const AdminPanel: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Tabs Internas del Admin */}
-      <div className="bg-slate-100 border-b border-slate-200 px-4 md:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setAdminTab('products')}
-            className={`px-3 py-1.5 rounded-lg font-black transition ${
-              adminTab === 'products'
-                ? 'bg-[#16a34a] text-white shadow-xs'
-                : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            Catálogo Activo ({products.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setAdminTab('new_product')}
-            className={`px-3 py-1.5 rounded-lg font-black transition flex items-center gap-1 ${
-              adminTab === 'new_product'
-                ? 'bg-[#16a34a] text-white shadow-xs'
-                : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[3]" />
-            <span>+ Nuevo Producto</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setAdminTab('bulk_upload')}
-            className={`px-3 py-1.5 rounded-lg font-black transition flex items-center gap-1 ${
-              adminTab === 'bulk_upload'
-                ? 'bg-[#16a34a] text-white shadow-xs'
-                : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            <Upload className="w-3.5 h-3.5" />
-            <span>Carga Masiva (Lotes)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setAdminTab('orders')}
-            className={`px-3 py-1.5 rounded-lg font-black transition ${
-              adminTab === 'orders'
-                ? 'bg-[#16a34a] text-white shadow-xs'
-                : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            Pre-Ventas Emitidas ({orders.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setAdminTab('promos')}
-            className={`px-3 py-1.5 rounded-lg font-black transition flex items-center gap-1 ${
-              adminTab === 'promos' || adminTab === 'new_promo'
-                ? 'bg-[#059669] text-white shadow-xs'
-                : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-200 border border-emerald-200'
-            }`}
-          >
-            <Star className="w-3.5 h-3.5 stroke-[3]" />
-            Promociones & Combos
-          </button>
+      {/* Layout Flex (Menú Lateral + Contenido) */}
+      <div className="flex flex-1 overflow-hidden relative">
+        
+        {/* Drawer / Menú Lateral Hamburguesa */}
+        <div 
+          className={`absolute inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white shadow-2xl transform transition-transform duration-300 lg:relative lg:translate-x-0 ${
+            isMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="p-4 border-b border-slate-800 flex items-center justify-between lg:hidden">
+            <span className="font-black text-sm uppercase text-slate-300">Menú Admin</span>
+            <button onClick={() => setIsMenuOpen(false)} className="p-1 rounded-lg hover:bg-slate-800 text-slate-400">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <nav className="p-4 space-y-2 text-sm font-bold">
+            <button
+              onClick={() => { setAdminTab('dashboard'); setIsMenuOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'dashboard' ? 'bg-[#16a34a] text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <LayoutDashboard className="w-5 h-5" /> Dashboard
+            </button>
+            <button
+              onClick={() => { setAdminTab('products'); setIsMenuOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'products' ? 'bg-[#16a34a] text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <Package className="w-5 h-5" /> Catálogo ({products.length})
+            </button>
+            <button
+              onClick={() => { setAdminTab('promos'); setIsMenuOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'promos' || adminTab === 'new_promo' ? 'bg-[#16a34a] text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <Star className="w-5 h-5" /> Combos y Promos
+            </button>
+            <button
+              onClick={() => { setAdminTab('new_product'); setIsMenuOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'new_product' ? 'bg-[#16a34a] text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <Plus className="w-5 h-5 stroke-[3]" /> Nuevo Producto
+            </button>
+            <button
+              onClick={() => { setAdminTab('orders'); setIsMenuOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'orders' ? 'bg-[#16a34a] text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <ShoppingBag className="w-5 h-5" /> Pre-Ventas ({orders.length})
+            </button>
+            <button
+              onClick={() => { setAdminTab('bulk_upload'); setIsMenuOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'bulk_upload' ? 'bg-[#16a34a] text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <Upload className="w-5 h-5" /> Carga Masiva
+            </button>
+          </nav>
         </div>
 
+        {/* Backdrop para móvil */}
+        {isMenuOpen && (
+          <div 
+            className="absolute inset-0 bg-black/60 z-20 lg:hidden"
+            onClick={() => setIsMenuOpen(false)}
+          />
+        )}
+
+        {/* Contenido Principal Scrollable */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50">
+
         {feedbackMsg && (
-          <div className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-200 flex items-center gap-1.5">
+          <div className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1 mb-4 rounded-lg border border-emerald-200 flex items-center gap-1.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>{feedbackMsg}</span>
           </div>
         )}
-      </div>
 
-      {/* CONTENIDO DE LA PESTAÑA SELECCIONADA */}
-      <div className="p-4 md:p-6 max-h-[70vh] overflow-y-auto">
+        {/* TAB 0: DASHBOARD */}
+        {adminTab === 'dashboard' && (
+          <div className="space-y-6 animate-in fade-in">
+            <div>
+              <h3 className="text-lg font-black text-slate-900 uppercase">Dashboard General</h3>
+              <p className="text-xs text-slate-500">Resumen de operaciones y estado del inventario</p>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <div className="text-slate-500 mb-1 flex items-center gap-2 text-xs font-bold uppercase"><TrendingUp className="w-4 h-4 text-[#16a34a]"/> Ventas del Día</div>
+                <div className="text-2xl font-black text-slate-900 font-mono">S/ {(orders.reduce((acc, o) => acc + o.totalAmount, 0)).toFixed(2)}</div>
+                <div className="text-[10px] text-[#16a34a] font-bold mt-1">+14.5% vs ayer</div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <div className="text-slate-500 mb-1 flex items-center gap-2 text-xs font-bold uppercase"><Calendar className="w-4 h-4 text-blue-500"/> Ganancias Mes</div>
+                <div className="text-2xl font-black text-slate-900 font-mono">S/ 4,850.00</div>
+                <div className="text-[10px] text-blue-600 font-bold mt-1">Semanales: S/ 1,210.00</div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <div className="text-slate-500 mb-1 flex items-center gap-2 text-xs font-bold uppercase"><Package className="w-4 h-4 text-amber-500"/> Stock Crítico</div>
+                <div className="text-2xl font-black text-slate-900 font-mono">{products.filter(p => p.stockInBaseUnits <= (p.minStockAlert || 50)).length}</div>
+                <div className="text-[10px] text-amber-600 font-bold mt-1">Productos por reponer</div>
+              </div>
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <div className="text-slate-500 mb-1 flex items-center gap-2 text-xs font-bold uppercase"><Clock className="w-4 h-4 text-red-500"/> Vencimientos</div>
+                <div className="text-2xl font-black text-slate-900 font-mono">3</div>
+                <div className="text-[10px] text-red-600 font-bold mt-1">Vencen en &lt; 30 días</div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <h4 className="text-sm font-black text-slate-900 uppercase border-b border-slate-100 pb-2 mb-3">Últimas Ventas Emitidas</h4>
+                {orders.slice(0, 3).length > 0 ? (
+                  <div className="space-y-3">
+                    {orders.slice(0, 3).map(o => (
+                      <div key={o.id} className="flex justify-between items-center text-xs">
+                        <div>
+                          <div className="font-bold text-slate-900 font-mono">{o.id}</div>
+                          <div className="text-[10px] text-slate-500">{new Date(o.createdAt).toLocaleTimeString()} · {o.items.length} ítems</div>
+                        </div>
+                        <div className="font-black text-emerald-700 font-mono">S/ {o.totalAmount.toFixed(2)}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-xs text-slate-400 py-4 text-center">No hay ventas registradas hoy.</div>
+                )}
+              </div>
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <h4 className="text-sm font-black text-slate-900 uppercase border-b border-slate-100 pb-2 mb-3">Alertas de Stock ({products.filter(p => p.stockInBaseUnits <= (p.minStockAlert || 50)).length})</h4>
+                <div className="space-y-3">
+                  {products.filter(p => p.stockInBaseUnits <= (p.minStockAlert || 50)).slice(0, 3).map(p => (
+                    <div key={p.id} className="flex justify-between items-center text-xs">
+                      <div className="truncate max-w-[70%]">
+                        <div className="font-bold text-slate-900 truncate">{p.name}</div>
+                        <div className="text-[10px] text-slate-500">Mínimo sugerido: {p.minStockAlert || 50}</div>
+                      </div>
+                      <div className="font-black text-amber-600 font-mono px-2 py-1 bg-amber-50 rounded">
+                        {p.stockInBaseUnits} {p.baseUnitName}s
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* TAB 1: LISTADO Y GESTIÓN DE PRODUCTOS */}
         {adminTab === 'products' && (
           <div className="space-y-4">
@@ -1160,5 +1245,6 @@ export const AdminPanel: React.FC<Props> = ({
         )}
       </div>
     </div>
+  </div>
   );
 };
