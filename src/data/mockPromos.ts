@@ -18,11 +18,11 @@ export const INITIAL_PROMOS: PromoBanner[] = [
     badgeText: 'OFERTA EXPRESS',
     tag: 'BODEGAS',
     discountBadge: '-10% OFF',
-    title: 'PACK MIXTO GALLETAS (MOROCHAS + RITZ)',
-    subtitle: 'Lleva 1 display de Morochas y 1 display de Ritz a un precio especial para reponer stock.',
+    title: 'PACK MIXTO GALLETAS (MOROCHAS + OREO)',
+    subtitle: 'Lleva 1 display de Morochas y 1 display de Oreo a un precio especial para reponer stock.',
     originalPrice: 22.00,
     offerPrice: 19.80,
     savingText: 'Ahorras S/ 2.20',
-    associatedBarcodes: ['7751234567891', '7751234567894'], // Example barcodes
+    associatedBarcodes: ['7622210877845', '7622210874512'], // Morochas + Oreo
   }
 ];
