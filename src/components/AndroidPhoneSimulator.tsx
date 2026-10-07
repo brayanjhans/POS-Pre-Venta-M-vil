@@ -60,7 +60,17 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
   onOpenAdmin,
   onGoToCashier
 }) => {
-  const [cart, setCart] = React.useState<CartItem[]>([]);
+  const [cart, setCart] = React.useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('pos_cart');
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return [];
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('pos_cart', JSON.stringify(cart));
+  }, [cart]);
   const [selectedCartItem, setSelectedCartItem] = React.useState<CartItem | null>(null);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = React.useState<boolean>(false);
   const [activeOrder, setActiveOrder] = React.useState<Order | null>(null);
@@ -296,6 +306,21 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
 
   const handleGeneratePreSale = () => {
     if (cart.length === 0) return;
+
+    if (paymentTerm !== 'Contado' && selectedCustomer.name.trim()) {
+      const hasDebt = orders.some(o => 
+        o.customerName && 
+        o.customerName.toLowerCase() === selectedCustomer.name.toLowerCase().trim() && 
+        (o.status === 'FIADO' || o.status === 'PENDIENTE_PAGO') &&
+        (o.debtAmount || 0) > 0
+      );
+
+      if (hasDebt) {
+        if (!window.confirm(`⚠️ ¡ALERTA DE DEUDA!\n\nEl cliente "${selectedCustomer.name}" ya tiene una DEUDA PENDIENTE en el sistema.\n\n¿Estás completamente seguro de emitir un NUEVO FIADO a este cliente?`)) {
+          return;
+        }
+      }
+    }
 
     playSuccessChime();
 
