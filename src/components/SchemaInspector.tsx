@@ -28,15 +28,15 @@ export const SchemaInspector: React.FC = () => {
   const [testQuantity, setTestQuantity] = React.useState<number>(3);
 
   const selectedProduct = INITIAL_PRODUCTS.find(p => p.id === selectedProductId) || INITIAL_PRODUCTS[0];
-  const selectedPres = selectedProduct.presentations[selectedPresType];
+  const selectedPres = selectedProduct.presentations[selectedPresType]!;
 
   const totalDeduction = testQuantity * selectedPres.conversionFactor;
   const remainingStock = selectedProduct.stockInBaseUnits - totalDeduction;
   const isStockOk = remainingStock >= 0;
 
   // Desglose mixto amigable (Paquetes, Medios, Unidades)
-  const packFactor = selectedProduct.presentations.pack.conversionFactor;
-  const halfFactor = selectedProduct.presentations.half.conversionFactor;
+  const packFactor = selectedProduct.presentations.pack?.conversionFactor || 24;
+  const halfFactor = selectedProduct.presentations.half?.conversionFactor || 12;
   const remainingPacks = Math.floor(Math.max(0, remainingStock) / packFactor);
   const remainingAfterPacks = Math.max(0, remainingStock) % packFactor;
   const remainingHalves = Math.floor(remainingAfterPacks / halfFactor);

@@ -3,7 +3,7 @@
  * Especializado en Golosinas y Bebidas con Multi-Presentación y Factor de Conversión
  */
 
-export type PresentationType = 'unit' | 'half' | 'pack';
+export type PresentationType = 'unit' | 'quarter' | 'half' | 'pack';
 
 export interface ProductPresentation {
   id: string;
@@ -27,7 +27,7 @@ export interface Product {
   stockInBaseUnits: number; // Stock total expresado en unidades mínimas
   minStockAlert: number;
   imageUrl?: string;
-  presentations: Record<PresentationType, ProductPresentation>;
+  presentations: Partial<Record<PresentationType, ProductPresentation>> & { unit: ProductPresentation };
 }
 
 export interface CartItem {

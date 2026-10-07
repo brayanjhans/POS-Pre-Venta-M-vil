@@ -29,7 +29,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
     }
   }, [item]);
 
-  const currentPresentation = product.presentations[selectedPres];
+  const currentPresentation = product.presentations[selectedPres]!;
   const requiredBaseUnits = qty * currentPresentation.conversionFactor;
   const isStockSufficient = requiredBaseUnits <= product.stockInBaseUnits;
   const subtotal = qty * currentPresentation.price;
@@ -50,6 +50,11 @@ export const BottomSheetPresentation: React.FC<Props> = ({
       type: 'unit', 
       icon: <Package className="w-5 h-5 text-emerald-600" />,
       labelTag: 'Venta por Unidad'
+    },
+    { 
+      type: 'quarter', 
+      icon: <Layers className="w-5 h-5 text-blue-600" />,
+      labelTag: 'Cuarto de Paquete'
     },
     { 
       type: 'half', 
@@ -187,7 +192,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Selector de Cantidad */}
+        {/* Selector de Cantidad (Con soporte para fracciones) */}
         <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
@@ -201,7 +206,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
-              onClick={() => setQty(Math.max(1, qty - 1))}
+              onClick={() => setQty(Math.max(0.25, qty - (qty <= 1 ? 0.25 : 1)))}
               className="w-12 h-12 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-2xl flex items-center justify-center active:scale-95 transition border border-slate-300 shadow-xs"
             >
               -
@@ -210,33 +215,41 @@ export const BottomSheetPresentation: React.FC<Props> = ({
             <div className="flex-1 text-center bg-white border border-slate-300 rounded-xl py-2 px-4 shadow-xs">
               <span className="text-3xl font-black text-slate-900 font-mono">{qty}</span>
               <span className="text-xs text-slate-500 ml-2 font-bold uppercase">
-                {currentPresentation.type === 'pack' ? 'Paquetes' : currentPresentation.type === 'half' ? 'Medios' : 'Unidades'}
+                {currentPresentation.type === 'pack' ? 'Paquetes' : 
+                 currentPresentation.type === 'half' ? 'Medios' : 
+                 currentPresentation.type === 'quarter' ? 'Cuartos' : 'Unid.'}
               </span>
             </div>
 
             <button
               type="button"
-              onClick={() => setQty(qty + 1)}
-              className="w-12 h-12 rounded-xl bg-[#16a34a] hover:bg-[#15803d] text-white font-black text-2xl flex items-center justify-center active:scale-95 transition shadow-md shadow-emerald-700/20"
+              onClick={() => setQty(qty + (qty < 1 ? 0.25 : 1))}
+              className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-2xl flex items-center justify-center active:scale-95 transition shadow-md shadow-emerald-700/20"
             >
               +
             </button>
           </div>
 
-          {/* Accesos rápidos */}
-          <div className="grid grid-cols-4 gap-2 mt-3">
-            {[1, 2, 5, 10].map(val => (
+          {/* Accesos rápidos (Fracciones y enteros) */}
+          <div className="grid grid-cols-5 gap-2 mt-3">
+            {[
+              { val: 0.25, label: '1/4' },
+              { val: 0.5, label: '1/2' },
+              { val: 1, label: '1' },
+              { val: 2, label: '2' },
+              { val: 5, label: '5' }
+            ].map(item => (
               <button
-                key={val}
+                key={item.label}
                 type="button"
-                onClick={() => setQty(val)}
+                onClick={() => setQty(item.val)}
                 className={`py-1.5 text-xs font-bold rounded-lg border transition ${
-                  qty === val 
-                    ? 'bg-[#16a34a] border-[#16a34a] text-white shadow-xs' 
-                    : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'
+                  qty === item.val 
+                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-[0_4px_10px_rgba(5,150,105,0.3)]' 
+                    : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:border-slate-400'
                 }`}
               >
-                +{val}
+                {item.label}
               </button>
             ))}
           </div>

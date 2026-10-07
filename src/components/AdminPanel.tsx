@@ -701,15 +701,15 @@ export const AdminPanel: React.FC<Props> = ({
                         S/ {p.presentations.unit.price.toFixed(2)}
                       </td>
                       <td className="p-3 font-mono text-slate-700">
-                        S/ {p.presentations.half.price.toFixed(2)}
+                        {p.presentations.half ? `S/ ${p.presentations.half.price.toFixed(2)}` : '-'}
                         <span className="text-[10px] text-slate-400 block font-normal">
-                          (x{p.presentations.half.conversionFactor}u)
+                          {p.presentations.half ? `(x${p.presentations.half.conversionFactor}u)` : ''}
                         </span>
                       </td>
                       <td className="p-3 font-mono text-emerald-800 font-bold">
-                        S/ {p.presentations.pack.price.toFixed(2)}
+                        {p.presentations.pack ? `S/ ${p.presentations.pack.price.toFixed(2)}` : '-'}
                         <span className="text-[10px] text-slate-400 block font-normal">
-                          (x{p.presentations.pack.conversionFactor}u)
+                          {p.presentations.pack ? `(x${p.presentations.pack.conversionFactor}u)` : ''}
                         </span>
                       </td>
                       <td className="p-3 font-mono">

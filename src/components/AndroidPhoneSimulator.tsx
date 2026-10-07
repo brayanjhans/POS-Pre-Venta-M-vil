@@ -99,6 +99,28 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
   // Ref para mantener la versión más reciente de handleScanBarcode sin recrear el listener del escáner
   const handleScanBarcodeRef = React.useRef<(barcode: string) => void>(() => {});
 
+  // Ref y Effect para auto-scroll del carrusel de promociones
+  const carouselRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (activeScreenTab === 'ofertas') return; // No auto-scroll cuando están en vista de lista vertical
+    
+    const interval = setInterval(() => {
+      if (carouselRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+        const maxScroll = scrollWidth - clientWidth;
+        
+        // Si llegó al final (o muy cerca), regresa al principio, sino avanza 1 tarjeta (aprox)
+        if (scrollLeft >= maxScroll - 10) {
+          carouselRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          carouselRef.current.scrollTo({ left: scrollLeft + 300, behavior: 'smooth' });
+        }
+      }
+    }, 3500); // Cambia cada 3.5 segundos
+
+    return () => clearInterval(interval);
+  }, [activeScreenTab]);
+
   const customersList = [
     { name: 'Bodega San Martín', ruc: '10458921821', route: 'Ruta 1 - Centro' },
     { name: 'Minimarket El Trébol', ruc: '20601234567', route: 'Ruta 2 - Norte' },
@@ -241,7 +263,7 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
     setCart(prevCart => {
       return prevCart.map(item => {
         if (item.cartItemId === cartItemId) {
-          const presInfo = item.product.presentations[presentation];
+          const presInfo = item.product.presentations[presentation]!;
           return {
             ...item,
             selectedPresentation: presentation,
@@ -294,8 +316,8 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
         productId: i.product.id,
         productName: i.product.name,
         presentationType: i.selectedPresentation,
-        presentationLabel: i.product.presentations[i.selectedPresentation].label,
-        conversionFactor: i.product.presentations[i.selectedPresentation].conversionFactor,
+        presentationLabel: i.product.presentations[i.selectedPresentation]!.label,
+        conversionFactor: i.product.presentations[i.selectedPresentation]!.conversionFactor,
         quantity: i.quantity,
         unitPrice: i.unitPrice,
         subtotal: i.subtotal,
@@ -542,22 +564,22 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
         )}
 
         {/* BÚSQUEDA Y FILTRADO POTENTE PARA CIENTOS DE PRODUCTOS */}
-        <div className="bg-slate-100 p-2.5 md:p-3 border-b border-slate-200 space-y-2 z-20">
+        <div className="sticky top-0 bg-white/85 backdrop-blur-xl p-3 border-b border-slate-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-3 z-20 transition-all duration-300">
           <div className="relative flex items-center">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
+            <Search className="w-4 h-4 text-emerald-600 absolute left-3.5 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar entre cientos de golosinas y bebidas..."
-              className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-16 py-2 text-xs md:text-sm text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-[#16a34a] focus:ring-1 focus:ring-[#16a34a] font-medium shadow-xs"
+              placeholder="Buscar entre cientos de productos..."
+              className="w-full bg-slate-100/80 border-transparent rounded-2xl pl-10 pr-16 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-hidden focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 font-semibold shadow-inner transition-all duration-200"
             />
             <div className="absolute right-2.5 flex items-center gap-1">
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="p-1 text-slate-400 hover:text-slate-600"
+                  className="p-1.5 bg-slate-200 text-slate-500 hover:bg-slate-300 hover:text-slate-700 rounded-full transition"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -565,25 +587,25 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={() => setIsCameraScannerOpen(true)}
-                className="p-1 text-[#16a34a] hover:bg-emerald-50 rounded transition"
-                title="Escanear con Cámara / Simulador"
+                className="p-1.5 text-emerald-600 hover:bg-emerald-100 rounded-xl transition"
+                title="Escanear con Cámara"
               >
                 <Camera className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-none py-0.5 flex-1">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex gap-2 overflow-x-auto scrollbar-none py-0.5 flex-1 pr-2">
               {categoriesList.map(cat => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase whitespace-nowrap transition border ${
+                  className={`px-4 py-1.5 rounded-full text-[11px] font-black uppercase whitespace-nowrap transition-all duration-200 ${
                     selectedCategory === cat
-                      ? 'bg-[#059669] border-[#059669] text-white shadow-md'
-                      : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-300'
+                      ? 'bg-emerald-600 text-white shadow-[0_4px_12px_rgba(5,150,105,0.3)] scale-105'
+                      : 'bg-white text-slate-500 border border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50'
                   }`}
                 >
                   {cat}
@@ -591,22 +613,22 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
               ))}
             </div>
 
-            <div className="flex items-center bg-white p-0.5 rounded-lg border border-slate-200 shrink-0">
+            <div className="flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200/50 shrink-0 shadow-inner">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-[#16a34a] text-white' : 'text-slate-400'}`}
+                className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                 title="Vista Cuadrícula Kiosk"
               >
-                <LayoutGrid className="w-3.5 h-3.5" />
+                <LayoutGrid className="w-4 h-4" />
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-[#16a34a] text-white' : 'text-slate-400'}`}
+                className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                 title="Vista Lista Rápida"
               >
-                <List className="w-3.5 h-3.5" />
+                <List className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -614,23 +636,23 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
 
         {/* TOAST FLOTANTE ANIMADO CUANDO SE AÑADE UN ÍTEM */}
         {recentlyAddedItem && (
-          <div className="absolute top-28 left-4 right-4 z-40 bg-slate-900 text-white p-3 rounded-2xl shadow-2xl border-2 border-[#16a34a] flex items-center justify-between animate-in slide-in-from-top-4 zoom-in-95 duration-200">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-[#16a34a] flex items-center justify-center animate-bounce text-white">
+          <div className="absolute top-36 left-4 right-4 z-40 bg-slate-900/90 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] border border-white/10 flex items-center justify-between animate-in slide-in-from-top-6 zoom-in-95 fade-in duration-300">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center animate-bounce text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]">
                 <ShoppingCart className="w-4 h-4 stroke-[2.5]" />
               </div>
-              <div>
-                <div className="text-xs font-black flex items-center gap-1.5">
-                  <span className="text-emerald-400 font-bold">+1 Agregado al Carrito</span>
+              <div className="flex flex-col">
+                <div className="text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 text-emerald-400">
+                  <span>Añadido al Carrito</span>
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 </div>
-                <div className="text-xs font-bold text-white truncate max-w-[200px]">
+                <div className="text-[13px] font-bold text-white truncate max-w-[180px] leading-tight">
                   {recentlyAddedItem.name}
                 </div>
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-xs font-mono font-black text-amber-300">
+            <div className="text-right shrink-0">
+              <span className="text-[13px] font-mono font-black text-amber-300 bg-amber-400/10 px-2 py-1 rounded-lg">
                 S/ {recentlyAddedItem.price.toFixed(2)}
               </span>
             </div>
@@ -657,48 +679,53 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
         <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-slate-50 pb-28">
           {/* SECCIÓN DE PROMOCIONES DINÁMICAS (CARRUSEL O LISTA COMPLETA) */}
           {!searchQuery && promos.length > 0 && (activeScreenTab === 'ofertas' || selectedCategory === 'Todos') && (
-            <div className={activeScreenTab === 'ofertas' ? "flex flex-col gap-4" : "flex overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-none pb-2"}>
+            <div ref={carouselRef} className={activeScreenTab === 'ofertas' ? "flex flex-col gap-4" : "flex overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-none pb-2 transition-all"}>
               {promos.map((promo) => (
-                <div key={promo.id} className={`relative rounded-3xl overflow-hidden shadow-lg border-2 border-slate-800 bg-gradient-to-br from-slate-900 to-[#064e3b] text-white ${activeScreenTab === 'ofertas' ? 'w-full' : 'min-w-[300px] sm:min-w-[340px] snap-center shrink-0'}`}>
-                  <div className="p-5 relative z-10 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-1 text-[10px] font-black tracking-widest uppercase bg-[#10b981] text-white px-2 py-1 rounded-full">
-                          <span className="w-1.5 h-1.5 bg-white rounded-full block" />
-                          {promo.badgeText}
-                        </span>
-                        {promo.tag && (
-                          <span className="text-[9px] font-black text-amber-300 border border-amber-500/50 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                            {promo.tag}
+                <div key={promo.id} className={`relative rounded-[20px] overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.12)] border border-slate-200/50 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-900 text-white ${activeScreenTab === 'ofertas' ? 'w-full' : 'min-w-[280px] sm:min-w-[320px] snap-center shrink-0'}`}>
+                  {/* Decoración de fondo */}
+                  <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-emerald-500/20 blur-2xl"></div>
+                  <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-amber-500/20 blur-xl"></div>
+
+                  <div className="p-4 relative z-10 flex flex-col justify-between h-full">
+                    <div>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="flex items-center gap-1 text-[9px] font-black tracking-wider uppercase bg-emerald-500 text-white px-2 py-0.5 rounded-md shadow-sm">
+                            {promo.badgeText}
+                          </span>
+                          {promo.tag && (
+                            <span className="text-[9px] font-bold text-amber-300 border border-amber-400/30 px-1.5 py-0.5 rounded-md uppercase">
+                              {promo.tag}
+                            </span>
+                          )}
+                        </div>
+                        {promo.discountBadge && (
+                          <span className="text-[10px] font-black text-white bg-red-500 px-1.5 py-0.5 rounded-md shadow-sm rotate-3 transform">
+                            {promo.discountBadge}
                           </span>
                         )}
                       </div>
-                      {promo.discountBadge && (
-                        <span className="text-[11px] font-black text-white bg-red-500 px-2 py-1 rounded-full shadow-sm">
-                          {promo.discountBadge}
-                        </span>
-                      )}
+
+                      <h3 className="text-base font-black leading-tight text-white uppercase tracking-tight w-10/12">
+                        {promo.title}
+                      </h3>
+                      <p className="text-[10px] text-slate-300 leading-snug mt-1 w-11/12 line-clamp-2">
+                        {promo.subtitle}
+                      </p>
                     </div>
 
-                    <h3 className="text-lg md:text-xl font-black leading-tight text-white uppercase mt-2">
-                      {promo.title}
-                    </h3>
-                    <p className="text-xs text-slate-300 leading-relaxed">
-                      {promo.subtitle}
-                    </p>
-
-                    <div className="flex items-end justify-between pt-2">
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
                       <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-slate-400 line-through font-bold">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-slate-400 line-through font-semibold">
                             S/ {promo.originalPrice.toFixed(2)}
                           </span>
-                          <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/50 px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] text-emerald-400 font-bold bg-emerald-950/40 px-1 rounded-sm">
                             {promo.savingText}
                           </span>
                         </div>
-                        <div className="text-3xl font-black text-amber-400 font-mono mt-0.5 flex items-start gap-1">
-                          <span className="text-lg mt-1 text-amber-500">S/</span>
+                        <div className="text-2xl font-black text-amber-400 font-mono flex items-start gap-0.5 leading-none mt-0.5">
+                          <span className="text-sm mt-0.5 text-amber-500">S/</span>
                           {promo.offerPrice.toFixed(2)}
                         </div>
                       </div>
@@ -708,10 +735,10 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                         onClick={() => {
                           promo.associatedBarcodes.forEach(bc => handleScanBarcode(bc));
                         }}
-                        className="px-4 py-2.5 bg-[#10b981] hover:bg-[#059669] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
+                        className="px-3 py-2 bg-gradient-to-tr from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-white font-black text-[10px] uppercase tracking-wider rounded-xl shadow-[0_4px_12px_rgba(16,185,129,0.3)] active:scale-95 transition flex items-center gap-1 cursor-pointer border border-emerald-400/30"
                       >
-                        <Plus className="w-4 h-4 stroke-[3]" />
-                        <span>AÑADIR COMBO</span>
+                        <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                        <span>AGREGAR</span>
                       </button>
                     </div>
                   </div>
@@ -756,14 +783,14 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                     {/* Cuerpo de la tarjeta */}
                     <div className="p-3 space-y-3 flex-1 flex flex-col justify-between">
                       <div>
-                        <div className="h-24 w-full rounded-2xl bg-gradient-to-b from-emerald-50 to-white border border-emerald-100 flex flex-col items-center justify-center p-2 relative group-hover:scale-105 transition-transform">
-                          <div className="text-4xl filter drop-shadow-md mb-1">
+                        <div className="h-28 w-full rounded-2xl bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 border border-slate-200 shadow-inner flex flex-col items-center justify-center p-2 relative group-hover:scale-105 group-hover:shadow-[0_10px_20px_rgba(0,0,0,0.1)] transition-all duration-300">
+                          <div className="text-5xl filter drop-shadow-xl mb-1 transform group-hover:-translate-y-1 transition-transform duration-300">
                             {product.category === 'Bebidas' ? '🥤' :
                              product.category === 'Chocolates' ? '🍫' :
                              product.category === 'Galletas' ? '🍪' :
                              product.category === 'Snacks' ? '🍿' : '🍬'}
                           </div>
-                          <span className="absolute bottom-1 bg-white border border-slate-200 shadow-sm px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-600">
+                          <span className="absolute bottom-2 bg-white/90 backdrop-blur-xs border border-white shadow-xs px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase text-slate-700 tracking-wider">
                             {product.packagingType}
                           </span>
                         </div>
@@ -787,10 +814,10 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                           <span className="text-slate-400">Paq x{product.piecesPerPack}</span>
                         </div>
 
-                        <div className="flex items-center justify-between gap-1 bg-amber-50 rounded-xl px-2 py-1.5 border border-amber-100">
+                        <div className="flex items-center justify-between gap-1 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 rounded-2xl px-3 py-2 border border-emerald-100/60 shadow-inner">
                           <div className="flex flex-col">
-                            <span className="text-[8px] text-amber-700 font-black uppercase">PRECIO</span>
-                            <span className="text-amber-700 text-xs font-black tracking-tight font-mono">
+                            <span className="text-[9px] text-emerald-700 font-black uppercase tracking-wider">PRECIO</span>
+                            <span className="text-emerald-950 text-sm font-black tracking-tight font-mono">
                               S/ {minPrice.toFixed(2)}
                             </span>
                           </div>
@@ -798,10 +825,10 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                           <button
                             type="button"
                             onClick={(e) => handleQuickAddUnit(e, product)}
-                            className="w-8 h-8 bg-[#059669] hover:bg-[#047857] text-white rounded-full flex items-center justify-center font-black active:scale-90 transition shadow-md cursor-pointer group-hover:ring-2 group-hover:ring-emerald-300"
+                            className="w-9 h-9 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl flex items-center justify-center font-black active:scale-90 transition-all duration-200 shadow-[0_4px_12px_rgba(5,150,105,0.4)] cursor-pointer group-hover:scale-110"
                             title="Añadir 1 Unidad al Carrito"
                           >
-                            <Plus className="w-4 h-4 stroke-[3]" />
+                            <Plus className="w-5 h-5 stroke-[3]" />
                           </button>
                         </div>
                       </div>
@@ -830,7 +857,7 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                       <div className="text-[10px] text-slate-400 font-mono">{product.barcode}</div>
                       <h4 className="text-xs font-bold text-slate-900 truncate">{product.name}</h4>
                       <div className="text-[10px] text-slate-500">
-                        Stock: {product.stockInBaseUnits} {product.baseUnitName}s · Paq: S/ {product.presentations.pack.price.toFixed(2)}
+                        Stock: {product.stockInBaseUnits} {product.baseUnitName}s {product.presentations.pack ? `· Paq: S/ ${product.presentations.pack.price.toFixed(2)}` : ''}
                       </div>
                     </div>
                   </div>
@@ -852,40 +879,40 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
         {/* ========================================================================= */}
         {/* EL CARRITO UBICADO ABAJO (ZONA ERGONÓMICA DE PULGAR) CON ANIMACIÓN */}
         {/* ========================================================================= */}
-        <div className="absolute bottom-0 left-0 right-0 z-30 bg-emerald-50 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-[32px] border-t border-emerald-100">
+        <div className="absolute bottom-0 left-0 right-0 z-30 bg-white/80 backdrop-blur-xl shadow-[0_-15px_40px_rgba(0,0,0,0.08)] border-t border-white/60">
           <div 
             onClick={() => setIsCartDrawerOpen(true)}
-            className={`p-4 flex items-center justify-between gap-3 cursor-pointer transition-all duration-300 ${
-              isCartBouncing ? 'scale-[1.02] bg-emerald-100' : 'hover:bg-emerald-100/50'
+            className={`p-4 pb-6 flex items-center justify-between gap-3 cursor-pointer transition-all duration-300 ${
+              isCartBouncing ? 'scale-[1.02] bg-emerald-50/80' : 'hover:bg-slate-50/80'
             }`}
           >
-            <div className="flex items-center gap-3">
-              <div className="relative w-12 h-12 bg-[#c6f6d5] text-[#059669] rounded-2xl flex items-center justify-center border border-[#86efac] shadow-inner">
-                <ShoppingCart className={`w-5 h-5 ${isCartBouncing ? 'animate-bounce' : ''}`} />
-                <span className="absolute -top-1.5 -right-1.5 bg-slate-400 text-white font-black text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+            <div className="flex items-center gap-3.5">
+              <div className="relative w-12 h-12 bg-gradient-to-tr from-emerald-100 to-teal-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner border border-emerald-200/50">
+                <ShoppingCart className={`w-5 h-5 ${isCartBouncing ? 'animate-bounce text-emerald-500' : ''}`} />
+                <span className="absolute -top-1.5 -right-1.5 bg-slate-800 text-white font-black text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm transition-transform duration-300">
                   {cart.length}
                 </span>
               </div>
 
               <div className="flex flex-col">
-                <span className="text-[13px] font-black text-slate-900 leading-tight">
-                  {cart.length === 0 ? 'Carrito vacío' : `${cart.length} Productos añadidos`}
+                <span className="text-sm font-black text-slate-800 leading-tight">
+                  {cart.length === 0 ? 'Carrito vacío' : `${cart.length} Productos`}
                 </span>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className={`w-1.5 h-1.5 rounded-full ${cart.length === 0 ? 'bg-[#059669]' : 'bg-emerald-500'}`} />
-                  <span className="text-[10px] text-slate-500 font-bold">
-                    {cart.length === 0 ? 'Lector HID sincronizado' : `${totalBaseUnits} unidades base en total`}
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`w-1.5 h-1.5 rounded-full shadow-xs ${cart.length === 0 ? 'bg-slate-300' : 'bg-emerald-500 animate-pulse'}`} />
+                  <span className="text-[11px] text-slate-500 font-bold">
+                    {cart.length === 0 ? 'Escanea para añadir' : `${totalBaseUnits} unid. en total`}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <div className="flex flex-col items-end">
-                <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">
-                  SUBTOTAL
+                <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                  TOTAL
                 </span>
-                <span className="text-base font-black text-slate-900 font-mono leading-tight">
+                <span className="text-lg font-black text-slate-900 font-mono leading-none tracking-tight">
                   S/ {totalAmount.toFixed(2)}
                 </span>
               </div>
@@ -896,7 +923,7 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                   e.stopPropagation();
                   setIsCartDrawerOpen(true);
                 }}
-                className="px-4 py-3 bg-[#059669] hover:bg-[#047857] text-white font-black text-xs rounded-2xl shadow-md transition active:scale-95 flex items-center gap-1.5"
+                className="px-4 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-[0_8px_20px_rgba(16,185,129,0.3)] transition-all active:scale-95 flex items-center gap-1.5 border border-emerald-400/30"
               >
                 <span>Ver Pedido</span>
                 <span className="text-[10px] font-bold">❯</span>
@@ -957,7 +984,7 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
               {/* Lista de productos en el carrito */}
               <div className="flex-1 overflow-y-auto space-y-2 py-1 pr-1 max-h-[46vh]">
                 {cart.map((item) => {
-                  const pres = item.product.presentations[item.selectedPresentation];
+                  const pres = item.product.presentations[item.selectedPresentation]!;
                   return (
                     <div
                       key={item.cartItemId}

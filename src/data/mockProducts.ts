@@ -12,6 +12,29 @@ export interface ExtendedProduct extends Product {
 }
 
 export const INITIAL_PRODUCTS: ExtendedProduct[] = [
+  // --- LÁCTEOS ---
+  {
+    id: 'prod_y001',
+    barcode: '7750182005001',
+    name: 'Yogurt Gloria Fresa Botellita 190g',
+    category: 'Bebidas',
+    baseUnitName: 'botellita',
+    stockInBaseUnits: 120,
+    minStockAlert: 24,
+    accentColor: '#db2777',
+    gradientBg: 'from-pink-500/20 to-rose-600/10',
+    packagingType: 'Display Caja',
+    flavorNote: 'Sabor Fresa (Bebible)',
+    piecesPerPack: 24,
+    isPromo: true,
+    promoTag: 'NUEVO LOTE',
+    presentations: {
+      unit: { id: 'py001_u', productId: 'prod_y001', type: 'unit', label: 'Unidad (1 botellita)', shortLabel: 'UND', conversionFactor: 1, price: 1.50, isDefault: true },
+      quarter: { id: 'py001_q', productId: 'prod_y001', type: 'quarter', label: 'Cuarto de caja (6 unid)', shortLabel: 'CTO (6u)', conversionFactor: 6, price: 8.50 },
+      half: { id: 'py001_h', productId: 'prod_y001', type: 'half', label: 'Media caja (12 unid)', shortLabel: 'MED (12u)', conversionFactor: 12, price: 16.00 },
+      pack: { id: 'py001_p', productId: 'prod_y001', type: 'pack', label: 'Caja Completa (24 unid)', shortLabel: 'CAJA (24u)', conversionFactor: 24, price: 30.00 },
+    },
+  },
   // --- BEBIDAS ---
   {
     id: 'prod_001',
