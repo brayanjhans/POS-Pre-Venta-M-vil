@@ -253,6 +253,24 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onGoToCas
                   <span>S/ {order.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
+              
+              {order.returnedContainers && order.returnedContainers > 0 ? (
+                <div className="border-b border-dashed border-slate-300 pb-2 mb-3">
+                  <div className="flex justify-between font-bold text-[11px] text-slate-700 bg-slate-100 p-1.5 rounded">
+                    <span>Envases Devueltos:</span>
+                    <span>{order.returnedContainers} unid.</span>
+                  </div>
+                </div>
+              ) : null}
+
+              {order.debtAmount && order.debtAmount > 0 ? (
+                <div className="border border-slate-300 rounded p-1.5 mb-3 text-center bg-slate-50">
+                  <span className="font-bold text-[10px] text-slate-800 uppercase block">AVISO: SALDO PENDIENTE</span>
+                  <span className="text-[9px] text-slate-600 font-medium">
+                    Evite el bloqueo de sus créditos.
+                  </span>
+                </div>
+              ) : null}
 
               <div className="flex justify-center mb-3 mt-1">
                 {qrDataUrl && (

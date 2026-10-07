@@ -75,6 +75,7 @@ export interface Order {
   paymentMethod?: string;
   paidAmount?: number;
   debtAmount?: number;
+  returnedContainers?: number;
 }
 
 export interface PromoBanner {

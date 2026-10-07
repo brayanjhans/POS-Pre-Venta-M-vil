@@ -105,6 +105,7 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
   });
   const [paymentTerm, setPaymentTerm] = React.useState<'Contado' | 'Fiado (Libreta)' | 'Crédito 7 días' | 'Crédito 15 días'>('Contado');
   const [discountPercent, setDiscountPercent] = React.useState<number>(0);
+  const [returnedContainers, setReturnedContainers] = React.useState<number>(0);
 
   // Ref para mantener la versión más reciente de handleScanBarcode sin recrear el listener del escáner
   const handleScanBarcodeRef = React.useRef<(barcode: string) => void>(() => {});
@@ -308,15 +309,23 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
     if (cart.length === 0) return;
 
     if (paymentTerm !== 'Contado' && selectedCustomer.name.trim()) {
-      const hasDebt = orders.some(o => 
+      const customerDebtOrders = orders.filter(o => 
         o.customerName && 
         o.customerName.toLowerCase() === selectedCustomer.name.toLowerCase().trim() && 
         (o.status === 'FIADO' || o.status === 'PENDIENTE_PAGO') &&
         (o.debtAmount || 0) > 0
       );
 
-      if (hasDebt) {
-        if (!window.confirm(`⚠️ ¡ALERTA DE DEUDA!\n\nEl cliente "${selectedCustomer.name}" ya tiene una DEUDA PENDIENTE en el sistema.\n\n¿Estás completamente seguro de emitir un NUEVO FIADO a este cliente?`)) {
+      const totalCurrentDebt = customerDebtOrders.reduce((sum, o) => sum + (o.debtAmount || 0), 0);
+      const newTotalDebt = totalCurrentDebt + totalAmount;
+
+      if (newTotalDebt > 500) {
+        window.alert(`❌ TICKET BLOQUEADO: LÍMITE DE FIADO SUPERADO\n\nEl cliente "${selectedCustomer.name}" tiene una deuda previa de S/ ${totalCurrentDebt.toFixed(2)}.\nSi le fías S/ ${totalAmount.toFixed(2)} más, su deuda será de S/ ${newTotalDebt.toFixed(2)}, superando el tope máximo permitido de S/ 500.00.\n\nEl sistema bloquea esta operación para proteger el capital.`);
+        return;
+      }
+
+      if (totalCurrentDebt > 0) {
+        if (!window.confirm(`⚠️ ¡ALERTA DE DEUDA!\n\nEl cliente "${selectedCustomer.name}" ya debe S/ ${totalCurrentDebt.toFixed(2)} en el sistema.\n\n¿Estás completamente seguro de emitir un NUEVO FIADO por S/ ${totalAmount.toFixed(2)}?`)) {
           return;
         }
       }
@@ -339,6 +348,7 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
       status: paymentTerm === 'Fiado (Libreta)' ? 'FIADO' : (paymentTerm === 'Contado' ? 'PAGADO' : 'PENDIENTE_PAGO'),
       paidAmount: paymentTerm === 'Contado' ? totalAmount : 0,
       debtAmount: paymentTerm === 'Contado' ? 0 : totalAmount,
+      returnedContainers,
       items: cart.map(i => ({
         productId: i.product.id,
         productName: i.product.name,
@@ -364,6 +374,7 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
     setIsTicketModalOpen(true);
     setIsCartDrawerOpen(false);
     setCart([]);
+    setReturnedContainers(0);
     if (onOrderCreated) {
       onOrderCreated(order);
     }
@@ -1134,6 +1145,40 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                         ))}
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Registro rápido de Envases Retornables */}
+                <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🍾</span>
+                    <div>
+                      <span className="text-[11px] font-bold text-amber-900 block">Envases Devueltos</span>
+                      <span className="text-[9px] text-amber-700 leading-tight block">Si el cliente deja botellas<br/>o cajas vacías, anótalas aquí.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-amber-300">
+                    <button
+                      type="button"
+                      onClick={() => setReturnedContainers(Math.max(0, returnedContainers - 1))}
+                      className="w-7 h-7 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded font-black text-lg flex items-center justify-center transition cursor-pointer"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min="0"
+                      value={returnedContainers || ''}
+                      onChange={(e) => setReturnedContainers(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-10 text-center font-black text-amber-900 text-base focus:outline-hidden bg-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setReturnedContainers(returnedContainers + 1)}
+                      className="w-7 h-7 bg-amber-500 hover:bg-amber-600 text-white rounded font-black text-lg flex items-center justify-center transition cursor-pointer"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
 
