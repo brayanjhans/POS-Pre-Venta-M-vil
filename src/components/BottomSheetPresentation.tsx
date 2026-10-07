@@ -206,50 +206,48 @@ export const BottomSheetPresentation: React.FC<Props> = ({
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
-              onClick={() => setQty(Math.max(0.25, qty - (qty <= 1 ? 0.25 : 1)))}
+              onClick={() => setQty(Math.max(1, qty - 1))}
               className="w-12 h-12 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-2xl flex items-center justify-center active:scale-95 transition border border-slate-300 shadow-xs"
             >
               -
             </button>
 
-            <div className="flex-1 text-center bg-white border border-slate-300 rounded-xl py-2 px-4 shadow-xs">
-              <span className="text-3xl font-black text-slate-900 font-mono">{qty}</span>
-              <span className="text-xs text-slate-500 ml-2 font-bold uppercase">
-                {currentPresentation.type === 'pack' ? 'Paquetes' : 
-                 currentPresentation.type === 'half' ? 'Medios' : 
-                 currentPresentation.type === 'quarter' ? 'Cuartos' : 'Unid.'}
-              </span>
+            <div className="flex-1 text-center bg-white border border-slate-300 rounded-xl px-2 shadow-xs relative overflow-hidden flex items-center justify-center">
+              <input 
+                type="number"
+                min="1"
+                value={qty || ''}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setQty(isNaN(val) || val < 1 ? 1 : val);
+                }}
+                className="w-full text-center text-3xl font-black text-slate-900 font-mono focus:outline-hidden py-2 bg-transparent"
+              />
             </div>
 
             <button
               type="button"
-              onClick={() => setQty(qty + (qty < 1 ? 0.25 : 1))}
+              onClick={() => setQty(qty + 1)}
               className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-2xl flex items-center justify-center active:scale-95 transition shadow-md shadow-emerald-700/20"
             >
               +
             </button>
           </div>
 
-          {/* Accesos rápidos (Fracciones y enteros) */}
+          {/* Accesos rápidos (Solo enteros) */}
           <div className="grid grid-cols-5 gap-2 mt-3">
-            {[
-              { val: 0.25, label: '1/4' },
-              { val: 0.5, label: '1/2' },
-              { val: 1, label: '1' },
-              { val: 2, label: '2' },
-              { val: 5, label: '5' }
-            ].map(item => (
+            {[1, 2, 3, 4, 5].map(val => (
               <button
-                key={item.label}
+                key={val}
                 type="button"
-                onClick={() => setQty(item.val)}
+                onClick={() => setQty(val)}
                 className={`py-1.5 text-xs font-bold rounded-lg border transition ${
-                  qty === item.val 
+                  qty === val 
                     ? 'bg-emerald-600 border-emerald-600 text-white shadow-[0_4px_10px_rgba(5,150,105,0.3)]' 
                     : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:border-slate-400'
                 }`}
               >
-                {item.label}
+                {val}
               </button>
             ))}
           </div>
