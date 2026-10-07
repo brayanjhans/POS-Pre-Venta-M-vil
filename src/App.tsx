@@ -100,19 +100,23 @@ export default function App() {
     setOrders(prev => [order, ...prev]);
   };
 
-  const handleOrderPaid = (orderId: string, paymentMethod: string) => {
+  const handleOrderPaid = (orderId: string, paymentMethod: string, paidAmount?: number, debtAmount?: number) => {
     // Buscar la orden para descontar inventario
     const targetOrder = orders.find(o => o.id === orderId);
     if (!targetOrder) return;
 
-    // Actualizar estado del pedido a PAGADO
+    const isFiado = debtAmount && debtAmount > 0;
+
+    // Actualizar estado del pedido
     setOrders(prev => prev.map(o => {
       if (o.id === orderId) {
         return {
           ...o,
-          status: 'PAGADO',
+          status: isFiado ? 'FIADO' : 'PAGADO',
           paymentMethod,
           paidAt: new Date().toISOString(),
+          paidAmount,
+          debtAmount
         };
       }
       return o;
@@ -132,6 +136,24 @@ export default function App() {
         return prod;
       });
     });
+  };
+
+  const handlePayDebt = (orderId: string, amount: number) => {
+    setOrders(prev => prev.map(o => {
+      if (o.id === orderId && o.status === 'FIADO' && o.debtAmount !== undefined) {
+        const newPaidAmount = (o.paidAmount || 0) + amount;
+        const newDebt = Math.max(0, o.debtAmount - amount);
+        
+        return {
+          ...o,
+          paidAmount: newPaidAmount,
+          debtAmount: newDebt,
+          status: newDebt === 0 ? 'PAGADO' : 'FIADO',
+          paidAt: newDebt === 0 ? new Date().toISOString() : o.paidAt,
+        };
+      }
+      return o;
+    }));
   };
 
   return (
@@ -169,6 +191,7 @@ export default function App() {
           onDeletePromo={handleDeletePromo}
           orders={orders}
           onCloseAdmin={() => setActiveTab('simulator')}
+          onPayDebt={handlePayDebt}
         />
       )}
     </div>

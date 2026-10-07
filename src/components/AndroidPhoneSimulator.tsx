@@ -1028,13 +1028,22 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                     </span>
                   </div>
 
-                  <input
-                    type="text"
-                    placeholder="Ingresa el nombre del cliente..."
-                    value={selectedCustomer.name}
-                    onChange={(e) => setSelectedCustomer({ ...selectedCustomer, name: e.target.value })}
-                    className="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-bold text-slate-900 focus:outline-hidden focus:border-[#16a34a]"
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      placeholder="DNI / RUC..."
+                      value={selectedCustomer.ruc}
+                      onChange={(e) => setSelectedCustomer({ ...selectedCustomer, ruc: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-bold text-slate-900 focus:outline-hidden focus:border-[#16a34a]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Nombre Completo..."
+                      value={selectedCustomer.name}
+                      onChange={(e) => setSelectedCustomer({ ...selectedCustomer, name: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-bold text-slate-900 focus:outline-hidden focus:border-[#16a34a]"
+                    />
+                  </div>
 
                   {/* Condición de Pago & Descuento en 2 columnas */}
                   <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">

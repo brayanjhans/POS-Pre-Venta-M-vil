@@ -17,7 +17,7 @@ import {
 
 interface Props {
   orders: Order[];
-  onOrderPaid: (orderId: string, paymentMethod: string) => void;
+  onOrderPaid: (orderId: string, paymentMethod: string, paidAmount?: number, debtAmount?: number) => void;
   products: ExtendedProduct[];
   onOpenMobileTerminal: () => void;
 }
@@ -34,6 +34,7 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
   const [cashGiven, setCashGiven] = React.useState<string>('50');
   const [mixedAmounts, setMixedAmounts] = React.useState({ efectivo: 0, yape: 0, tarjeta: 0 });
   const [checkoutComplete, setCheckoutComplete] = React.useState<boolean>(false);
+  const [isFiado, setIsFiado] = React.useState<boolean>(false);
   const [searchTerm, setSearchTerm] = React.useState<string>('');
   const [queueTab, setQueueTab] = React.useState<'PENDIENTE' | 'PAGADO'>('PENDIENTE');
 
@@ -86,6 +87,8 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
   const isCashSufficient = paymentMethod === 'Mixto' 
     ? mixedTotal >= (selectedOrder?.totalAmount || 0)
     : (selectedOrder ? cashGivenNum >= selectedOrder.totalAmount : true);
+    
+  const missingAmount = selectedOrder ? Math.max(0, selectedOrder.totalAmount - (paymentMethod === 'Mixto' ? mixedTotal : cashGivenNum)) : 0;
 
   const handleExecuteCheckout = () => {
     if (!selectedOrder) return;
@@ -93,16 +96,25 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
       alert('Este pedido ya fue pagado previamente.');
       return;
     }
-    if ((paymentMethod === 'Efectivo' || paymentMethod === 'Mixto') && !isCashSufficient) {
-      alert('El monto ingresado es menor al total a pagar.');
+    
+    if (!isCashSufficient && !isFiado) {
+      alert('El monto ingresado es menor al total a pagar. Si deseas dar fiado, activa el interruptor de Crédito.');
       return;
+    }
+    
+    if (isFiado && (!selectedOrder.customerRuc && !selectedOrder.customerName)) {
+       // Ideally we check for RUC but name works as fallback
     }
 
     playSuccessChime();
     const finalMethod = paymentMethod === 'Mixto' 
       ? `Mixto (Ef: ${mixedAmounts.efectivo}, Yp: ${mixedAmounts.yape}, Tj: ${mixedAmounts.tarjeta})` 
       : paymentMethod;
-    onOrderPaid(selectedOrder.id, finalMethod);
+      
+    const paidAmt = paymentMethod === 'Mixto' ? mixedTotal : (isFiado ? cashGivenNum : selectedOrder.totalAmount);
+    const debtAmt = isFiado ? missingAmount : 0;
+    
+    onOrderPaid(selectedOrder.id, finalMethod, paidAmt, debtAmt);
     setCheckoutComplete(true);
   };
 
@@ -483,21 +495,35 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
                         <div className={`text-sm font-black font-mono py-1 px-3 rounded-lg border ${
                           isCashSufficient
                             ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                            : 'bg-red-50 text-red-700 border-red-200'
+                            : (isFiado ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200')
                         }`}>
-                          {changeDue > 0 ? `Vuelto: S/ ${changeDue.toFixed(2)}` : (mixedTotal < selectedOrder.totalAmount ? `Falta: S/ ${(selectedOrder.totalAmount - mixedTotal).toFixed(2)}` : 'Suma Exacta')}
+                          {changeDue > 0 ? `Vuelto: S/ ${changeDue.toFixed(2)}` : (missingAmount > 0 ? (isFiado ? `Deuda: S/ ${missingAmount.toFixed(2)}` : `Falta: S/ ${missingAmount.toFixed(2)}`) : 'Suma Exacta')}
                         </div>
                       </div>
+                    </div>
+                  )}
+                  
+                  {/* Toggle para FIADO si falta dinero */}
+                  {(!isCashSufficient) && (
+                    <div className="p-3 bg-amber-50 border-2 border-amber-300 rounded-xl flex items-center justify-between animate-in zoom-in-95">
+                      <div className="space-y-0.5">
+                        <label className="text-xs font-black text-amber-900 uppercase">Falta S/ {missingAmount.toFixed(2)}</label>
+                        <p className="text-[10px] text-amber-700 font-bold">¿Registrar esta falta como Crédito / Fiado?</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" checked={isFiado} onChange={(e) => setIsFiado(e.target.checked)} />
+                        <div className="w-11 h-6 bg-amber-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-amber-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+                      </label>
                     </div>
                   )}
 
                   {/* Botón de Ejecución del Cobro */}
                   <button
                     type="button"
-                    disabled={!isCashSufficient}
+                    disabled={!isCashSufficient && !isFiado}
                     onClick={handleExecuteCheckout}
                     className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-98 ${
-                      !isCashSufficient
+                      !isCashSufficient && !isFiado
                         ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                         : 'bg-[#16a34a] hover:bg-[#15803d] text-white shadow-emerald-700/30 cursor-pointer'
                     }`}

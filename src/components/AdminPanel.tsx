@@ -23,7 +23,9 @@ import {
   TrendingUp,
   Calendar,
   Package,
-  Clock
+  Clock,
+  Users,
+  Receipt
 } from 'lucide-react';
 
 interface Props {
@@ -38,6 +40,7 @@ interface Props {
   onDeletePromo: (promoId: string) => void;
   orders: Order[];
   onCloseAdmin: () => void;
+  onPayDebt?: (orderId: string, amount: number) => void;
 }
 
 export const AdminPanel: React.FC<Props> = ({
@@ -52,6 +55,7 @@ export const AdminPanel: React.FC<Props> = ({
   onDeletePromo,
   orders,
   onCloseAdmin,
+  onPayDebt,
 }) => {
   // Estado de autenticación
   const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false);
@@ -61,10 +65,11 @@ export const AdminPanel: React.FC<Props> = ({
 
   // Estados del panel
   const [isMenuOpen, setIsMenuOpen] = React.useState<boolean>(false);
-  const [adminTab, setAdminTab] = React.useState<'dashboard' | 'products' | 'new_product' | 'bulk_upload' | 'orders' | 'promos' | 'new_promo'>('dashboard');
+  const [adminTab, setAdminTab] = React.useState<'dashboard' | 'products' | 'new_product' | 'bulk_upload' | 'orders' | 'promos' | 'new_promo' | 'deudores'>('dashboard');
   const [searchQuery, setSearchQuery] = React.useState<string>('');
   const [selectedCategory, setSelectedCategory] = React.useState<string>('Todos');
   const [feedbackMsg, setFeedbackMsg] = React.useState<string | null>(null);
+  const [viewTicketOrder, setViewTicketOrder] = React.useState<Order | null>(null);
 
   // Formulario de nuevo producto
   const [formData, setFormData] = React.useState<{
@@ -532,6 +537,12 @@ export const AdminPanel: React.FC<Props> = ({
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'bulk_upload' ? 'bg-[#16a34a] text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
             >
               <Upload className="w-5 h-5" /> Carga Masiva
+            </button>
+            <button
+              onClick={() => { setAdminTab('deudores'); setIsMenuOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'deudores' ? 'bg-[#16a34a] text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <Users className="w-5 h-5" /> Libreta de Fiados
             </button>
           </nav>
         </div>
@@ -1243,8 +1254,183 @@ export const AdminPanel: React.FC<Props> = ({
             </div>
           </form>
         )}
+
+        {/* TAB: DEUDORES / FIADOS */}
+        {adminTab === 'deudores' && (
+          <div className="space-y-4 animate-in fade-in">
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+              <div>
+                <h3 className="text-xl font-black text-slate-900 uppercase">Libreta de Fiados (Cuentas por Cobrar)</h3>
+                <p className="text-xs text-slate-500">Historial de clientes con deudas pendientes organizados por DNI.</p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              {orders.filter(o => o.status === 'FIADO' && o.debtAmount && o.debtAmount > 0).length === 0 ? (
+                <div className="p-8 text-center text-slate-400">
+                  <CheckCircle2 className="w-12 h-12 mx-auto text-emerald-300 mb-2" />
+                  <p className="font-bold text-sm">No hay cuentas por cobrar</p>
+                  <p className="text-xs">Todos los clientes están al día con sus pagos.</p>
+                </div>
+              ) : (
+                <table className="w-full text-left text-sm whitespace-nowrap">
+                  <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3">Cliente (DNI/RUC)</th>
+                      <th className="px-4 py-3">Ticket / Fecha</th>
+                      <th className="px-4 py-3 text-right">Total Pedido</th>
+                      <th className="px-4 py-3 text-right">Abonado</th>
+                      <th className="px-4 py-3 text-right">Deuda</th>
+                      <th className="px-4 py-3 text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {
+                      Object.entries(
+                        orders.filter(o => o.status === 'FIADO' && o.debtAmount && o.debtAmount > 0)
+                              .reduce((acc, order) => {
+                                const key = order.customerRuc || order.customerName || 'Desconocido';
+                                if (!acc[key]) acc[key] = [];
+                                acc[key].push(order);
+                                return acc;
+                              }, {} as Record<string, typeof orders>)
+                      ).flatMap(([key, clientOrders]) => 
+                        clientOrders.map((ord, idx) => (
+                          <tr key={ord.id} className="hover:bg-slate-50 transition">
+                            {idx === 0 && (
+                              <td rowSpan={clientOrders.length} className="px-4 py-3 border-r border-slate-100 align-top bg-white">
+                                <div className="font-bold text-slate-900">{ord.customerName || 'Sin Nombre'}</div>
+                                <div className="text-[10px] text-slate-500 font-mono mt-0.5">{key}</div>
+                                <div className="text-xs font-black text-amber-700 mt-2 bg-amber-50 inline-block px-2 py-0.5 rounded">
+                                  Deuda Total: S/ {clientOrders.reduce((sum, o) => sum + (o.debtAmount || 0), 0).toFixed(2)}
+                                </div>
+                              </td>
+                            )}
+                            <td className="px-4 py-3 text-xs">
+                              <span className="font-mono font-bold text-slate-700">{ord.id}</span>
+                              <div className="text-[10px] text-slate-400">
+                                {new Date(ord.createdAt).toLocaleDateString()} {new Date(ord.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono font-medium text-slate-600">S/ {ord.totalAmount.toFixed(2)}</td>
+                            <td className="px-4 py-3 text-right font-mono font-medium text-emerald-600">S/ {(ord.paidAmount || 0).toFixed(2)}</td>
+                            <td className="px-4 py-3 text-right font-mono font-black text-red-600">S/ {(ord.debtAmount || 0).toFixed(2)}</td>
+                            <td className="px-4 py-3 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setViewTicketOrder(ord)}
+                                  className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg transition"
+                                  title="Ver Ticket"
+                                >
+                                  <Receipt className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const abonarStr = window.prompt(`Abonar deuda del ticket ${ord.id}\nDeuda actual: S/ ${ord.debtAmount}\n¿Cuánto desea abonar ahora?`, String(ord.debtAmount));
+                                    if(abonarStr) {
+                                      const abonarNum = parseFloat(abonarStr);
+                                      if(!isNaN(abonarNum) && abonarNum > 0 && onPayDebt) {
+                                        onPayDebt(ord.id, abonarNum);
+                                      } else if(!onPayDebt) {
+                                        alert(`Se abonó S/ ${abonarStr} al ticket ${ord.id}. (Backend pendiente)`);
+                                      }
+                                    }
+                                  }}
+                                  className="px-3 py-1.5 bg-[#16a34a] hover:bg-[#15803d] text-white font-bold text-[10px] uppercase rounded-lg shadow-xs transition"
+                                >
+                                  Abonar
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )
+                    }
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
+
+    {/* MODAL DE BOLETA ELECTRÓNICA */}
+    {viewTicketOrder && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-in fade-in">
+        <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl flex flex-col max-h-[90vh]">
+          {/* Header */}
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 rounded-t-2xl">
+            <div className="flex items-center gap-2">
+              <Receipt className="w-5 h-5 text-emerald-600" />
+              <h3 className="font-black text-sm uppercase text-slate-800">Boleta {viewTicketOrder.id}</h3>
+            </div>
+            <button onClick={() => setViewTicketOrder(null)} className="p-1 text-slate-400 hover:text-slate-600 bg-slate-200 rounded-lg">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          
+          {/* Contenido (Ticket) */}
+          <div className="p-5 overflow-y-auto font-mono text-xs text-slate-700 flex-1">
+            <div className="text-center mb-4">
+              <h2 className="font-black text-base uppercase">Distribuidora POS</h2>
+              <p className="text-[10px] text-slate-500">Comprobante de Venta</p>
+            </div>
+            
+            <div className="border-t border-dashed border-slate-300 py-2 mb-2 space-y-1">
+              <div className="flex justify-between"><span>Fecha:</span> <span>{new Date(viewTicketOrder.createdAt).toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Cliente:</span> <span>{viewTicketOrder.customerName || '-'}</span></div>
+              <div className="flex justify-between"><span>DNI/RUC:</span> <span>{viewTicketOrder.customerRuc || '-'}</span></div>
+            </div>
+
+            <table className="w-full mb-3 text-[11px]">
+              <thead>
+                <tr className="border-b border-dashed border-slate-300">
+                  <th className="text-left py-1">CANT</th>
+                  <th className="text-left py-1">DESCRIPCIÓN</th>
+                  <th className="text-right py-1">IMPORTE</th>
+                </tr>
+              </thead>
+              <tbody>
+                {viewTicketOrder.items.map((item, i) => (
+                  <tr key={i}>
+                    <td className="py-1 align-top">{item.quantity} {item.presentationLabel.split(' ')[0]}</td>
+                    <td className="py-1 px-1 align-top break-words max-w-[120px]">{item.productName}</td>
+                    <td className="py-1 text-right align-top">S/ {item.subtotal.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="border-t border-dashed border-slate-300 pt-2 space-y-1">
+              <div className="flex justify-between font-bold">
+                <span>TOTAL:</span>
+                <span>S/ {viewTicketOrder.totalAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-emerald-600">
+                <span>ABONADO:</span>
+                <span>S/ {(viewTicketOrder.paidAmount || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-red-600 font-black text-sm pt-1">
+                <span>DEUDA ACTUAL:</span>
+                <span>S/ {(viewTicketOrder.debtAmount || 0).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-4 bg-slate-50 rounded-b-2xl">
+            <button
+              onClick={() => setViewTicketOrder(null)}
+              className="w-full py-2 bg-slate-900 text-white rounded-xl font-bold uppercase text-xs"
+            >
+              Cerrar Boleta
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   </div>
   );
 };

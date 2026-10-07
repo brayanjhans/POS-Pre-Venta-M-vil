@@ -40,7 +40,7 @@ export interface CartItem {
   deductedBaseUnits: number; // quantity * presentation.conversionFactor
 }
 
-export type OrderStatus = 'PENDIENTE_PAGO' | 'PAGADO' | 'CANCELADO';
+export type OrderStatus = 'PENDIENTE_PAGO' | 'PAGADO' | 'CANCELADO' | 'FIADO';
 
 export interface OrderItemRecord {
   productId: string;
@@ -72,6 +72,8 @@ export interface Order {
   qrPayload: string; // String codificado en el QR
   paidAt?: string;
   paymentMethod?: string;
+  paidAmount?: number;
+  debtAmount?: number;
 }
 
 export interface PromoBanner {
