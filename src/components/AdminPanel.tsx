@@ -86,6 +86,7 @@ export const AdminPanel: React.FC<Props> = ({
     packFactor: number;
     packPrice: number;
     isPromo: boolean;
+    expirationDate: string;
   }>({
     name: '',
     barcode: '',
@@ -100,6 +101,7 @@ export const AdminPanel: React.FC<Props> = ({
     packFactor: 24,
     packPrice: 20.00,
     isPromo: false,
+    expirationDate: '',
   });
 
   // Formulario de nueva promoción / combo
@@ -170,6 +172,7 @@ export const AdminPanel: React.FC<Props> = ({
       flavorNote: formData.flavorNote.trim(),
       piecesPerPack: Number(formData.packFactor) || 24,
       isPromo: formData.isPromo,
+      expirationDate: formData.expirationDate || undefined,
       presentations: {
         unit: {
           id: `pres_${timestamp}_u`,
@@ -221,6 +224,7 @@ export const AdminPanel: React.FC<Props> = ({
       packFactor: 24,
       packPrice: 20.00,
       isPromo: false,
+      expirationDate: '',
     });
   };
 
@@ -591,21 +595,27 @@ export const AdminPanel: React.FC<Props> = ({
               </div>
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                 <div className="text-slate-500 mb-1 flex items-center gap-2 text-xs font-bold uppercase"><Clock className="w-4 h-4 text-red-500"/> Vencimientos</div>
-                <div className="text-2xl font-black text-slate-900 font-mono">3</div>
+                <div className="text-2xl font-black text-slate-900 font-mono">
+                  {products.filter(p => {
+                    if (!p.expirationDate) return false;
+                    const days = (new Date(p.expirationDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24);
+                    return days <= 30;
+                  }).length}
+                </div>
                 <div className="text-[10px] text-red-600 font-bold mt-1">Vencen en &lt; 30 días</div>
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-                <h4 className="text-sm font-black text-slate-900 uppercase border-b border-slate-100 pb-2 mb-3">Últimas Ventas Emitidas</h4>
+                <h4 className="text-sm font-black text-slate-900 uppercase border-b border-slate-100 pb-2 mb-3">Últimas Ventas</h4>
                 {orders.slice(0, 3).length > 0 ? (
                   <div className="space-y-3">
                     {orders.slice(0, 3).map(o => (
                       <div key={o.id} className="flex justify-between items-center text-xs">
                         <div>
                           <div className="font-bold text-slate-900 font-mono">{o.id}</div>
-                          <div className="text-[10px] text-slate-500">{new Date(o.createdAt).toLocaleTimeString()} · {o.items.length} ítems</div>
+                          <div className="text-[10px] text-slate-500">{new Date(o.createdAt).toLocaleTimeString()}</div>
                         </div>
                         <div className="font-black text-emerald-700 font-mono">S/ {o.totalAmount.toFixed(2)}</div>
                       </div>
@@ -615,20 +625,43 @@ export const AdminPanel: React.FC<Props> = ({
                   <div className="text-xs text-slate-400 py-4 text-center">No hay ventas registradas hoy.</div>
                 )}
               </div>
+
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-                <h4 className="text-sm font-black text-slate-900 uppercase border-b border-slate-100 pb-2 mb-3">Alertas de Stock ({products.filter(p => p.stockInBaseUnits <= (p.minStockAlert || 50)).length})</h4>
+                <h4 className="text-sm font-black text-slate-900 uppercase border-b border-slate-100 pb-2 mb-3">Alertas Stock</h4>
                 <div className="space-y-3">
                   {products.filter(p => p.stockInBaseUnits <= (p.minStockAlert || 50)).slice(0, 3).map(p => (
                     <div key={p.id} className="flex justify-between items-center text-xs">
                       <div className="truncate max-w-[70%]">
                         <div className="font-bold text-slate-900 truncate">{p.name}</div>
-                        <div className="text-[10px] text-slate-500">Mínimo sugerido: {p.minStockAlert || 50}</div>
                       </div>
                       <div className="font-black text-amber-600 font-mono px-2 py-1 bg-amber-50 rounded">
-                        {p.stockInBaseUnits} {p.baseUnitName}s
+                        {p.stockInBaseUnits} u
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-red-500">
+                <h4 className="text-sm font-black text-slate-900 uppercase border-b border-slate-100 pb-2 mb-3">Próximos a Vencer</h4>
+                <div className="space-y-3">
+                  {products.filter(p => p.expirationDate).map(p => ({
+                    ...p, 
+                    daysToExpire: Math.ceil((new Date(p.expirationDate!).getTime() - new Date().getTime()) / (1000 * 3600 * 24))
+                  })).filter(p => p.daysToExpire <= 30).sort((a,b) => a.daysToExpire - b.daysToExpire).slice(0, 3).map(p => (
+                    <div key={p.id} className="flex justify-between items-center text-xs">
+                      <div className="truncate max-w-[65%]">
+                        <div className="font-bold text-slate-900 truncate">{p.name}</div>
+                        <div className="text-[10px] text-slate-500">{p.expirationDate}</div>
+                      </div>
+                      <div className={`font-black font-mono px-2 py-1 rounded ${p.daysToExpire < 0 ? 'bg-red-100 text-red-700' : p.daysToExpire <= 7 ? 'bg-orange-100 text-orange-700' : 'bg-yellow-50 text-yellow-700'}`}>
+                        {p.daysToExpire < 0 ? 'Expiró' : `${p.daysToExpire} d`}
+                      </div>
+                    </div>
+                  ))}
+                  {products.filter(p => p.expirationDate).length === 0 && (
+                    <div className="text-xs text-slate-400 py-4 text-center">Todo en orden.</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -681,6 +714,7 @@ export const AdminPanel: React.FC<Props> = ({
                     <th className="p-3">P. Medio</th>
                     <th className="p-3">P. Paquete</th>
                     <th className="p-3">Stock Base</th>
+                    <th className="p-3">Vencimiento</th>
                     <th className="p-3 text-right">Acciones</th>
                   </tr>
                 </thead>
@@ -714,6 +748,17 @@ export const AdminPanel: React.FC<Props> = ({
                       </td>
                       <td className="p-3 font-mono">
                         <strong className="text-slate-900">{p.stockInBaseUnits}</strong> {p.baseUnitName}s
+                      </td>
+                      <td className="p-3 font-mono text-slate-500">
+                        {p.expirationDate ? (
+                          <span className={
+                            Math.ceil((new Date(p.expirationDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)) <= 30
+                              ? 'text-red-600 font-bold bg-red-50 px-1 py-0.5 rounded'
+                              : ''
+                          }>
+                            {p.expirationDate}
+                          </span>
+                        ) : '-'}
                       </td>
                       <td className="p-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
@@ -850,6 +895,16 @@ export const AdminPanel: React.FC<Props> = ({
                   value={formData.stockInBaseUnits}
                   onChange={(e) => setFormData({ ...formData, stockInBaseUnits: parseInt(e.target.value) || 0 })}
                   className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Fecha de Vencimiento</label>
+                <input
+                  type="date"
+                  value={formData.expirationDate}
+                  onChange={(e) => setFormData({ ...formData, expirationDate: e.target.value })}
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono text-slate-900"
                 />
               </div>
 

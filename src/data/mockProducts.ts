@@ -21,6 +21,7 @@ export const INITIAL_PRODUCTS: ExtendedProduct[] = [
     baseUnitName: 'botellita',
     stockInBaseUnits: 120,
     minStockAlert: 24,
+    expirationDate: '2026-10-10', // Vence en 3 días (muy pronto)
     accentColor: '#db2777',
     gradientBg: 'from-pink-500/20 to-rose-600/10',
     packagingType: 'Display Caja',
@@ -44,6 +45,7 @@ export const INITIAL_PRODUCTS: ExtendedProduct[] = [
     baseUnitName: 'botella',
     stockInBaseUnits: 240,
     minStockAlert: 24,
+    expirationDate: '2026-10-25', // Vence en 18 días
     accentColor: '#16a34a',
     gradientBg: 'from-amber-400/20 to-yellow-500/10',
     packagingType: 'Botella Pet',
@@ -65,6 +67,7 @@ export const INITIAL_PRODUCTS: ExtendedProduct[] = [
     baseUnitName: 'botella',
     stockInBaseUnits: 300,
     minStockAlert: 36,
+    expirationDate: '2027-05-15', // Fecha lejana
     accentColor: '#dc2626',
     gradientBg: 'from-red-600/20 to-stone-900/10',
     packagingType: 'Botella Pet',

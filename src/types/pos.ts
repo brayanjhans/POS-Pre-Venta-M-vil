@@ -26,6 +26,7 @@ export interface Product {
   baseUnitName: string; // "unidad", "botella", "lata", "sobre"
   stockInBaseUnits: number; // Stock total expresado en unidades mínimas
   minStockAlert: number;
+  expirationDate?: string; // Fecha de vencimiento (YYYY-MM-DD)
   imageUrl?: string;
   presentations: Partial<Record<PresentationType, ProductPresentation>> & { unit: ProductPresentation };
 }
