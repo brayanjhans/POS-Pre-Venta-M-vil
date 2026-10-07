@@ -633,8 +633,26 @@ export const AdminPanel: React.FC<Props> = ({
                     <div key={p.id} className="flex justify-between items-center text-xs">
                       <div className="truncate max-w-[70%]">
                         <div className="font-bold text-slate-900 truncate">{p.name}</div>
+                        {p.stockInBaseUnits < 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cost = window.prompt(`Regularizar ${p.name}\nSe vendieron ${Math.abs(p.stockInBaseUnits)} ${p.baseUnitName}s en negativo.\n¿Cuánto costó comprarlos en la otra tienda? (S/)`);
+                              if (cost) {
+                                const costNum = parseFloat(cost);
+                                if (!isNaN(costNum)) {
+                                  alert(`Se regularizó la compra externa por S/ ${costNum.toFixed(2)}. Stock volvió a 0.`);
+                                  onUpdateProduct({ ...p, stockInBaseUnits: 0 });
+                                }
+                              }
+                            }}
+                            className="text-[9px] mt-0.5 text-blue-600 font-bold hover:underline"
+                          >
+                            Regularizar Compra
+                          </button>
+                        )}
                       </div>
-                      <div className="font-black text-amber-600 font-mono px-2 py-1 bg-amber-50 rounded">
+                      <div className={`font-black font-mono px-2 py-1 rounded ${p.stockInBaseUnits < 0 ? 'bg-red-100 text-red-700' : 'bg-amber-50 text-amber-600'}`}>
                         {p.stockInBaseUnits} u
                       </div>
                     </div>

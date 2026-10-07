@@ -105,7 +105,7 @@ export default function App() {
         return prevProducts.map(prod => {
           const itemInOrder = order.items.find(i => i.productId === prod.id);
           if (itemInOrder) {
-            const newStock = Math.max(0, prod.stockInBaseUnits - itemInOrder.baseUnitsDeducted);
+            const newStock = prod.stockInBaseUnits - itemInOrder.baseUnitsDeducted;
             return { ...prod, stockInBaseUnits: newStock };
           }
           return prod;
@@ -141,7 +141,7 @@ export default function App() {
       return prevProducts.map(prod => {
         const itemInOrder = targetOrder.items.find(i => i.productId === prod.id);
         if (itemInOrder) {
-          const newStock = Math.max(0, prod.stockInBaseUnits - itemInOrder.baseUnitsDeducted);
+          const newStock = prod.stockInBaseUnits - itemInOrder.baseUnitsDeducted;
           return {
             ...prod,
             stockInBaseUnits: newStock,

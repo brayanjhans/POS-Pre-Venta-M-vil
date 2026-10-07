@@ -255,9 +255,11 @@ export const BottomSheetPresentation: React.FC<Props> = ({
           </div>
 
           {!isStockSufficient && (
-            <div className="mt-3 p-2.5 rounded-xl bg-red-50 border border-red-300 text-red-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
-              <span>Stock insuficiente: Se requieren {requiredBaseUnits} y sólo hay {product.stockInBaseUnits} {product.baseUnitName}s.</span>
+            <div className="mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-[11px] flex items-center gap-2 font-medium">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+              <span>
+                <strong>⚠️ Venta sin Stock:</strong> Solo hay {product.stockInBaseUnits} {product.baseUnitName}s. Se descontará en negativo y requerirá compra a terceros.
+              </span>
             </div>
           )}
         </div>
@@ -273,12 +275,12 @@ export const BottomSheetPresentation: React.FC<Props> = ({
 
           <button
             type="button"
-            disabled={!isStockSufficient}
+            disabled={false}
             onClick={handleConfirm}
             className={`flex-1 py-3.5 px-4 rounded-xl font-black flex items-center justify-center gap-2 text-sm uppercase tracking-wider transition-all shadow-md ${
               isStockSufficient
                 ? 'bg-[#16a34a] hover:bg-[#15803d] text-white active:scale-98 shadow-emerald-700/20 cursor-pointer'
-                : 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                : 'bg-amber-500 hover:bg-amber-600 text-white active:scale-98 shadow-amber-700/20 cursor-pointer'
             }`}
           >
             <Check className="w-5 h-5 stroke-[2.5]" />
