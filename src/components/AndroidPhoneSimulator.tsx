@@ -89,9 +89,9 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
 
   // Cliente, Ruta y Condiciones de Preventa
   const [selectedCustomer, setSelectedCustomer] = React.useState<{ name: string; ruc?: string; route: string }>({
-    name: 'Bodega San Martín',
-    ruc: '10458921821',
-    route: 'Ruta 1 - Centro',
+    name: '',
+    ruc: '',
+    route: 'Venta Directa',
   });
   const [paymentTerm, setPaymentTerm] = React.useState<'Contado' | 'Crédito 7 días' | 'Crédito 15 días'>('Contado');
   const [discountPercent, setDiscountPercent] = React.useState<number>(0);
@@ -1019,20 +1019,13 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                     </span>
                   </div>
 
-                  <select
+                  <input
+                    type="text"
+                    placeholder="Ingresa el nombre del cliente..."
                     value={selectedCustomer.name}
-                    onChange={(e) => {
-                      const found = customersList.find(c => c.name === e.target.value);
-                      if (found) setSelectedCustomer(found);
-                    }}
-                    className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-900 focus:outline-hidden focus:border-[#16a34a]"
-                  >
-                    {customersList.map((c) => (
-                      <option key={c.name} value={c.name}>
-                        {c.name} {c.ruc ? `(RUC ${c.ruc})` : ''}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(e) => setSelectedCustomer({ ...selectedCustomer, name: e.target.value })}
+                    className="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-bold text-slate-900 focus:outline-hidden focus:border-[#16a34a]"
+                  />
 
                   {/* Condición de Pago & Descuento en 2 columnas */}
                   <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
