@@ -126,6 +126,12 @@ export const AdminPanel: React.FC<Props> = ({
     savingText: '¡Ahorras S/ 0.00!',
     associatedBarcodes: '',
   });
+  const [restockProduct, setRestockProduct] = React.useState<ExtendedProduct | null>(null);
+  const [restockData, setRestockData] = React.useState({
+    addedQuantity: 0,
+    newExpirationDate: '',
+    unitPrice: 0,
+  });
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -783,15 +789,17 @@ export const AdminPanel: React.FC<Props> = ({
                           <button
                             type="button"
                             onClick={() => {
-                              const newStock = prompt(`Ajustar stock en unidades base para ${p.name}:`, String(p.stockInBaseUnits));
-                              if (newStock !== null && !isNaN(Number(newStock))) {
-                                onUpdateProduct({ ...p, stockInBaseUnits: Math.max(0, parseInt(newStock)) });
-                              }
+                              setRestockProduct(p);
+                              setRestockData({
+                                addedQuantity: 0,
+                                newExpirationDate: p.expirationDate || '',
+                                unitPrice: p.presentations.unit.price
+                              });
                             }}
-                            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs"
-                            title="Ajustar Stock"
+                            className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs"
+                            title="Ingreso Rápido (Reabastecer)"
                           >
-                            <Edit3 className="w-3.5 h-3.5" />
+                            <Plus className="w-3.5 h-3.5 stroke-[3]" />
                           </button>
                           <button
                             type="button"
@@ -1504,6 +1512,100 @@ export const AdminPanel: React.FC<Props> = ({
         </div>
       </div>
     )}
+
+      {/* MODAL DE INGRESO RÁPIDO (REABASTECER) */}
+      {restockProduct && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="bg-[#10b981] p-4 text-white">
+              <h3 className="font-black uppercase text-sm flex items-center gap-2">
+                <Package className="w-4 h-4" />
+                Ingreso Rápido
+              </h3>
+              <p className="text-emerald-100 text-xs mt-1 truncate">{restockProduct.name}</p>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const currentStock = isNaN(restockProduct.stockInBaseUnits) ? 0 : restockProduct.stockInBaseUnits;
+                const newTotalStock = (currentStock < 0 ? 0 : currentStock) + restockData.addedQuantity;
+                onUpdateProduct({
+                  ...restockProduct,
+                  stockInBaseUnits: newTotalStock,
+                  expirationDate: restockData.newExpirationDate || undefined,
+                  presentations: {
+                    ...restockProduct.presentations,
+                    unit: { ...restockProduct.presentations.unit, price: restockData.unitPrice }
+                  }
+                });
+                setRestockProduct(null);
+                alert('¡Stock ingresado correctamente!');
+              }}
+              className="p-5 space-y-4 text-left"
+            >
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Cantidad a ingresar (en {restockProduct.baseUnitName}s)
+                </label>
+                <input
+                  required
+                  type="number"
+                  min="1"
+                  value={restockData.addedQuantity || ''}
+                  onChange={(e) => setRestockData({ ...restockData, addedQuantity: parseInt(e.target.value) || 0 })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono font-black text-slate-900 focus:outline-hidden focus:border-[#10b981]"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Nueva Fecha de Venc.
+                </label>
+                <input
+                  type="date"
+                  value={restockData.newExpirationDate}
+                  onChange={(e) => setRestockData({ ...restockData, newExpirationDate: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono text-slate-900 focus:outline-hidden focus:border-[#10b981]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Precio de Venta (Unidad)
+                </label>
+                <input
+                  required
+                  type="number"
+                  step="0.10"
+                  min="0"
+                  value={restockData.unitPrice}
+                  onChange={(e) => setRestockData({ ...restockData, unitPrice: parseFloat(e.target.value) || 0 })}
+                  className="w-full bg-slate-50 border border-emerald-300 rounded-xl px-3 py-2 text-sm font-mono font-black text-emerald-800 focus:outline-hidden focus:border-[#10b981]"
+                />
+                <p className="text-[10px] text-slate-400 mt-1 leading-tight">Este precio se actualizará para todo el stock acumulado.</p>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRestockProduct(null)}
+                  className="flex-1 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-[#10b981] hover:bg-[#059669] text-white font-black text-xs uppercase rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
   </div>
   );
 };
