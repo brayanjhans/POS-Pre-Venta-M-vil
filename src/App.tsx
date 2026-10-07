@@ -98,6 +98,20 @@ export default function App() {
 
   const handleOrderCreated = (order: Order) => {
     setOrders(prev => [order, ...prev]);
+    
+    // Si la orden ya se creó como PAGADO o FIADO (salta la caja), deducir inventario
+    if (order.status === 'PAGADO' || order.status === 'FIADO') {
+      setProducts(prevProducts => {
+        return prevProducts.map(prod => {
+          const itemInOrder = order.items.find(i => i.productId === prod.id);
+          if (itemInOrder) {
+            const newStock = Math.max(0, prod.stockInBaseUnits - itemInOrder.baseUnitsDeducted);
+            return { ...prod, stockInBaseUnits: newStock };
+          }
+          return prod;
+        });
+      });
+    }
   };
 
   const handleOrderPaid = (orderId: string, paymentMethod: string, paidAmount?: number, debtAmount?: number) => {

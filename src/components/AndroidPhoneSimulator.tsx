@@ -93,7 +93,7 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
     ruc: '',
     route: 'Venta Directa',
   });
-  const [paymentTerm, setPaymentTerm] = React.useState<'Contado' | 'Crédito 7 días' | 'Crédito 15 días'>('Contado');
+  const [paymentTerm, setPaymentTerm] = React.useState<'Contado' | 'Fiado (Libreta)' | 'Crédito 7 días' | 'Crédito 15 días'>('Contado');
   const [discountPercent, setDiscountPercent] = React.useState<number>(0);
 
   // Ref para mantener la versión más reciente de handleScanBarcode sin recrear el listener del escáner
@@ -311,7 +311,9 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
       customerRuc: selectedCustomer.ruc,
       paymentTerm,
       discountAmount,
-      status: 'PENDIENTE_PAGO',
+      status: paymentTerm === 'Fiado (Libreta)' ? 'FIADO' : (paymentTerm === 'Contado' ? 'PAGADO' : 'PENDIENTE_PAGO'),
+      paidAmount: paymentTerm === 'Contado' ? totalAmount : 0,
+      debtAmount: paymentTerm === 'Contado' ? 0 : totalAmount,
       items: cart.map(i => ({
         productId: i.product.id,
         productName: i.product.name,
@@ -1082,6 +1084,7 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                         className="w-full bg-white border border-slate-300 rounded-lg p-1 text-[11px] font-bold text-slate-800"
                       >
                         <option value="Contado">Contado</option>
+                        <option value="Fiado (Libreta)">Fiado (Libreta)</option>
                         <option value="Crédito 7 días">Crédito 7 días</option>
                         <option value="Crédito 15 días">Crédito 15 días</option>
                       </select>

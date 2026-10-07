@@ -66,7 +66,7 @@ export interface Order {
   totalBaseUnits: number;
   customerName?: string;
   customerRuc?: string;
-  paymentTerm?: 'Contado' | 'Crédito 7 días' | 'Crédito 15 días';
+  paymentTerm?: 'Contado' | 'Fiado (Libreta)' | 'Crédito 7 días' | 'Crédito 15 días';
   discountAmount?: number;
   notes?: string;
   syncStatus: 'synced' | 'pending_sync' | 'error';
