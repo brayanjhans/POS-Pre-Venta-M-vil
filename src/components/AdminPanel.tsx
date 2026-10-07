@@ -129,6 +129,7 @@ export const AdminPanel: React.FC<Props> = ({
   const [restockProduct, setRestockProduct] = React.useState<ExtendedProduct | null>(null);
   const [restockData, setRestockData] = React.useState({
     addedQuantity: 0,
+    presentationKey: 'unit' as PresentationType,
     newExpirationDate: '',
     unitPrice: 0,
   });
@@ -792,6 +793,7 @@ export const AdminPanel: React.FC<Props> = ({
                               setRestockProduct(p);
                               setRestockData({
                                 addedQuantity: 0,
+                                presentationKey: 'unit',
                                 newExpirationDate: p.expirationDate || '',
                                 unitPrice: p.presentations.unit.price
                               });
@@ -1528,7 +1530,9 @@ export const AdminPanel: React.FC<Props> = ({
               onSubmit={(e) => {
                 e.preventDefault();
                 const currentStock = isNaN(restockProduct.stockInBaseUnits) ? 0 : restockProduct.stockInBaseUnits;
-                const newTotalStock = (currentStock < 0 ? 0 : currentStock) + restockData.addedQuantity;
+                const conversionFactor = restockProduct.presentations[restockData.presentationKey]?.conversionFactor || 1;
+                const totalAddedBaseUnits = restockData.addedQuantity * conversionFactor;
+                const newTotalStock = (currentStock < 0 ? 0 : currentStock) + totalAddedBaseUnits;
                 onUpdateProduct({
                   ...restockProduct,
                   stockInBaseUnits: newTotalStock,
@@ -1539,23 +1543,46 @@ export const AdminPanel: React.FC<Props> = ({
                   }
                 });
                 setRestockProduct(null);
-                alert('¡Stock ingresado correctamente!');
+                alert(`¡Se sumaron ${totalAddedBaseUnits} unidades base correctamente!`);
               }}
               className="p-5 space-y-4 text-left"
             >
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Cantidad a ingresar (en {restockProduct.baseUnitName}s)
-                </label>
-                <input
-                  required
-                  type="number"
-                  min="1"
-                  value={restockData.addedQuantity || ''}
-                  onChange={(e) => setRestockData({ ...restockData, addedQuantity: parseInt(e.target.value) || 0 })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono font-black text-slate-900 focus:outline-hidden focus:border-[#10b981]"
-                  autoFocus
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Cantidad a ingresar
+                  </label>
+                  <input
+                    required
+                    type="number"
+                    min="1"
+                    value={restockData.addedQuantity || ''}
+                    onChange={(e) => setRestockData({ ...restockData, addedQuantity: parseInt(e.target.value) || 0 })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono font-black text-slate-900 focus:outline-hidden focus:border-[#10b981]"
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Formato
+                  </label>
+                  <select
+                    value={restockData.presentationKey}
+                    onChange={(e) => setRestockData({ ...restockData, presentationKey: e.target.value as PresentationType })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-hidden focus:border-[#10b981]"
+                  >
+                    <option value="unit">Unidades</option>
+                    {restockProduct.presentations.quarter && (
+                      <option value="quarter">Cuartos (x{restockProduct.presentations.quarter.conversionFactor})</option>
+                    )}
+                    {restockProduct.presentations.half && (
+                      <option value="half">Medios/Tiras (x{restockProduct.presentations.half.conversionFactor})</option>
+                    )}
+                    {restockProduct.presentations.pack && (
+                      <option value="pack">Fardos/Paquetes (x{restockProduct.presentations.pack.conversionFactor})</option>
+                    )}
+                  </select>
+                </div>
               </div>
 
               <div>
