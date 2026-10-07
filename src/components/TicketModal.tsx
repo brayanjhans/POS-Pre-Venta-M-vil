@@ -16,9 +16,10 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onGoToCashier?: (orderId: string) => void;
+  onEditOrder?: (order: Order) => void;
 }
 
-export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onGoToCashier }) => {
+export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onGoToCashier, onEditOrder }) => {
   const [paperWidth, setPaperWidth] = React.useState<'58mm' | '80mm'>('58mm');
   const [qrDataUrl, setQrDataUrl] = React.useState<string>('');
   const [copiedText, setCopiedText] = React.useState(false);
@@ -330,6 +331,20 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onGoToCas
               {copiedText ? 'Copiado' : 'Copiar'}
             </button>
           </div>
+
+          {onEditOrder && (
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm('⚠️ ¿Estás seguro de modificar este ticket?\nEl ticket actual se ANULARÁ permanentemente y los productos volverán a tu carrito para que agregues más. Luego deberás emitir un NUEVO ticket.')) {
+                  onEditOrder(order);
+                }
+              }}
+              className="w-full mt-2.5 py-3 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-[11px] font-black uppercase tracking-wider rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              <span>✏️</span> Modificar / Añadir Productos
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -114,6 +114,15 @@ export default function App() {
     }
   };
 
+  const handleCancelOrder = (orderId: string) => {
+    setOrders(prev => prev.map(o => {
+      if (o.id === orderId) {
+        return { ...o, status: 'CANCELADO' };
+      }
+      return o;
+    }));
+  };
+
   const handleOrderPaid = (orderId: string, paymentMethod: string, paidAmount?: number, debtAmount?: number) => {
     // Buscar la orden para descontar inventario
     const targetOrder = orders.find(o => o.id === orderId);
@@ -178,6 +187,7 @@ export default function App() {
           promos={promos}
           orders={orders}
           onOrderCreated={handleOrderCreated}
+          onCancelOrder={handleCancelOrder}
           onOpenAdmin={() => setActiveTab('admin')}
           onGoToCashier={(orderId) => setActiveTab('cashier')}
         />

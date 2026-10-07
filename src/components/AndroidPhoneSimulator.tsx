@@ -48,6 +48,7 @@ interface Props {
   promos?: PromoBanner[];
   orders?: Order[];
   onOrderCreated?: (order: Order) => void;
+  onCancelOrder?: (orderId: string) => void;
   onOpenAdmin?: () => void;
   onGoToCashier?: (orderId: string) => void;
 }
@@ -57,6 +58,7 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
   promos = [],
   orders = [],
   onOrderCreated,
+  onCancelOrder,
   onOpenAdmin,
   onGoToCashier
 }) => {
@@ -378,6 +380,37 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
     if (onOrderCreated) {
       onOrderCreated(order);
     }
+  };
+
+  const handleEditOrder = (order: Order) => {
+    const newCart: CartItem[] = [];
+    order.items.forEach(item => {
+      const product = products.find(p => p.id === item.productId);
+      if (product) {
+        newCart.push({
+          cartItemId: crypto.randomUUID(),
+          product: product,
+          selectedPresentation: item.presentationType,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          subtotal: item.subtotal,
+          deductedBaseUnits: item.baseUnitsDeducted
+        });
+      }
+    });
+
+    setCart(newCart);
+    if (order.paymentTerm) setPaymentTerm(order.paymentTerm);
+    setSelectedCustomer({ name: order.customerName || '', ruc: order.customerRuc || '', route: 'Venta Directa' });
+    setReturnedContainers(order.returnedContainers || 0);
+
+    if (onCancelOrder) {
+      onCancelOrder(order.id);
+    }
+
+    setIsTicketModalOpen(false);
+    setIsOrderHistoryOpen(false);
+    setIsCartDrawerOpen(true);
   };
 
   // Filtrado de cientos de productos
@@ -1236,6 +1269,7 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
           isOpen={isTicketModalOpen}
           onClose={() => setIsTicketModalOpen(false)}
           onGoToCashier={onGoToCashier}
+          onEditOrder={handleEditOrder}
         />
 
         {/* ========================================================================= */}
