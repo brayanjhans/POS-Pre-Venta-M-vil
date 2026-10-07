@@ -395,26 +395,16 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* Botón CAJA S/ 0.00 */}
+            {/* Botón VENTAS S/ 0.00 (Historial de Pre-ventas) */}
             <button
               type="button"
               onClick={() => setIsOrderHistoryOpen(true)}
               className="px-3 py-1 bg-[#064e3b] hover:bg-[#022c22] rounded-xl flex items-center gap-1.5 transition border border-[#047857]"
             >
-              <div className="text-[10px] font-black uppercase leading-tight text-emerald-100">CAJA<br/>
-                <span className="text-white text-xs">S/ 0.00</span>
+              <div className="text-[10px] font-black uppercase leading-tight text-emerald-100 text-right">MIS VENTAS<br/>
+                <span className="text-white text-xs">S/ {orders.filter(o => o.status !== 'CANCELADO').reduce((acc, o) => acc + o.totalAmount, 0).toFixed(2)}</span>
               </div>
             </button>
-            
-            {onOpenAdmin && (
-              <button
-                type="button"
-                onClick={onOpenAdmin}
-                className="p-1.5 bg-black/25 hover:bg-black/40 text-white rounded-lg transition border border-white/20 cursor-pointer"
-              >
-                <Lock className="w-4 h-4 text-amber-300" />
-              </button>
-            )}
           </div>
         </div>
 
@@ -505,6 +495,25 @@ export const AndroidPhoneSimulator: React.FC<Props> = ({
                   </button>
 
                   <div className="my-2 border-t border-slate-200" />
+
+                  {onGoToCashier && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDrawerOpen(false);
+                        onGoToCashier('');
+                      }}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800 transition mb-2"
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <Monitor className="w-4 h-4 text-emerald-100" />
+                        <span>Caja Principal de Cobro</span>
+                      </span>
+                      <span className="text-[10px] bg-emerald-900 text-emerald-100 px-1.5 py-0.2 rounded font-black uppercase">
+                        ABRIR
+                      </span>
+                    </button>
+                  )}
 
                   <button
                     type="button"

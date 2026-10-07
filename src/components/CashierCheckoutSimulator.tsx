@@ -8,7 +8,11 @@ import {
   CreditCard, 
   Smartphone, 
   CheckCircle2, 
-  Clock
+  Clock,
+  Search,
+  Printer,
+  Receipt,
+  Coins
 } from 'lucide-react';
 
 interface Props {
@@ -26,12 +30,21 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
 }) => {
   const [scannedCode, setScannedCode] = React.useState<string>('');
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
-  const [paymentMethod, setPaymentMethod] = React.useState<'Efectivo' | 'Yape' | 'Tarjeta'>('Efectivo');
+  const [paymentMethod, setPaymentMethod] = React.useState<'Efectivo' | 'Yape' | 'Tarjeta' | 'Mixto'>('Efectivo');
   const [cashGiven, setCashGiven] = React.useState<string>('50');
+  const [mixedAmounts, setMixedAmounts] = React.useState({ efectivo: 0, yape: 0, tarjeta: 0 });
   const [checkoutComplete, setCheckoutComplete] = React.useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = React.useState<string>('');
+  const [queueTab, setQueueTab] = React.useState<'PENDIENTE' | 'PAGADO'>('PENDIENTE');
 
   const pendingOrders = orders.filter(o => o.status === 'PENDIENTE_PAGO');
   const paidOrders = orders.filter(o => o.status === 'PAGADO');
+
+  const currentList = queueTab === 'PENDIENTE' ? pendingOrders : paidOrders;
+  const filteredList = currentList.filter(o => 
+    o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (o.customerName || '').toLowerCase().includes(searchTerm.toLowerCase())
+  ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // Buscar orden por ID o código escaneado del QR
   const handleScanOrSubmit = (e: React.FormEvent) => {
@@ -43,7 +56,7 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
       playBarcodeBeep();
       setSelectedOrder(found);
       setScannedCode('');
-      setCheckoutComplete(false);
+      setCheckoutComplete(found.status === 'PAGADO');
       if (paymentMethod === 'Efectivo') {
         const nextRounded = Math.ceil(found.totalAmount / 10) * 10;
         setCashGiven(String(Math.max(found.totalAmount, nextRounded)));
@@ -56,14 +69,23 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
   const handleSelectOrder = (order: Order) => {
     playBarcodeBeep();
     setSelectedOrder(order);
-    setCheckoutComplete(false);
+    setCheckoutComplete(order.status === 'PAGADO');
     const nextRounded = Math.ceil(order.totalAmount / 10) * 10;
     setCashGiven(String(Math.max(order.totalAmount, nextRounded)));
+    setMixedAmounts({ efectivo: order.totalAmount, yape: 0, tarjeta: 0 });
   };
 
   const cashGivenNum = parseFloat(cashGiven) || 0;
-  const changeDue = selectedOrder ? Math.max(0, cashGivenNum - selectedOrder.totalAmount) : 0;
-  const isCashSufficient = selectedOrder ? cashGivenNum >= selectedOrder.totalAmount : true;
+  
+  // Para pago mixto:
+  const mixedTotal = mixedAmounts.efectivo + mixedAmounts.yape + mixedAmounts.tarjeta;
+  const changeDue = paymentMethod === 'Mixto' 
+    ? Math.max(0, mixedTotal - (selectedOrder?.totalAmount || 0))
+    : (selectedOrder ? Math.max(0, cashGivenNum - selectedOrder.totalAmount) : 0);
+    
+  const isCashSufficient = paymentMethod === 'Mixto' 
+    ? mixedTotal >= (selectedOrder?.totalAmount || 0)
+    : (selectedOrder ? cashGivenNum >= selectedOrder.totalAmount : true);
 
   const handleExecuteCheckout = () => {
     if (!selectedOrder) return;
@@ -71,18 +93,22 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
       alert('Este pedido ya fue pagado previamente.');
       return;
     }
-    if (paymentMethod === 'Efectivo' && !isCashSufficient) {
-      alert('El monto en efectivo entregado es menor al total a pagar.');
+    if ((paymentMethod === 'Efectivo' || paymentMethod === 'Mixto') && !isCashSufficient) {
+      alert('El monto ingresado es menor al total a pagar.');
       return;
     }
 
     playSuccessChime();
-    onOrderPaid(selectedOrder.id, paymentMethod);
+    const finalMethod = paymentMethod === 'Mixto' 
+      ? `Mixto (Ef: ${mixedAmounts.efectivo}, Yp: ${mixedAmounts.yape}, Tj: ${mixedAmounts.tarjeta})` 
+      : paymentMethod;
+    onOrderPaid(selectedOrder.id, finalMethod);
     setCheckoutComplete(true);
   };
 
   return (
-    <div className="w-full max-w-5xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in text-slate-800">
+    <div className="w-full h-full overflow-y-auto bg-slate-50 md:p-6 animate-in fade-in text-slate-800 flex justify-center">
+      <div className="w-full h-max max-w-5xl bg-white md:rounded-3xl border-0 md:border border-slate-200 md:shadow-2xl overflow-hidden flex flex-col">
       {/* Header Caja Mostrador */}
       <div className="bg-[#15803d] text-white p-5 md:p-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -143,26 +169,58 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
             </p>
           </div>
 
-          {/* Lista de Pre-Ventas Pendientes en Espera de Pago */}
+          {/* Lista de Pre-Ventas y Pestañas */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-black text-slate-700 uppercase">
-                Pedidos en Cola de Cobro ({pendingOrders.length})
-              </span>
-              <span className="text-[10px] text-amber-700 font-bold bg-amber-100 px-2 py-0.5 rounded-full">
-                Pendientes de Pago
-              </span>
+            <div className="flex bg-slate-200 p-1 rounded-xl mb-3">
+              <button
+                type="button"
+                onClick={() => setQueueTab('PENDIENTE')}
+                className={`flex-1 py-1.5 text-[11px] font-black uppercase rounded-lg transition ${
+                  queueTab === 'PENDIENTE' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Por Cobrar ({pendingOrders.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setQueueTab('PAGADO')}
+                className={`flex-1 py-1.5 text-[11px] font-black uppercase rounded-lg transition ${
+                  queueTab === 'PAGADO' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Historial ({paidOrders.length})
+              </button>
             </div>
 
-            {pendingOrders.length === 0 ? (
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="font-black text-slate-700 uppercase">
+                {queueTab === 'PENDIENTE' ? 'Pedidos en Cola' : 'Tickets Completados'} ({filteredList.length})
+              </span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${queueTab === 'PENDIENTE' ? 'text-amber-700 bg-amber-100' : 'text-emerald-700 bg-emerald-100'}`}>
+                {queueTab === 'PENDIENTE' ? 'Pendientes de Pago' : 'Ya Pagados'}
+              </span>
+            </div>
+            
+            {/* Buscador de Clientes / Pedidos */}
+            <div className="relative mb-3">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <input 
+                type="text"
+                placeholder="Buscar por cliente o código de pedido..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs focus:border-[#16a34a] focus:outline-hidden"
+              />
+            </div>
+
+            {filteredList.length === 0 ? (
               <div className="p-6 bg-white rounded-2xl border border-slate-200 text-center text-slate-400 space-y-2">
                 <Clock className="w-8 h-8 mx-auto text-slate-300" />
-                <p className="font-bold text-xs">No hay tickets pendientes en caja</p>
-                <p className="text-[11px]">Genera una pre-venta desde la terminal móvil para probar el cobro en mostrador.</p>
+                <p className="font-bold text-xs">No hay tickets {queueTab === 'PENDIENTE' ? 'pendientes' : 'pagados'}</p>
               </div>
             ) : (
               <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
-                {pendingOrders.map((ord) => (
+                {filteredList.map((ord) => (
                   <div
                     key={ord.id}
                     onClick={() => handleSelectOrder(ord)}
@@ -179,7 +237,13 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
                           {ord.status}
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">
+                      <div className="text-[11px] font-bold text-slate-700 mt-1 flex items-center justify-between gap-2">
+                        <span className="truncate">{ord.customerName || 'Cliente Genérico'}</span>
+                        <span className="text-[9px] font-mono font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
+                          {new Date(ord.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">
                         {ord.sellerName} · {ord.items.length} productos ({ord.totalBaseUnits} unds)
                       </div>
                     </div>
@@ -188,7 +252,9 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
                       <div className="text-base font-black font-mono text-slate-900">
                         S/ {ord.totalAmount.toFixed(2)}
                       </div>
-                      <span className="text-[10px] font-bold text-emerald-700">Cobrar ➔</span>
+                      <span className={`text-[10px] font-bold ${ord.status === 'PAGADO' ? 'text-blue-600' : 'text-emerald-700'}`}>
+                        {ord.status === 'PAGADO' ? 'Ver Boleta ➔' : 'Cobrar ➔'}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -250,12 +316,54 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
                   <p className="text-xs text-emerald-800 max-w-md mx-auto">
                     El pedido <strong className="font-mono">{selectedOrder.id}</strong> pasó a estado <strong className="font-mono">PAGADO</strong>. Se descontaron automáticamente <strong>{selectedOrder.totalBaseUnits} unidades base</strong> del almacén central.
                   </p>
-                  <div className="pt-2 flex justify-center gap-3">
+                  <div className="pt-2 flex flex-col md:flex-row justify-center gap-3">
                     <button
                       type="button"
-                      onClick={() => alert(`Imprimiendo comprobante fiscal final para pedido ${selectedOrder.id}...`)}
-                      className="px-4 py-2 bg-[#16a34a] text-white font-bold text-xs uppercase rounded-xl shadow-xs"
+                      onClick={() => {
+                        const printWindow = window.open('', '_blank');
+                        if (printWindow) {
+                          printWindow.document.write(`
+                            <html><head><title>Boleta de Venta - ${selectedOrder.id}</title>
+                            <style>
+                              body { font-family: monospace; width: 300px; margin: 0 auto; padding: 20px; color: black; }
+                              h2, h3 { text-align: center; margin: 5px 0; }
+                              table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                              th, td { text-align: left; padding: 4px 0; border-bottom: 1px dashed #ccc; font-size: 12px; }
+                              .right { text-align: right; }
+                              .total { font-weight: bold; font-size: 14px; }
+                            </style>
+                            </head><body>
+                              <h2>DULCES & BEBIDAS</h2>
+                              <h3>RUC: 20123456789</h3>
+                              <p style="text-align:center; font-size: 12px;">Comprobante de Pago Electrónico<br>Ticket: ${selectedOrder.id}</p>
+                              <hr style="border: 1px dashed black;" />
+                              <p style="font-size: 12px;">
+                                Cliente: ${selectedOrder.customerName || 'Cliente Genérico'}<br>
+                                Fecha: ${new Date().toLocaleString()}<br>
+                                Pago: ${paymentMethod}
+                              </p>
+                              <table>
+                                <tr><th>Cant</th><th>Descripción</th><th class="right">Importe</th></tr>
+                                ${selectedOrder.items.map(item => `
+                                  <tr>
+                                    <td>${item.quantity}</td>
+                                    <td>${item.productName.substring(0, 15)}...</td>
+                                    <td class="right">S/ ${item.subtotal.toFixed(2)}</td>
+                                  </tr>
+                                `).join('')}
+                              </table>
+                              <p class="right total">TOTAL: S/ ${selectedOrder.totalAmount.toFixed(2)}</p>
+                              <hr style="border: 1px dashed black;" />
+                              <p style="text-align:center; font-size: 11px;">¡Gracias por su compra!</p>
+                            </body></html>
+                          `);
+                          printWindow.document.close();
+                          printWindow.print();
+                        }
+                      }}
+                      className="px-4 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white font-bold text-xs uppercase rounded-xl shadow-md flex items-center justify-center gap-2 transition"
                     >
+                      <Printer className="w-4 h-4" />
                       Imprimir Boleta / Factura
                     </button>
                     <button
@@ -275,11 +383,12 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
                     <label className="text-xs font-black text-slate-700 uppercase tracking-wide block mb-2">
                       Seleccionar Medio de Pago
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       {[
                         { id: 'Efectivo', icon: <DollarSign className="w-4 h-4" />, label: 'Efectivo' },
                         { id: 'Yape', icon: <Smartphone className="w-4 h-4" />, label: 'Yape / Plin' },
                         { id: 'Tarjeta', icon: <CreditCard className="w-4 h-4" />, label: 'Tarjeta' },
+                        { id: 'Mixto', icon: <Coins className="w-4 h-4" />, label: 'Mixto' },
                       ].map(m => (
                         <button
                           key={m.id}
@@ -329,7 +438,14 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
                       </div>
 
                       {/* Botones de billetes rápidos */}
-                      <div className="flex gap-2 pt-1">
+                      <div className="flex gap-2 pt-1 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => setCashGiven(String(selectedOrder.totalAmount))}
+                          className="px-2.5 py-1 bg-[#16a34a] text-white border border-[#16a34a] rounded-lg text-xs font-bold font-mono shadow-sm"
+                        >
+                          Exacto
+                        </button>
                         {[20, 50, 100, 200].map(bill => (
                           <button
                             key={bill}
@@ -344,13 +460,44 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
                     </div>
                   )}
 
+                  {/* Cálculo Pago Mixto */}
+                  {paymentMethod === 'Mixto' && (
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">Efectivo S/</label>
+                          <input type="number" value={mixedAmounts.efectivo} onChange={(e) => setMixedAmounts({...mixedAmounts, efectivo: parseFloat(e.target.value) || 0})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:border-[#16a34a] focus:outline-hidden" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">Yape/Plin S/</label>
+                          <input type="number" value={mixedAmounts.yape} onChange={(e) => setMixedAmounts({...mixedAmounts, yape: parseFloat(e.target.value) || 0})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:border-[#16a34a] focus:outline-hidden" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">Tarjeta S/</label>
+                          <input type="number" value={mixedAmounts.tarjeta} onChange={(e) => setMixedAmounts({...mixedAmounts, tarjeta: parseFloat(e.target.value) || 0})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:border-[#16a34a] focus:outline-hidden" />
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+                        <span className="text-[11px] font-bold text-slate-600 uppercase">Suma Ingresada: S/ {mixedTotal.toFixed(2)}</span>
+                        <div className={`text-sm font-black font-mono py-1 px-3 rounded-lg border ${
+                          isCashSufficient
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            : 'bg-red-50 text-red-700 border-red-200'
+                        }`}>
+                          {changeDue > 0 ? `Vuelto: S/ ${changeDue.toFixed(2)}` : (mixedTotal < selectedOrder.totalAmount ? `Falta: S/ ${(selectedOrder.totalAmount - mixedTotal).toFixed(2)}` : 'Suma Exacta')}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Botón de Ejecución del Cobro */}
                   <button
                     type="button"
-                    disabled={paymentMethod === 'Efectivo' && !isCashSufficient}
+                    disabled={!isCashSufficient}
                     onClick={handleExecuteCheckout}
                     className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-98 ${
-                      paymentMethod === 'Efectivo' && !isCashSufficient
+                      !isCashSufficient
                         ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                         : 'bg-[#16a34a] hover:bg-[#15803d] text-white shadow-emerald-700/30 cursor-pointer'
                     }`}
@@ -372,6 +519,7 @@ export const CashierCheckoutSimulator: React.FC<Props> = ({
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 };
