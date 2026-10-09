@@ -5,7 +5,6 @@ import { errorMessage, isNetworkError } from '../../services/rpc';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
 import { setScreenTheme } from '../../lib/screenTheme';
-import { Starburst } from '../../app/Starburst';
 import type { Catalog } from '../../types/pos';
 
 /*
@@ -13,15 +12,6 @@ import type { Catalog } from '../../types/pos';
  * No se lista a las personas: cada quien escribe sus datos y entra a su pantalla según su rol.
  * El PIN usa solo el teclado numérico del celular (no hay teclado propio en pantalla).
  */
-
-/** Golosinas decorativas del recuadro (posiciones y ritmos distintos para que no se vean en fila). */
-const FLOATERS = [
-  { emoji: '🍬', x: '8%', y: '14%', size: 40, delay: '0s', rot: '-14deg' },
-  { emoji: '🥤', x: '30%', y: '6%', size: 46, delay: '-1.2s', rot: '8deg' },
-  { emoji: '🍫', x: '52%', y: '16%', size: 38, delay: '-2.4s', rot: '-6deg' },
-  { emoji: '🍭', x: '16%', y: '42%', size: 30, delay: '-3.1s', rot: '12deg' },
-  { emoji: '🍪', x: '70%', y: '40%', size: 34, delay: '-0.6s', rot: '-10deg' },
-];
 
 export const LoginScreen: React.FC = () => {
   const { login } = usePos();
@@ -31,7 +21,7 @@ export const LoginScreen: React.FC = () => {
   const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [storeName, setStoreName] = useState('Pre-Venta');
+  const [storeName, setStoreName] = useState('Distribuidora Golosinas');
   const userRef = useRef<HTMLInputElement>(null);
   const pinRef = useRef<HTMLInputElement>(null);
 
@@ -67,98 +57,121 @@ export const LoginScreen: React.FC = () => {
     }
   };
 
-  const field = 'h-13 w-full rounded-2xl border-2 border-ink/10 bg-white text-[15px] text-ink shadow-[0_1px_2px_rgba(31,42,48,0.04)] outline-none transition placeholder:text-ink/35 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20';
+  const field = 'w-full bg-white border border-slate-200/90 rounded-2xl py-3.5 pl-12 pr-4 text-slate-800 text-sm font-medium shadow-[0_2px_8px_rgba(15,62,54,0.04)] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#0e3a33] focus:border-transparent';
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto bg-paper text-ink">
-      {/* Cabecera mínima con la marca */}
-      <header className="sticky top-0 z-10 border-b border-ink/5 bg-paper/90 backdrop-blur">
-        <div className="flex h-16 items-center justify-center gap-2 px-4">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-white shadow-sm">
-            <Store className="h-[18px] w-[18px]" />
-          </span>
-          <span className="truncate font-display text-lg font-bold">{storeName}</span>
-        </div>
-      </header>
-
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-8">
-        {/* Recuadro de color con golosinas que flotan (estilo Olipop) */}
-        <div className="relative mb-7 overflow-hidden rounded-[32px] bg-mint px-6 pb-7 pt-24 text-center">
-          {FLOATERS.map(f => (
-            <span key={f.emoji} aria-hidden className="float-bob absolute select-none drop-shadow-[0_8px_10px_rgba(20,67,61,0.25)]"
-              style={{ left: f.x, top: f.y, fontSize: f.size, animationDelay: f.delay, ['--r' as string]: f.rot } as React.CSSProperties}>
-              {f.emoji}
-            </span>
-          ))}
-          <Starburst className="absolute right-4 top-4 rotate-12" color="#fdda79" size={64} spin>¡Hola!</Starburst>
-          <div className="relative mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white text-ink shadow-sm">
-            <LockOpen className="h-7 w-7" />
-          </div>
-          <h1 className="relative font-display text-[34px] font-bold leading-none">Iniciar sesión</h1>
-          <p className="relative mt-2 text-[15px] font-semibold text-ink/75">Ingrese su usuario y PIN para entrar a su cuenta</p>
-        </div>
-
-        <form className="space-y-4" onSubmit={e => void submit(e)} noValidate>
-          <div>
-            <label htmlFor="login-user" className="mb-1.5 block text-sm font-semibold text-ink">Usuario</label>
-            <div className="relative flex items-center">
-              <User className="pointer-events-none absolute left-3.5 h-5 w-5 text-ink/40" />
-              <input
-                id="login-user"
-                ref={userRef}
-                value={username}
-                onChange={e => { setUsername(e.target.value.replace(/\s/g, '').toLowerCase()); setError(''); }}
-                autoCapitalize="none"
-                autoCorrect="off"
-                autoComplete="username"
-                enterKeyHint="next"
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); pinRef.current?.focus(); } }}
-                placeholder="ej. carlos.m"
-                className={`${field} pl-11 pr-4`}
-              />
+    <div className="flex h-full flex-col justify-between overflow-y-auto bg-[#faf9f4] font-sans text-slate-800 selection:bg-emerald-100 selection:text-emerald-900">
+      <main className="mx-auto flex min-h-full w-full max-w-[420px] flex-col justify-between px-5 py-6">
+        <div className="flex w-full flex-col items-center gap-6">
+          {/* Cabecera mínima con la marca */}
+          <header className="flex w-full items-center justify-center gap-3 pt-2">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0e3a33] text-white shadow-sm">
+              <Store className="h-5 w-5" strokeWidth={2} />
             </div>
-          </div>
+            <h1 className="text-base font-extrabold uppercase tracking-wider text-[#0e3a33] sm:text-lg">
+              {storeName}
+            </h1>
+          </header>
 
-          <div>
-            <label htmlFor="login-pin" className="mb-1.5 block text-sm font-semibold text-ink">PIN</label>
-            <div className="relative flex items-center">
-              <Lock className="pointer-events-none absolute left-3.5 h-5 w-5 text-ink/40" />
-              <input
-                id="login-pin"
-                ref={pinRef}
-                type={showPin ? 'text' : 'password'}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="current-password"
-                enterKeyHint="go"
-                maxLength={6}
-                value={pin}
-                onChange={e => { setPin(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
-                placeholder="••••"
-                className={`${field} pl-11 pr-12 font-display tracking-[0.3em] placeholder:tracking-[0.3em]`}
+          {/* Hero Card con la imagen y degradado */}
+          <section className="relative flex w-full flex-col items-center overflow-hidden rounded-3xl pb-4 pt-1">
+            <div className="relative h-56 w-full overflow-hidden rounded-3xl shadow-[0_12px_36px_-4px_rgba(14,58,51,0.08),_0_4px_16px_-2px_rgba(14,58,51,0.04)]"
+              style={{
+                maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)'
+              }}>
+              <img
+                src="https://lh3.googleusercontent.com/aida/AEtjO1UraVjZS-xvMEy1j1kS2xW5LyomRM2fc3i5fB2Mk3u4yhAQy-vvBtRLEIbLemCiuDMss5PpQUAGVYPefkAARlo22qNpJFVJ4__zNZmr2aosA0lCL5yLMoKAKvkvv0tuRn_UryqxCYsTo8pJO3XuNd4vXfrWO-wxBn80B_o6v70IL-f5ffcEsgPN5KMOjBCmthWTsEyQg7Uv7A5byT-QviUAeHIi0DCVwCnGPaIWnc03Smiq1RqCRb0nEA"
+                alt="Variedad de golosinas"
+                className="h-full w-full scale-105 object-cover object-center"
               />
-              <button type="button" onClick={() => setShowPin(v => !v)} aria-label={showPin ? 'Ocultar PIN' : 'Mostrar PIN'}
-                className="absolute right-1.5 flex h-10 w-10 items-center justify-center rounded-lg text-ink/45 transition hover:text-ink active:scale-95">
-                {showPin ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#faf9f4] via-transparent to-black/20"></div>
+              <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-white/60 bg-white/90 px-3 py-1 shadow-sm backdrop-blur-md">
+                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#0e3a33]">Portal Mayorista</span>
+              </div>
             </div>
-          </div>
 
-          <p className="min-h-5 text-sm font-semibold text-fresa" role="alert">{error}</p>
+            <div className="relative z-10 -mt-6 flex w-full flex-col items-center px-4 text-center">
+              <div className="mb-2.5 flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-emerald-900/5 bg-white p-3 text-[#0e3a33] shadow-md">
+                <LockOpen className="h-6 w-6" strokeWidth={2} />
+              </div>
+              <h2 className="text-2xl font-bold tracking-tight text-[#0a2f29]">
+                ¡Bienvenido a tu portal!
+              </h2>
+              <p className="mt-1 max-w-[280px] text-xs font-medium text-slate-500 sm:text-sm">
+                Ingresa tus credenciales para gestionar pedidos y stock
+              </p>
+            </div>
+          </section>
 
-          <button type="submit" disabled={loading}
-            className="squish flex h-14 w-full items-center justify-center gap-2 rounded-full bg-ink text-base font-bold text-white shadow-[0_12px_24px_-12px_rgba(20,67,61,0.7)] transition disabled:opacity-70">
-            {loading ? <><Loader2 className="h-5 w-5 animate-spin" /> Ingresando…</> : <><LogIn className="h-5 w-5" /> Iniciar sesión</>}
-          </button>
+          <form className="mt-1 flex w-full flex-col gap-4" onSubmit={e => void submit(e)} noValidate>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="login-user" className="ml-1 text-xs font-semibold tracking-wide text-slate-700">
+                Usuario
+              </label>
+              <div className="relative flex items-center">
+                <User className="pointer-events-none absolute left-4 h-5 w-5 text-slate-400" strokeWidth={2} />
+                <input
+                  id="login-user"
+                  ref={userRef}
+                  value={username}
+                  onChange={e => { setUsername(e.target.value.replace(/\s/g, '').toLowerCase()); setError(''); }}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  autoComplete="username"
+                  enterKeyHint="next"
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); pinRef.current?.focus(); } }}
+                  placeholder="Ingresa tu usuario"
+                  className={field}
+                />
+              </div>
+            </div>
 
-          <div className="pt-1 text-center">
-            <button type="button"
-              onClick={() => void dialog.alert('Pida al administrador que le restablezca el PIN desde Administración → Usuarios.', { title: '¿Olvidó su PIN?' })}
-              className="text-sm font-medium text-ink-soft transition hover:text-brand-700">
-              ¿Olvidó su PIN?
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="login-pin" className="ml-1 text-xs font-semibold tracking-wide text-slate-700">
+                PIN
+              </label>
+              <div className="relative flex items-center">
+                <Lock className="pointer-events-none absolute left-4 h-5 w-5 text-slate-400" strokeWidth={2} />
+                <input
+                  id="login-pin"
+                  ref={pinRef}
+                  type={showPin ? 'text' : 'password'}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="current-password"
+                  enterKeyHint="go"
+                  maxLength={6}
+                  value={pin}
+                  onChange={e => { setPin(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
+                  placeholder="••••"
+                  className={`${field} !pr-12 text-base font-semibold tracking-widest`}
+                />
+                <button type="button" onClick={() => setShowPin(v => !v)} aria-label={showPin ? 'Ocultar PIN' : 'Mostrar PIN'}
+                  className="absolute right-3.5 rounded-lg p-1 text-slate-400 transition-colors hover:text-slate-600 focus:outline-none">
+                  {showPin ? <EyeOff className="h-5 w-5" strokeWidth={2} /> : <Eye className="h-5 w-5" strokeWidth={2} />}
+                </button>
+              </div>
+            </div>
+
+            <p className="min-h-5 text-sm font-semibold text-red-500" role="alert">{error}</p>
+
+            <button type="submit" disabled={loading}
+              className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-2xl bg-[#0e3a33] px-6 py-4 font-semibold text-white shadow-[0_8px_20px_-4px_rgba(14,58,51,0.35)] transition-all duration-200 hover:bg-[#134e45] active:scale-[0.99] disabled:opacity-70">
+              {loading ? <><Loader2 className="h-5 w-5 animate-spin" strokeWidth={2.2} /> <span className="text-base tracking-wide">Ingresando…</span></> : <><LogIn className="h-5 w-5" strokeWidth={2.2} /> <span className="text-base tracking-wide">Ingresar al sistema</span></>}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
+
+        <footer className="w-full pb-2 pt-6 text-center">
+          <button type="button"
+            onClick={() => void dialog.alert('Pida al administrador que le restablezca el PIN desde Administración → Usuarios.', { title: '¿Olvidó su PIN?' })}
+            className="inline-block rounded-lg px-3 py-2 text-xs font-semibold text-slate-500 transition-colors hover:text-[#0e3a33] focus:outline-none">
+            ¿Olvidaste tu PIN? Contactar soporte
+          </button>
+          <div aria-hidden="true" className="mx-auto mt-4 h-1 w-32 rounded-full bg-slate-300/60"></div>
+        </footer>
       </main>
     </div>
   );
