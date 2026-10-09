@@ -6,7 +6,7 @@
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/+$/, '') ?? '';
 const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? '';
 
-export const isBackendConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+export const isBackendConfigured = /^https?:\/\//.test(SUPABASE_URL) && Boolean(SUPABASE_ANON_KEY);
 
 /** Host del servidor (sin la clave), para mostrar en pantallas de diagnóstico. */
 export const backendHost = SUPABASE_URL.replace(/^https?:\/\//, '');
@@ -30,7 +30,7 @@ export const errorMessage = (e: unknown): string =>
 
 export async function rpc<T>(fn: string, args: Record<string, unknown> = {}, timeoutMs = 20000): Promise<T> {
   if (!isBackendConfigured) {
-    throw new ApiError('SIN_CONFIGURAR', 'Falta configurar VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.');
+    throw new ApiError('SIN_CONFIGURAR', 'Falta configurar VITE_SUPABASE_URL (https://xxxx.supabase.co) y VITE_SUPABASE_ANON_KEY.');
   }
 
   const headers: Record<string, string> = {
@@ -72,5 +72,9 @@ export async function rpc<T>(fn: string, args: Record<string, unknown> = {}, tim
   }
 
   const text = await res.text();
-  return (text ? JSON.parse(text) : undefined) as T;
+  try {
+    return (text ? JSON.parse(text) : undefined) as T;
+  } catch {
+    throw new ApiError('RESPUESTA_INVALIDA', 'El servidor respondió algo que no es la API de Supabase. Revise VITE_SUPABASE_URL.');
+  }
 }
