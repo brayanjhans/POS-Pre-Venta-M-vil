@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'POS Pre-Venta',
   webDir: 'dist',
   // Fondo del WebView mientras carga y en los bordes: el mismo oscuro de la app.
-  backgroundColor: '#0f172a',
+  backgroundColor: '#f2f4ef',
   plugins: {
     SystemBars: {
       // Iconos claros (hora, batería) sobre el fondo oscuro.
