@@ -1,13 +1,15 @@
 import React from 'react';
 import { useDialog } from '../../app/DialogProvider';
 import QRCode from 'qrcode';
+import { shareTicketImage } from '../../lib/shareTicket';
 import type { Order, StoreSettings } from '../../types/pos';
 import { 
   X, 
   Printer, 
   Share2, 
   Copy, 
-  Check, 
+  Check,
+  Loader2,
 } from 'lucide-react';
 
 interface Props {
@@ -24,6 +26,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
   const [paperWidth, setPaperWidth] = React.useState<'58mm' | '80mm'>('58mm');
   const [qrDataUrl, setQrDataUrl] = React.useState<string>('');
   const [copiedText, setCopiedText] = React.useState(false);
+  const [sharing, setSharing] = React.useState(false);
 
   React.useEffect(() => {
     if (order) {
@@ -68,23 +71,17 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
     setTimeout(() => setCopiedText(false), 2000);
   };
 
-  const handleWhatsAppShare = () => {
-    const customerInfo = order.customerName ? `\n🏪 *Cliente:* ${order.customerName}${order.customerRuc ? ` (RUC: ${order.customerRuc})` : ''}\n💳 *Condición:* ${order.paymentTerm || 'Contado'}` : '';
-    const discountInfo = order.discountAmount ? `\n🏷️ *Descuento aplicado:* -S/ ${order.discountAmount.toFixed(2)}` : '';
-    const message = encodeURIComponent(
-      `🍬 *TICKET DE PRE-VENTA* - ${order.code}\n` +
-      `🥤 *${storeName}*\n` +
-      `📅 Fecha: ${new Date(order.createdAt).toLocaleDateString()}\n` +
-      `👤 Preventista: ${order.sellerName}` +
-      customerInfo + `\n\n` +
-      `*DETALLE DE PRODUCTOS:*\n` +
-      order.items.map(i => `• ${i.quantity}x ${i.presentationType.toUpperCase()} ${i.productName} = S/ ${i.subtotal.toFixed(2)}`).join('\n') +
-      discountInfo +
-      `\n\n💰 *TOTAL A PAGAR EN CAJA:* S/ ${order.totalAmount.toFixed(2)}\n` +
-      `🔖 *CÓDIGO QR / CAJA:* *${order.code}*\n` +
-      `\n_Pase por Caja Central con este ticket o código para su cobro y despacho inmediato._`
-    );
-    window.open(`https://api.whatsapp.com/send?text=${message}`, '_blank');
+  /** Envía el ticket como IMAGEN (WhatsApp u otra app), no como texto. */
+  const handleWhatsAppShare = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      await shareTicketImage(order, settings);
+    } catch (e) {
+      void dialog.alert(e instanceof Error ? e.message : String(e), { tone: 'danger', title: 'No se pudo compartir el ticket' });
+    } finally {
+      setSharing(false);
+    }
   };
 
   const handlePrintPDF = () => {
@@ -303,11 +300,12 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
             </button>
             <button
               type="button"
-              onClick={handleWhatsAppShare}
-              className="py-3 px-2 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold uppercase flex flex-col items-center justify-center gap-1.5 transition duration-200 shadow-[0_4px_12px_-4px_rgba(37,211,102,0.4)] active:scale-[0.97]"
+              onClick={() => void handleWhatsAppShare()}
+              disabled={sharing}
+              className="py-3 px-2 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold uppercase flex flex-col items-center justify-center gap-1.5 transition duration-200 shadow-[0_4px_12px_-4px_rgba(37,211,102,0.4)] active:scale-[0.97] disabled:opacity-60"
             >
-              <Share2 className="w-4 h-4" />
-              WhatsApp
+              {sharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+              WhatsApp (imagen)
             </button>
             <button
               type="button"
