@@ -190,10 +190,12 @@ export const PreventaScreen: React.FC = () => {
 
   /** Busca por código principal o por el código propio de una presentación (ej. el del paquete). */
   const findByBarcode = (code: string): { product: Product; presentation: PresentationType } | null => {
+    // Un UPC de 12 dígitos es el mismo EAN-13 con un 0 adelante: la cámara puede leer cualquiera de los dos.
+    const variants = new Set([code, code.length === 12 ? `0${code}` : code, code.length === 13 && code.startsWith('0') ? code.slice(1) : code]);
     for (const p of products) {
-      if (p.barcode === code) return { product: p, presentation: 'unit' };
+      if (variants.has(p.barcode)) return { product: p, presentation: 'unit' };
       for (const pres of Object.values(p.presentations)) {
-        if (pres?.barcode === code) return { product: p, presentation: pres.type };
+        if (pres?.barcode && variants.has(pres.barcode)) return { product: p, presentation: pres.type };
       }
     }
     return null;
@@ -1142,7 +1144,13 @@ export const PreventaScreen: React.FC = () => {
         <CameraScanner
           open={isCameraScannerOpen}
           onClose={() => setIsCameraScannerOpen(false)}
-          onDetected={code => handleScanBarcode(code)}
+          onDetected={code => {
+            const added = handleScanBarcode(code);
+            if (added) return added;
+            return findByBarcode(code)
+              ? { error: 'No hay stock suficiente de este producto' }
+              : { error: `El código ${code} no está en el catálogo` };
+          }}
           kind="barcode"
           continuous
         />

@@ -16,8 +16,11 @@ type Kind = 'barcode' | 'qr' | 'any';
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Devuelve un texto para mostrar como confirmación (ej. "✓ Coca Cola") o null si el código no sirvió. */
-  onDetected: (code: string) => string | null | void;
+  /**
+   * Devuelve un texto de confirmación (ej. "✓ Coca Cola"), { error } con el motivo si el código no
+   * sirvió (la cámara sigue abierta), o nada.
+   */
+  onDetected: (code: string) => string | { error: string } | null | void;
   kind?: Kind;
   continuous?: boolean;
   title?: string;
@@ -75,8 +78,10 @@ export const CameraScanner: React.FC<Props> = ({ open, onClose, onDetected, kind
     lastRef.current = { code, at: now };
     navigator.vibrate?.(40);
     const result = onDetectedRef.current(code);
-    setFlash({ text: typeof result === 'string' ? result : code, ok: result !== null, id: now });
-    if (!continuous && result !== null) onCloseRef.current();
+    const error = result === null ? `Código ${code} no reconocido` : typeof result === 'object' && result ? result.error : null;
+    if (error) navigator.vibrate?.([60, 80, 60]);
+    setFlash({ text: error ?? (typeof result === 'string' ? result : code), ok: !error, id: now });
+    if (!continuous && !error) onCloseRef.current();
   }, [continuous]);
 
   React.useEffect(() => {
@@ -164,7 +169,7 @@ export const CameraScanner: React.FC<Props> = ({ open, onClose, onDetected, kind
   // El aviso de lectura se oculta solo.
   React.useEffect(() => {
     if (!flash) return;
-    const id = window.setTimeout(() => setFlash(null), 1600);
+    const id = window.setTimeout(() => setFlash(null), flash.ok ? 1600 : 3200);
     return () => window.clearTimeout(id);
   }, [flash]);
 
@@ -193,6 +198,8 @@ export const CameraScanner: React.FC<Props> = ({ open, onClose, onDetected, kind
     <AnimatePresence>
       {open && (
         <motion.div
+          // Los toques dentro de la cámara no deben llegar a lo que está debajo (ej. cerrar el formulario).
+          onClick={e => e.stopPropagation()}
           className="fixed inset-0 z-[90] flex flex-col bg-black text-white"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
