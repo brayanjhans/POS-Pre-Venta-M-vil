@@ -24,7 +24,6 @@ export const storage = {
 export const KEYS = {
   session: 'pos.session',
   catalog: 'pos.catalog',
-  loginUsers: 'pos.loginUsers',
   lastUsername: 'pos.lastUsername',
   orders: (userId: string) => `pos.orders.${userId}`,
   outbox: (userId: string) => `pos.outbox.${userId}`,

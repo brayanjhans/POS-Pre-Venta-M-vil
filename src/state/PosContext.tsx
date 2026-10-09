@@ -288,7 +288,9 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sessionRef.current = s;
       setSession(s);
       await persistSession(s);
-      await storage.set(KEYS.lastUsername, result.user.username);
+      // La cuenta de soporte no se recuerda: su usuario no debe quedar escrito en el login del cliente.
+      if (result.user.isSupport) await storage.remove(KEYS.lastUsername);
+      else await storage.set(KEYS.lastUsername, result.user.username);
       await loadUserData(result.user.id);
     }
     return result;

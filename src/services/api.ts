@@ -1,6 +1,6 @@
 import { rpc } from './rpc';
 import type {
-  Catalog, Customer, CustomerStatement, Dashboard, DebtorSummary, LoginUser, Order, PaidFiado, PaymentMethod,
+  Catalog, Customer, CustomerStatement, Dashboard, DebtorSummary, Order, PaidFiado, PaymentMethod,
   PaymentTerm, PresentationType, Product, PromoBanner, Shift, StoreSettings, User, UserRole,
 } from '../types/pos';
 
@@ -59,7 +59,6 @@ export type UserPatch = Partial<{
 
 /** Funciones públicas (sin sesión). */
 export const publicApi = {
-  loginUsers: () => rpc<LoginUser[]>('pos_login_users'),
   login: (username: string, pin: string, device: string) =>
     rpc<LoginResult>('pos_login', { p_username: username, p_pin: pin, p_device: device }),
 };

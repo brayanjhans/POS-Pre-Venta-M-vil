@@ -16,7 +16,7 @@ empaquetada como APK de Android con **Capacitor**. Los datos viven en **Supabase
 1. Abrir el proyecto en Supabase → **SQL Editor** → *New query*.
 2. Pegar todo `supabase/migrations/20261009000000_init.sql` → **Run**.
 3. Nueva query: pegar `supabase/seed.sql` → **Run** (crea el admin, clientes y catálogo de ejemplo).
-   Luego, en orden, cada migración nueva de `supabase/migrations/` (`20261010000000_precio_editable.sql`, `20261010010000_libreta_fiados.sql`, `20261010020000_pin_inmutable.sql`, `20261010030000_admin_soporte.sql`, …) → **Run**.
+   Luego, en orden, cada migración nueva de `supabase/migrations/` (`20261010000000_precio_editable.sql`, `20261010010000_libreta_fiados.sql`, `20261010020000_pin_inmutable.sql`, `20261010030000_admin_soporte.sql`, `20261010040000_ocultar_lista_usuarios.sql` (esta última solo después de actualizar el APK en todos los celulares), …) → **Run**.
 4. Ir a **Project Settings → API Keys** y copiar la clave **anon / publishable**.
 
 Primer ingreso: usuario **`admin`**, PIN temporal **`2580`**. La app obliga a cambiarlo (es el único PIN que se puede cambiar).
@@ -25,9 +25,10 @@ si alguien lo olvida, el admin usa **Restablecer PIN** (conserva la cuenta y su 
 
 ### Cuenta de soporte técnico (la maneja el desarrollador, no el cliente)
 
-Sirve para recuperar el sistema si el administrador del cliente olvida su PIN. No aparece en la
-pantalla "¿Quién va a trabajar?": se entra **tocando 5 veces el logo** y escribiendo el usuario.
-El cliente la ve en Usuarios como *protegida* y no puede editarla, desactivarla ni cambiar su PIN.
+Sirve para recuperar el sistema si el administrador del cliente olvida su PIN. Se entra como
+cualquier usuario: escribiendo `soporte` y su PIN en el login (el login no muestra la lista de
+usuarios, y el celular no recuerda esta cuenta). El cliente la ve en Usuarios como *protegida* y no
+puede editarla, desactivarla ni cambiar su PIN.
 
 Crearla una sola vez en **SQL Editor**, reemplazando `TU_PIN` por un PIN de 4-6 dígitos que solo usted
 conozca (no lo guarde en este repositorio):
