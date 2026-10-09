@@ -3,12 +3,19 @@ name: Generar APK Android
 on:
   push:
     branches: [ "main", "master" ]
+  pull_request:
   workflow_dispatch:
 
 jobs:
   build-android:
     name: Compilacion de APK
     runs-on: ubuntu-latest
+    env:
+      # Configurar en GitHub: Settings → Secrets and variables → Actions
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      VERSION_CODE: ${{ github.run_number }}
 
     steps:
     - name: 1. Descargar Codigo
@@ -18,33 +25,65 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 22
+        cache: npm
 
-    - name: 3. Configurar Java JDK
+    - name: 3. Instalar dependencias (exactas del package-lock)
+      run: npm ci
+
+    - name: 4. Verificar tipos y pruebas
+      run: |
+        npm run lint
+        npm test
+
+    - name: 5. Verificar configuracion de Supabase
+      if: github.event_name != 'pull_request'
+      run: |
+        if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+          echo "::error::Faltan los secrets VITE_SUPABASE_URL y/o VITE_SUPABASE_ANON_KEY"
+          exit 1
+        fi
+
+    - name: 6. Compilar Web (Vite)
+      run: npm run build
+
+    - name: 7. Configurar Java JDK
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
         java-version: '21'
+        cache: gradle
 
-    - name: 4. Instalar dependencias de React
-      run: npm install --legacy-peer-deps
-
-    - name: 5. Compilar Web (Vite)
-      run: npm run build
-      env:
-        CI: false
-        VITE_CONFIG_NATIVE_IGNORE_WARNING: true
-
-    - name: 6. Sincronizar Capacitor con Android
+    - name: 8. Sincronizar Capacitor con Android
       run: npx cap sync android
 
-    - name: 7. Dar permisos de ejecucion a Gradle
-      run: chmod +x android/gradlew
+    - name: 9. Preparar keystore de firma (si existe)
+      if: env.HAS_KEYSTORE == 'true'
+      run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.keystore"
 
-    - name: 8. Compilar APK Nativo con Gradle
-      run: cd android && ./gradlew assembleDebug
+    - name: 10. Compilar APK release firmado
+      if: env.HAS_KEYSTORE == 'true'
+      working-directory: android
+      env:
+        ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release.keystore
+        ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      run: |
+        chmod +x gradlew
+        ./gradlew assembleRelease
+        mkdir -p ../apk && cp app/build/outputs/apk/release/app-release.apk "../apk/POS-PreVenta-v1.0.${VERSION_CODE}.apk"
 
-    - name: 9. Subir el APK final para Descarga
+    - name: 10b. Compilar APK debug (sin keystore configurado)
+      if: env.HAS_KEYSTORE != 'true'
+      working-directory: android
+      run: |
+        echo "::warning::Sin keystore: se genera un APK debug. Configure ANDROID_KEYSTORE_* para APKs de produccion."
+        chmod +x gradlew
+        ./gradlew assembleDebug
+        mkdir -p ../apk && cp app/build/outputs/apk/debug/app-debug.apk "../apk/POS-PreVenta-debug-${VERSION_CODE}.apk"
+
+    - name: 11. Subir el APK final para Descarga
       uses: actions/upload-artifact@v4
       with:
-        name: POS-Pre-Venta-APK
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+        name: POS-Pre-Venta-APK-${{ github.run_number }}
+        path: apk/*.apk

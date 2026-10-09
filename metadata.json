@@ -1,6 +1,0 @@
-{
-  "name": "POS Pre-Venta Móvil & Arquitectura",
-  "description": "Arquitectura y terminal interactivo de Pre-Venta Android para golosinas y bebidas con escáner HID, Bottom Sheet multi-presentación y tickets ESC/POS con QR.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
