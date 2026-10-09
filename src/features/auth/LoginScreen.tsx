@@ -86,10 +86,6 @@ export const LoginScreen: React.FC = () => {
                 className="h-full w-full scale-105 object-cover object-center"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#faf9f4] via-transparent to-black/20"></div>
-              <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-white/60 bg-white/90 px-3 py-1 shadow-sm backdrop-blur-md">
-                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#0e3a33]">Portal Mayorista</span>
-              </div>
             </div>
 
             <div className="relative z-10 -mt-6 flex w-full flex-col items-center px-4 text-center">
