@@ -54,7 +54,7 @@ export const useDialog = (): DialogApi => {
 
 const TONE: Record<DialogTone, { icon: React.ReactNode; ring: string; button: string }> = {
   info: { icon: <Info className="h-6 w-6 text-sky-600" />, ring: 'bg-sky-50 ring-sky-100', button: 'bg-slate-900 hover:bg-slate-800' },
-  success: { icon: <CheckCircle2 className="h-6 w-6 text-emerald-600" />, ring: 'bg-emerald-50 ring-emerald-100', button: 'bg-emerald-600 hover:bg-emerald-500' },
+  success: { icon: <CheckCircle2 className="h-6 w-6 text-brand-600" />, ring: 'bg-brand-50 ring-brand-100', button: 'bg-brand-600 hover:bg-brand-500' },
   warning: { icon: <AlertTriangle className="h-6 w-6 text-amber-600" />, ring: 'bg-amber-50 ring-amber-100', button: 'bg-amber-500 hover:bg-amber-400' },
   danger: { icon: <XCircle className="h-6 w-6 text-red-600" />, ring: 'bg-red-50 ring-red-100', button: 'bg-red-600 hover:bg-red-500' },
 };
@@ -139,7 +139,7 @@ const DialogView: React.FC<{ request: Request; onDone: () => void }> = ({ reques
         onClick={e => e.stopPropagation()}
         onSubmit={e => { e.preventDefault(); accept(); }}
         onKeyDown={e => { if (e.key === 'Escape') cancel(); }}
-        className="w-full max-w-sm rounded-3xl bg-white p-5 text-slate-800 shadow-2xl ring-1 ring-slate-900/5"
+        className="w-full max-w-sm rounded-3xl bg-white p-5 text-ink shadow-2xl ring-1 ring-slate-900/5"
         initial={{ opacity: 0, y: 24, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 12, scale: 0.98 }}
@@ -147,13 +147,13 @@ const DialogView: React.FC<{ request: Request; onDone: () => void }> = ({ reques
       >
         <div className="flex items-start gap-3">
           <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ring-4 ${style.ring}`}>
-            {request.kind === 'prompt' ? <HelpCircle className="h-6 w-6 text-slate-600" /> : style.icon}
+            {request.kind === 'prompt' ? <HelpCircle className="h-6 w-6 text-ink-soft" /> : style.icon}
           </div>
           <div className="min-w-0 flex-1 pt-0.5">
-            <h2 id="dialog-title" className="text-base font-black text-slate-900">
+            <h2 id="dialog-title" className="text-base font-black text-ink">
               {request.options.title ?? DEFAULT_TITLE[request.kind][tone]}
             </h2>
-            <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-600">{request.message}</p>
+            <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink-soft">{request.message}</p>
           </div>
         </div>
 
@@ -165,7 +165,7 @@ const DialogView: React.FC<{ request: Request; onDone: () => void }> = ({ reques
               inputMode={request.options.inputMode}
               placeholder={request.options.placeholder}
               onChange={e => { setValue(e.target.value); setError(''); }}
-              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-3 text-base text-slate-900 outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-3 text-base text-ink outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20"
             />
             {error && <p className="mt-1.5 text-sm font-medium text-red-600">{error}</p>}
           </div>

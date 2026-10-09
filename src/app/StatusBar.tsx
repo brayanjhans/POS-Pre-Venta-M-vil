@@ -28,7 +28,7 @@ export const StatusBar: React.FC<Props> = ({ view, onChangeView }) => {
 
   return (
     <>
-      <div className="bg-slate-900 text-white text-xs px-3 py-1.5 flex items-center justify-between gap-2 z-40">
+      <div className="bg-ink text-white text-xs px-3 py-1.5 flex items-center justify-between gap-2 z-40">
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-bold truncate max-w-[7rem] sm:max-w-none">{session.user.fullName.split(' ')[0]}<span className="hidden sm:inline">{session.user.fullName.slice(session.user.fullName.split(' ')[0].length)}</span></span>
           <span className="text-slate-400 hidden sm:inline">· {ROLE_LABELS[session.user.role]}</span>
@@ -36,7 +36,7 @@ export const StatusBar: React.FC<Props> = ({ view, onChangeView }) => {
             <div className="flex bg-slate-800 rounded-lg p-0.5 ml-1">
               {(Object.keys(VIEW_LABELS) as MainView[]).map(v => (
                 <button key={v} type="button" onClick={() => onChangeView(v)}
-                  className={`px-2 py-0.5 rounded-md font-bold whitespace-nowrap ${view === v ? 'bg-emerald-600' : 'text-slate-300'}`}>
+                  className={`px-2 py-0.5 rounded-md font-bold whitespace-nowrap ${view === v ? 'bg-brand-600' : 'text-slate-300'}`}>
                   {VIEW_LABELS[v]}
                 </button>
               ))}
@@ -47,7 +47,7 @@ export const StatusBar: React.FC<Props> = ({ view, onChangeView }) => {
         <div className="flex items-center gap-1.5 shrink-0">
           <button type="button" onClick={() => (pending ? setShowQueue(true) : void syncNow())}
             className={`flex items-center gap-1 px-2 py-0.5 rounded-full font-bold ${
-              failed.length ? 'bg-red-600' : !online ? 'bg-amber-600' : pending ? 'bg-blue-600' : 'bg-emerald-700'}`}
+              failed.length ? 'bg-red-600' : !online ? 'bg-amber-600' : pending ? 'bg-blue-600' : 'bg-brand-700'}`}
             title="Estado de sincronización">
             {failed.length ? <AlertTriangle className="w-3 h-3" /> : online ? <Wifi className="w-3 h-3" /> : <CloudOff className="w-3 h-3" />}
             <span>
@@ -77,9 +77,9 @@ export const StatusBar: React.FC<Props> = ({ view, onChangeView }) => {
 
       {showQueue && (
         <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4" onClick={() => setShowQueue(false)}>
-          <div className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-slate-800" onClick={e => e.stopPropagation()}>
-            <h3 className="font-black uppercase text-sm">Operaciones por sincronizar</h3>
-            <p className="text-xs text-slate-500">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-ink" onClick={e => e.stopPropagation()}>
+            <h3 className="font-black  text-sm">Operaciones por sincronizar</h3>
+            <p className="text-xs text-ink-soft">
               Se envían solas al recuperar internet. Las marcadas en rojo fueron rechazadas por el servidor.
             </p>
             <div className="space-y-2 max-h-[50vh] overflow-y-auto">
@@ -88,7 +88,7 @@ export const StatusBar: React.FC<Props> = ({ view, onChangeView }) => {
                   <div className="font-bold">
                     {op.kind === 'create_order' ? `Ticket ${op.order.code}` : 'Anulación de ticket'}
                   </div>
-                  <div className="text-slate-500">{new Date(op.createdAt).toLocaleString('es-PE')}</div>
+                  <div className="text-ink-soft">{new Date(op.createdAt).toLocaleString('es-PE')}</div>
                   {op.error && (
                     <>
                       <div className="text-red-700 mt-1">{op.error}</div>
@@ -105,7 +105,7 @@ export const StatusBar: React.FC<Props> = ({ view, onChangeView }) => {
                 </div>
               ))}
             </div>
-            <button type="button" onClick={() => void syncNow()} className="w-full py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm">
+            <button type="button" onClick={() => void syncNow()} className="w-full py-2.5 bg-brand-600 text-white rounded-xl font-bold text-sm">
               Sincronizar ahora
             </button>
           </div>

@@ -66,7 +66,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
   const presentationConfig: { type: PresentationType; icon: React.ReactNode; labelTag: string }[] = [
     { 
       type: 'unit', 
-      icon: <Package className="w-5 h-5 text-emerald-600" />,
+      icon: <Package className="w-5 h-5 text-brand-600" />,
       labelTag: 'Venta por Unidad'
     },
     { 
@@ -81,7 +81,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
     },
     { 
       type: 'pack', 
-      icon: <Sparkles className="w-5 h-5 text-emerald-700" />,
+      icon: <Sparkles className="w-5 h-5 text-brand-700" />,
       labelTag: 'Fardo / Paquete Mayorista'
     },
   ];
@@ -99,23 +99,23 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
             <div className="flex items-center gap-2 text-xs">
-              <span className="font-bold text-brand-600 uppercase bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <span className="font-bold text-brand-600  bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
                 {product.category}
               </span>
-              <span className="text-slate-400 font-mono text-xs">
+              <span className="text-slate-400 font-display text-xs">
                 {product.barcode}
               </span>
             </div>
-            <h3 className="text-base font-black text-slate-900 mt-1 leading-snug">
+            <h3 className="text-base font-black text-ink mt-1 leading-snug">
               {product.name}
             </h3>
             {product.flavorNote && (
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-ink-soft mt-0.5">
                 {product.flavorNote}
               </p>
             )}
-            <div className="text-xs text-slate-600 mt-1">
-              Stock en Almacén: <strong className="text-slate-900">{product.stockInBaseUnits} {product.baseUnitName}s</strong>
+            <div className="text-xs text-ink-soft mt-1">
+              Stock en Almacén: <strong className="text-ink">{product.stockInBaseUnits} {product.baseUnitName}s</strong>
             </div>
           </div>
 
@@ -131,7 +131,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         {/* Selector de Presentación: 3 Opciones Táctiles (Unidad, Medio, Paquete) */}
         <div className="space-y-2 mb-4">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-700 tracking-wider uppercase">
+            <label className="text-xs font-bold text-slate-700  ">
               ¿Cómo lo vende?
             </label>
           </div>
@@ -151,7 +151,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                   onClick={() => selectPresentation(type)}
                   className={`relative flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all ${
                     isSelected 
-                      ? 'border-brand-600 bg-emerald-50/80 ring-2 ring-brand-600/30 shadow-md' 
+                      ? 'border-brand-600 bg-brand-50/80 ring-2 ring-brand-600/30 shadow-md' 
                       : 'border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300'
                   }`}
                 >
@@ -159,15 +159,15 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                     <div className={`shrink-0 p-2.5 rounded-xl border ${
                       isSelected 
                         ? 'bg-brand-600 text-white border-brand-600 [&_svg]:!text-white' 
-                        : 'bg-slate-100 border-slate-200 text-slate-600'
+                        : 'bg-slate-100 border-slate-200 text-ink-soft'
                     }`}>
                       {icon}
                     </div>
 
                     <div className="min-w-0">
-                      <div className="text-sm font-black leading-tight text-slate-900">{pres.label}</div>
+                      <div className="text-sm font-black leading-tight text-ink">{pres.label}</div>
                       {pres.conversionFactor > 1 && (
-                        <div className="text-xs text-slate-500 mt-0.5">
+                        <div className="text-xs text-ink-soft mt-0.5">
                           S/ {pricePerUnit.toFixed(2)} c/{product.baseUnitName}
                         </div>
                       )}
@@ -181,10 +181,10 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                   </div>
 
                   <div className="text-right shrink-0 pl-2">
-                    <div className="text-lg font-black text-slate-900 font-mono whitespace-nowrap">
+                    <div className="text-lg font-black text-ink font-display whitespace-nowrap">
                       S/ {pres.price.toFixed(2)}
                     </div>
-                    <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                    <div className="text-xs text-ink-soft font-bold  ">
                       {pres.shortLabel}
                     </div>
                   </div>
@@ -197,10 +197,10 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         {/* Selector de Cantidad (Con soporte para fracciones) */}
         <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+            <span className="text-xs font-bold text-slate-700  ">
               Cantidad de {currentPresentation.shortLabel}
             </span>
-            <span className="text-xs font-mono text-emerald-700 font-bold">
+            <span className="text-xs font-display text-brand-700 font-bold">
               Descontará: {requiredBaseUnits} {product.baseUnitName}s
             </span>
           </div>
@@ -209,7 +209,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
             <button
               type="button"
               onClick={() => setQty(Math.max(1, qty - 1))}
-              className="w-12 h-12 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-2xl flex items-center justify-center active:scale-95 transition border border-slate-300 shadow-xs"
+              className="w-12 h-12 rounded-xl bg-white hover:bg-slate-100 text-ink font-bold text-2xl flex items-center justify-center active:scale-95 transition border border-slate-300 shadow-xs"
             >
               -
             </button>
@@ -223,14 +223,14 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                   const val = parseInt(e.target.value);
                   setQty(isNaN(val) || val < 1 ? 1 : val);
                 }}
-                className="w-full text-center text-3xl font-black text-slate-900 font-mono focus:outline-hidden py-2 bg-transparent"
+                className="w-full text-center text-3xl font-black text-ink font-display focus:outline-hidden py-2 bg-transparent"
               />
             </div>
 
             <button
               type="button"
               onClick={() => setQty(qty + 1)}
-              className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-2xl flex items-center justify-center active:scale-95 transition shadow-md shadow-emerald-700/20"
+              className="w-12 h-12 rounded-xl bg-gradient-to-r from-brand-500 to-brand-500 hover:from-brand-400 hover:to-brand-400 text-white font-black text-2xl flex items-center justify-center active:scale-95 transition shadow-md shadow-brand-700/20"
             >
               +
             </button>
@@ -245,7 +245,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                 onClick={() => setQty(val)}
                 className={`py-1.5 text-xs font-bold rounded-lg border transition ${
                   qty === val 
-                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-[0_4px_10px_rgba(5,150,105,0.3)]' 
+                    ? 'bg-brand-600 border-brand-600 text-white shadow-[0_4px_10px_rgba(5,150,105,0.3)]' 
                     : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:border-slate-400'
                 }`}
               >
@@ -267,16 +267,16 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         {/* Precio de venta editable */}
         <div className={`rounded-2xl p-4 border mb-4 ${isPriceEdited ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200'}`}>
           <div className="flex items-center justify-between mb-2">
-            <label htmlFor="sheet-unit-price" className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1">
+            <label htmlFor="sheet-unit-price" className="text-xs font-bold text-slate-700   flex items-center gap-1">
               <Pencil className="w-3.5 h-3.5" /> Precio por {currentPresentation.shortLabel}
             </label>
-            <span className="text-xs text-slate-500">
-              Lista: <strong className="font-mono text-slate-700">S/ {listPrice.toFixed(2)}</strong>
+            <span className="text-xs text-ink-soft">
+              Lista: <strong className="font-display text-slate-700">S/ {listPrice.toFixed(2)}</strong>
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex-1 flex items-center bg-white border border-slate-300 rounded-xl px-3 shadow-xs focus-within:border-emerald-500">
-              <span className="text-slate-500 font-bold mr-1">S/</span>
+            <div className="flex-1 flex items-center bg-white border border-slate-300 rounded-xl px-3 shadow-xs focus-within:border-brand-500">
+              <span className="text-ink-soft font-bold mr-1">S/</span>
               <input
                 id="sheet-unit-price"
                 type="text"
@@ -285,7 +285,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                 value={priceText}
                 onChange={e => setPriceText(e.target.value.replace(/[^\d.,]/g, ''))}
                 onFocus={e => e.target.select()}
-                className="w-full text-2xl font-black text-slate-900 font-mono focus:outline-hidden py-2 bg-transparent"
+                className="w-full text-2xl font-black text-ink font-display focus:outline-hidden py-2 bg-transparent"
               />
             </div>
             {isPriceEdited && (
@@ -312,8 +312,8 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         {/* Resumen del Subtotal y Botón de Aplicar */}
         <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-4">
           <div>
-            <div className="text-xs text-slate-500 font-medium">Subtotal</div>
-            <div className="text-2xl font-black text-slate-900 font-mono">
+            <div className="text-xs text-ink-soft font-medium">Subtotal</div>
+            <div className="text-2xl font-black text-ink font-display">
               S/ {subtotal.toFixed(2)}
             </div>
           </div>
@@ -322,9 +322,9 @@ export const BottomSheetPresentation: React.FC<Props> = ({
             type="button"
             onClick={handleConfirm}
             disabled={!isPriceValid}
-            className={`disabled:opacity-40 disabled:cursor-not-allowed flex-1 py-3.5 px-4 rounded-xl font-black flex items-center justify-center gap-2 text-sm uppercase tracking-wider transition-all shadow-md ${
+            className={`disabled:opacity-40 disabled:cursor-not-allowed flex-1 py-3.5 px-4 rounded-xl font-black flex items-center justify-center gap-2 text-sm   transition-all shadow-md ${
               isStockSufficient
-                ? 'bg-brand-600 hover:bg-brand-700 text-white active:scale-98 shadow-emerald-700/20 cursor-pointer'
+                ? 'bg-brand-600 hover:bg-brand-700 text-white active:scale-98 shadow-brand-700/20 cursor-pointer'
                 : 'bg-amber-500 hover:bg-amber-600 text-white active:scale-98 shadow-amber-700/20 cursor-pointer'
             }`}
           >

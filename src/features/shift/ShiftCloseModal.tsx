@@ -53,9 +53,9 @@ export const ShiftCloseModal: React.FC<Props> = ({ onClose }) => {
   };
 
   const row = (label: string, value: number | null | undefined, strong = false) => (
-    <div className={`flex justify-between ${strong ? 'font-black text-slate-900' : 'text-slate-600'}`}>
+    <div className={`flex justify-between ${strong ? 'font-black text-ink' : 'text-ink-soft'}`}>
       <span>{label}</span>
-      <span className="font-mono">{formatSoles(value)}</span>
+      <span className="font-display">{formatSoles(value)}</span>
     </div>
   );
 
@@ -65,7 +65,7 @@ export const ShiftCloseModal: React.FC<Props> = ({ onClose }) => {
     <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
       <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden">
         <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
-          <h3 className="font-black uppercase text-sm flex items-center gap-2"><Lock className="w-4 h-4" /> Cierre de Turno</h3>
+          <h3 className="font-black  text-sm flex items-center gap-2"><Lock className="w-4 h-4" /> Cierre de Turno</h3>
           {!closed && <button onClick={onClose} aria-label="Cerrar"><X className="w-5 h-5" /></button>}
         </div>
 
@@ -87,9 +87,9 @@ export const ShiftCloseModal: React.FC<Props> = ({ onClose }) => {
               {row('Efectivo esperado en caja', shown.expectedCash ?? shown.expectedCashNow, true)}
               {closed && row('Efectivo contado', closed.countedCash, true)}
               {closed && (
-                <div className={`flex justify-between font-black ${(closed.difference ?? 0) < 0 ? 'text-red-600' : 'text-emerald-700'}`}>
+                <div className={`flex justify-between font-black ${(closed.difference ?? 0) < 0 ? 'text-red-600' : 'text-brand-700'}`}>
                   <span>{(closed.difference ?? 0) < 0 ? 'Faltante' : (closed.difference ?? 0) > 0 ? 'Sobrante' : 'Cuadre exacto'}</span>
-                  <span className="font-mono">{formatSoles(Math.abs(closed.difference ?? 0))}</span>
+                  <span className="font-display">{formatSoles(Math.abs(closed.difference ?? 0))}</span>
                 </div>
               )}
               <div className="text-xs text-slate-400 pt-1">Pedidos emitidos en el turno: {shown.ordersCreated}</div>
@@ -103,14 +103,14 @@ export const ShiftCloseModal: React.FC<Props> = ({ onClose }) => {
           ) : (
             <form onSubmit={submit} className="space-y-3">
               <label className="block">
-                <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Efectivo contado en caja</span>
+                <span className="block text-xs font-bold text-ink-soft  mb-1">Efectivo contado en caja</span>
                 <input
                   type="text"
                   inputMode="decimal"
                   value={counted}
                   onChange={e => setCounted(e.target.value)}
                   placeholder="0.00"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-xl font-black focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-xl font-black focus:outline-none focus:border-brand-500"
                   required
                 />
               </label>
@@ -124,7 +124,7 @@ export const ShiftCloseModal: React.FC<Props> = ({ onClose }) => {
               {error && <p className="text-red-600 text-xs text-center">{error}</p>}
               <button type="submit" disabled={loading || !summary}
                 className="w-full py-3.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-black rounded-xl">
-                {loading ? 'Cerrando…' : 'CERRAR TURNO'}
+                {loading ? 'Cerrando…' : 'Cerrar turno'}
               </button>
             </form>
           )}

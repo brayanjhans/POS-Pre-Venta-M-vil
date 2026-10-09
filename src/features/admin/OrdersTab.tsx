@@ -7,10 +7,10 @@ import { OrderReceiptModal } from '../shared/OrderReceiptModal';
 import type { Order, OrderStatus } from '../../types/pos';
 
 const STATUS_STYLE: Record<OrderStatus, string> = {
-  PAGADO: 'bg-emerald-100 text-emerald-800',
+  PAGADO: 'bg-brand-100 text-brand-800',
   FIADO: 'bg-orange-100 text-orange-800',
   PENDIENTE_PAGO: 'bg-amber-100 text-amber-800',
-  CANCELADO: 'bg-slate-200 text-slate-600',
+  CANCELADO: 'bg-slate-200 text-ink-soft',
 };
 
 /** Historial de boletas/pedidos (últimos 7 días) con filtros y anulación. */
@@ -54,8 +54,8 @@ export const OrdersTab: React.FC = () => {
     <div className="space-y-4 animate-in fade-in">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h3 className="text-sm font-black text-slate-900 uppercase">Historial de Boletas (últimos 7 días)</h3>
-          <p className="text-xs text-slate-500">{list.length} pedidos · {formatSoles(total)} sin contar anulados</p>
+          <h3 className="text-sm font-black text-ink ">Historial de Boletas (últimos 7 días)</h3>
+          <p className="text-xs text-ink-soft">{list.length} pedidos · {formatSoles(total)} sin contar anulados</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <select value={status} onChange={e => setStatus(e.target.value as OrderStatus | 'TODOS')} className="bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-bold">
@@ -79,19 +79,19 @@ export const OrdersTab: React.FC = () => {
         <div className="space-y-2">
           {list.map(ord => (
             <button key={ord.id} type="button" onClick={() => setViewOrder(ord)}
-              className="w-full p-3.5 bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 flex items-center justify-between gap-3 text-xs text-left">
+              className="w-full p-3.5 bg-white rounded-2xl border border-slate-200 hover:border-brand-400 flex items-center justify-between gap-3 text-xs text-left">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <strong className="text-sm font-mono text-slate-900">{ord.code}</strong>
+                  <strong className="text-sm font-display text-ink">{ord.code}</strong>
                   <span className={`px-2 py-0.5 rounded-full font-black text-xs ${STATUS_STYLE[ord.status]}`}>{ord.status}</span>
                   <span className="text-xs text-slate-400">{ord.paymentTerm}</span>
                 </div>
-                <div className="text-xs text-slate-500 mt-1 truncate">
+                <div className="text-xs text-ink-soft mt-1 truncate">
                   {new Date(ord.createdAt).toLocaleString('es-PE')} · {ord.sellerName} · {ord.customerName || 'Cliente genérico'} · {ord.items.length} productos
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <div className="text-base font-black font-mono text-emerald-800">{formatSoles(ord.totalAmount)}</div>
+                <div className="text-base font-black font-display text-brand-800">{formatSoles(ord.totalAmount)}</div>
                 {!!ord.debtAmount && <div className="text-xs font-bold text-red-600">Debe {formatSoles(ord.debtAmount)}</div>}
                 <Receipt className="w-3.5 h-3.5 text-slate-400 ml-auto" />
               </div>
@@ -104,7 +104,7 @@ export const OrdersTab: React.FC = () => {
         <OrderReceiptModal order={viewOrder} onClose={() => setViewOrder(null)}>
           {viewOrder.status !== 'CANCELADO' && (
             <button type="button" onClick={() => void cancel(viewOrder)}
-              className="w-full py-2 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-black uppercase flex items-center justify-center gap-1.5">
+              className="w-full py-2 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-black  flex items-center justify-center gap-1.5">
               <Ban className="w-4 h-4" /> Anular boleta
             </button>
           )}

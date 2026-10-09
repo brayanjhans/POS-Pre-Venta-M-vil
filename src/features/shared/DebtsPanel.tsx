@@ -16,7 +16,7 @@ const formatDate = (iso: string) => new Date(iso).toLocaleDateString('es-PE');
 const PhoneLink: React.FC<{ phone?: string | null }> = ({ phone }) =>
   phone ? (
     <a href={`tel:${phone}`} onClick={e => e.stopPropagation()}
-      className="inline-flex items-center gap-0.5 text-emerald-700 font-bold hover:underline">
+      className="inline-flex items-center gap-0.5 text-brand-700 font-bold hover:underline">
       <Phone className="w-3 h-3" />{formatPhone(phone)}
     </a>
   ) : (
@@ -139,12 +139,12 @@ export const DebtsPanel: React.FC = () => {
     return (
       <div className="space-y-4 animate-in fade-in">
         <button type="button" onClick={() => { setStatement(null); setMessage(null); }}
-          className="text-xs font-bold text-slate-500 flex items-center gap-1"><ArrowLeft className="w-4 h-4" /> Volver a deudores</button>
+          className="text-xs font-bold text-ink-soft flex items-center gap-1"><ArrowLeft className="w-4 h-4" /> Volver a deudores</button>
 
         <div className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap justify-between gap-3">
           <div>
-            <h3 className="text-lg font-black text-slate-900">{c.name}</h3>
-            <div className="text-xs text-slate-500">
+            <h3 className="text-lg font-black text-ink">{c.name}</h3>
+            <div className="text-xs text-ink-soft">
               {c.docType !== 'NINGUNO' ? `${c.docType} ${c.docNumber}` : 'Sin documento'}{c.route ? ` · ${c.route}` : ''}
             </div>
             <div className="text-sm mt-1">
@@ -152,28 +152,28 @@ export const DebtsPanel: React.FC = () => {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xs uppercase font-bold text-slate-500">Deuda fiada</div>
-            <div className="text-2xl font-black text-red-600 font-mono">{formatSoles(totalDebt)}</div>
-            <div className="text-xs text-slate-500">Límite: {formatSoles(c.creditLimit)}</div>
+            <div className="text-xs  font-bold text-ink-soft">Deuda fiada</div>
+            <div className="text-2xl font-black text-red-600 font-display">{formatSoles(totalDebt)}</div>
+            <div className="text-xs text-ink-soft">Límite: {formatSoles(c.creditLimit)}</div>
           </div>
         </div>
 
         {message && (
-          <div className={`text-xs font-bold px-3 py-2 rounded-lg border ${message.error ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>
+          <div className={`text-xs font-bold px-3 py-2 rounded-lg border ${message.error ? 'bg-red-50 border-red-200 text-red-700' : 'bg-brand-50 border-brand-200 text-brand-800'}`}>
             {message.text}
           </div>
         )}
 
         {totalDebt > 0 && (
-          <form ref={abonoFormRef} onSubmit={submitAbono} className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 space-y-3">
-            <h4 className="font-black text-sm uppercase text-emerald-900 flex items-center gap-2"><HandCoins className="w-4 h-4" /> Registrar abono</h4>
-            <p className="text-xs text-emerald-800">
+          <form ref={abonoFormRef} onSubmit={submitAbono} className="bg-brand-50 border border-brand-200 rounded-2xl p-4 space-y-3">
+            <h4 className="font-black text-sm  text-brand-900 flex items-center gap-2"><HandCoins className="w-4 h-4" /> Registrar abono</h4>
+            <p className="text-xs text-brand-800">
               Puede abonar una parte o el total. Deuda {targetOrderId ? `de la boleta ${openOrders.find(o => o.id === targetOrderId)?.code ?? ''}` : 'total'}:{' '}
-              <strong className="font-mono">{formatSoles(maxForTarget)}</strong>
+              <strong className="font-display">{formatSoles(maxForTarget)}</strong>
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <input ref={amountInputRef} type="text" inputMode="decimal" placeholder="Monto S/" value={amount} onChange={e => setAmount(e.target.value)} required
-                className="bg-white border border-slate-300 rounded-xl px-3 py-2 font-mono font-black" />
+                className="bg-white border border-slate-300 rounded-xl px-3 py-2 font-display font-black" />
               <select value={method} onChange={e => setMethod(e.target.value as PaymentMethod)} className="bg-white border border-slate-300 rounded-xl px-2 py-2 text-sm">
                 {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
@@ -185,10 +185,10 @@ export const DebtsPanel: React.FC = () => {
             <div className="flex gap-2">
               <input type="text" placeholder="Nota (opcional)" value={notes} onChange={e => setNotes(e.target.value)}
                 className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm" />
-              <button type="button" onClick={() => setAmount(maxForTarget.toFixed(2))} className="px-3 py-2 bg-white border border-emerald-300 rounded-xl text-xs font-bold">
+              <button type="button" onClick={() => setAmount(maxForTarget.toFixed(2))} className="px-3 py-2 bg-white border border-brand-300 rounded-xl text-xs font-bold">
                 Total
               </button>
-              <button type="submit" disabled={saving} className="px-4 py-2 bg-brand-600 text-white rounded-xl font-black text-xs uppercase disabled:opacity-50">
+              <button type="submit" disabled={saving} className="px-4 py-2 bg-brand-600 text-white rounded-xl font-black text-xs  disabled:opacity-50">
                 {saving ? '…' : 'Abonar'}
               </button>
             </div>
@@ -197,25 +197,25 @@ export const DebtsPanel: React.FC = () => {
 
         <div className="grid md:grid-cols-2 gap-4">
           <div className="bg-white rounded-2xl border border-slate-200 p-4">
-            <h4 className="font-black text-sm uppercase mb-2">Boletas a crédito</h4>
+            <h4 className="font-black text-sm  mb-2">Boletas a crédito</h4>
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {statement.orders.length === 0 && <p className="text-xs text-slate-400">Sin boletas a crédito.</p>}
               {statement.orders.map(o => {
                 const canAbonar = o.status === 'FIADO' && (o.debtAmount ?? 0) > 0;
                 const abonado = round2(o.totalAmount - (o.debtAmount ?? 0));
                 return (
-                  <div key={o.id} className={`flex items-stretch gap-2 rounded-xl border text-xs ${targetOrderId === o.id ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-100'}`}>
+                  <div key={o.id} className={`flex items-stretch gap-2 rounded-xl border text-xs ${targetOrderId === o.id ? 'border-brand-500 bg-brand-50/50' : 'border-slate-100'}`}>
                     <button type="button" onClick={() => setViewOrder(o)}
                       className="flex-1 flex justify-between items-center p-2.5 rounded-xl hover:bg-slate-50 text-left min-w-0">
                       <div className="min-w-0">
                         <div className="font-bold">
-                          Boleta <span className="font-mono">{o.code}</span>
-                          <span className={`ml-1 px-1.5 rounded text-xs ${o.status === 'FIADO' ? 'bg-orange-100 text-orange-800' : o.status === 'PAGADO' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{o.status}</span>
+                          Boleta <span className="font-display">{o.code}</span>
+                          <span className={`ml-1 px-1.5 rounded text-xs ${o.status === 'FIADO' ? 'bg-orange-100 text-orange-800' : o.status === 'PAGADO' ? 'bg-brand-100 text-brand-800' : 'bg-amber-100 text-amber-800'}`}>{o.status}</span>
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-ink-soft">
                           {formatDate(o.createdAt)} · total {formatSoles(o.totalAmount)}{canAbonar && abonado > 0 ? ` · abonado ${formatSoles(abonado)}` : ''}
                         </div>
-                        <div className="mt-0.5 text-xs text-slate-600 line-clamp-1">
+                        <div className="mt-0.5 text-xs text-ink-soft line-clamp-1">
                           {o.items.map(i => `${i.productName} ×${i.quantity}`).join(', ')}
                         </div>
                         <div className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-brand-700">
@@ -223,13 +223,13 @@ export const DebtsPanel: React.FC = () => {
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-xs text-slate-500">debe</div>
-                        <div className={`font-mono font-black ${(o.debtAmount ?? 0) > 0 ? 'text-red-600' : 'text-emerald-700'}`}>{formatSoles(o.debtAmount)}</div>
+                        <div className="text-xs text-ink-soft">debe</div>
+                        <div className={`font-display font-black ${(o.debtAmount ?? 0) > 0 ? 'text-red-600' : 'text-brand-700'}`}>{formatSoles(o.debtAmount)}</div>
                       </div>
                     </button>
                     {canAbonar && (
                       <button type="button" onClick={() => startAbonoFor(o)}
-                        className="px-3 my-1.5 mr-1.5 rounded-lg bg-brand-600 text-white font-black text-xs uppercase flex items-center gap-1 shrink-0">
+                        className="px-3 my-1.5 mr-1.5 rounded-lg bg-brand-600 text-white font-black text-xs  flex items-center gap-1 shrink-0">
                         <HandCoins className="w-3.5 h-3.5" /> Abonar
                       </button>
                     )}
@@ -239,18 +239,18 @@ export const DebtsPanel: React.FC = () => {
             </div>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 p-4">
-            <h4 className="font-black text-sm uppercase mb-2">Historial de pagos</h4>
+            <h4 className="font-black text-sm  mb-2">Historial de pagos</h4>
             <div className="space-y-1.5 max-h-80 overflow-y-auto text-xs">
               {statement.payments.length === 0 && <p className="text-slate-400">Sin pagos registrados.</p>}
               {statement.payments.map(p => (
                 <div key={p.id} className="flex justify-between border-b border-slate-100 py-1.5">
                   <div>
                     <div className="font-bold">{KIND_LABEL[p.kind]} · {p.method}</div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-ink-soft">
                       {new Date(p.createdAt).toLocaleString('es-PE')} · {p.orderCode} · {p.receivedBy}{p.notes ? ` · ${p.notes}` : ''}
                     </div>
                   </div>
-                  <div className={`font-mono font-black ${p.amount < 0 ? 'text-red-600' : 'text-emerald-700'}`}>{formatSoles(p.amount)}</div>
+                  <div className={`font-display font-black ${p.amount < 0 ? 'text-red-600' : 'text-brand-700'}`}>{formatSoles(p.amount)}</div>
                 </div>
               ))}
             </div>
@@ -279,11 +279,11 @@ export const DebtsPanel: React.FC = () => {
     <div className="space-y-4 animate-in fade-in">
       <div className="flex flex-wrap justify-between items-end gap-3">
         <div>
-          <h3 className="text-xl font-black text-slate-900 uppercase">Libreta de Fiados (Cuentas por Cobrar)</h3>
+          <h3 className="text-xl font-black text-ink ">Libreta de Fiados (Cuentas por Cobrar)</h3>
           {tab === 'pendientes' ? (
-            <p className="text-xs text-slate-500">Total por cobrar: <strong className="text-red-600">{formatSoles(grandTotal)}</strong> · {debtors.length} clientes</p>
+            <p className="text-xs text-ink-soft">Total por cobrar: <strong className="text-red-600">{formatSoles(grandTotal)}</strong> · {debtors.length} clientes</p>
           ) : (
-            <p className="text-xs text-slate-500">Fiados pagados: <strong className="text-emerald-700">{formatSoles(paidTotal)}</strong> · {filteredPaid.length} boletas</p>
+            <p className="text-xs text-ink-soft">Fiados pagados: <strong className="text-brand-700">{formatSoles(paidTotal)}</strong> · {filteredPaid.length} boletas</p>
           )}
         </div>
         <div className="flex gap-2">
@@ -302,8 +302,8 @@ export const DebtsPanel: React.FC = () => {
           ['pagados', 'Pagados (historial)', <History key="i" className="w-4 h-4" />],
         ] as const).map(([key, label, icon]) => (
           <button key={key} type="button" onClick={() => { setTab(key); setMessage(null); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase flex items-center gap-1.5 transition ${
-              tab === key ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-800'}`}>
+            className={`px-3 py-1.5 rounded-lg text-xs font-black  flex items-center gap-1.5 transition ${
+              tab === key ? 'bg-white shadow text-ink' : 'text-ink-soft hover:text-ink'}`}>
             {icon}{label}
           </button>
         ))}
@@ -315,7 +315,7 @@ export const DebtsPanel: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           {!loading && filtered.length === 0 ? (
             <div className="p-8 text-center text-slate-400">
-              <CheckCircle2 className="w-12 h-12 mx-auto text-emerald-300 mb-2" />
+              <CheckCircle2 className="w-12 h-12 mx-auto text-brand-300 mb-2" />
               <p className="font-bold text-sm">No hay cuentas por cobrar</p>
             </div>
           ) : (
@@ -325,19 +325,19 @@ export const DebtsPanel: React.FC = () => {
                   onKeyDown={e => { if (e.key === 'Enter') void openStatement(d.id); }}
                   className="w-full p-4 flex justify-between items-center gap-3 hover:bg-slate-50 text-left cursor-pointer">
                   <div className="min-w-0">
-                    <div className="font-bold text-slate-900">{d.name}</div>
-                    <div className="text-xs text-slate-500 flex flex-wrap gap-x-1.5">
+                    <div className="font-bold text-ink">{d.name}</div>
+                    <div className="text-xs text-ink-soft flex flex-wrap gap-x-1.5">
                       <PhoneLink phone={d.phone} />
                       <span>· {d.docNumber ?? 'Sin documento'}{d.route ? ` · ${d.route}` : ''} · desde {formatDate(d.oldestDebtAt)}</span>
                     </div>
-                    <div className="text-xs text-slate-600 mt-0.5">
+                    <div className="text-xs text-ink-soft mt-0.5">
                       {d.openOrders} boleta(s):{' '}
-                      <span className="font-mono font-bold">{(d.orderCodes ?? []).join(', ') || '—'}</span>
+                      <span className="font-display font-bold">{(d.orderCodes ?? []).join(', ') || '—'}</span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="font-mono font-black text-red-600">{formatSoles(d.fiadoDebt)}</div>
-                    <div className="text-xs text-emerald-700 font-bold">Ver / Abonar ➔</div>
+                    <div className="font-display font-black text-red-600">{formatSoles(d.fiadoDebt)}</div>
+                    <div className="text-xs text-brand-700 font-bold">Ver / Abonar ➔</div>
                   </div>
                 </div>
               ))}
@@ -357,17 +357,17 @@ export const DebtsPanel: React.FC = () => {
                 <button key={o.id} type="button" onClick={() => setViewOrder(o)}
                   className="w-full p-4 flex justify-between items-center gap-3 hover:bg-slate-50 text-left">
                   <div className="min-w-0">
-                    <div className="font-bold text-slate-900">
-                      Boleta <span className="font-mono">{o.code}</span>
-                      <span className="ml-1.5 px-1.5 rounded text-xs bg-emerald-100 text-emerald-800">PAGADO</span>
+                    <div className="font-bold text-ink">
+                      Boleta <span className="font-display">{o.code}</span>
+                      <span className="ml-1.5 px-1.5 rounded text-xs bg-brand-100 text-brand-800">Pagado</span>
                     </div>
-                    <div className="text-xs text-slate-600 flex flex-wrap gap-x-1.5">
+                    <div className="text-xs text-ink-soft flex flex-wrap gap-x-1.5">
                       <span className="font-bold">{o.customerName ?? 'Cliente'}</span>
                       <span>·</span>
                       <PhoneLink phone={o.customerPhone} />
                       {o.customerDoc && <span>· {o.customerDoc}</span>}
                     </div>
-                    <div className="text-xs text-slate-500 mt-0.5">
+                    <div className="text-xs text-ink-soft mt-0.5">
                       Fiado el {formatDate(o.createdAt)} · pagado el {formatDate(o.lastAbonoAt)} · {o.abonosCount} abono(s)
                     </div>
                     <div className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-brand-700">
@@ -375,7 +375,7 @@ export const DebtsPanel: React.FC = () => {
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="font-mono font-black text-emerald-700">{formatSoles(o.totalAmount)}</div>
+                    <div className="font-display font-black text-brand-700">{formatSoles(o.totalAmount)}</div>
                     <Receipt className="w-3.5 h-3.5 text-slate-400 ml-auto" />
                   </div>
                 </button>

@@ -73,18 +73,18 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
     }
   };
 
-  const field = 'w-full bg-white border border-slate-300 rounded-lg p-2 text-sm text-slate-900 focus:outline-hidden focus:border-brand-600';
+  const field = 'w-full bg-white border border-slate-300 rounded-lg p-2 text-sm text-ink focus:outline-hidden focus:border-brand-600';
 
   return (
     <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4" onClick={onClose}>
       <form onSubmit={submit} onClick={e => e.stopPropagation()}
-        className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-slate-800 max-h-[90vh] overflow-y-auto">
+        className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-ink max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
-          <h3 className="font-black uppercase text-sm">{customer ? 'Editar cliente' : 'Nuevo cliente'}</h3>
+          <h3 className="font-black  text-sm">{customer ? 'Editar cliente' : 'Nuevo cliente'}</h3>
           <button type="button" onClick={onClose} aria-label="Cerrar"><X className="w-5 h-5 text-slate-400" /></button>
         </div>
         <input className={field} placeholder="Nombre o razón social *" value={name} onChange={e => setName(e.target.value)} required minLength={2} autoFocus />
-        <p className="text-xs text-slate-500">Solo el nombre es obligatorio. Los demás datos puede completarlos después.</p>
+        <p className="text-xs text-ink-soft">Solo el nombre es obligatorio. Los demás datos puede completarlos después.</p>
         <div className="grid grid-cols-3 gap-2">
           <select className={field} value={docType} onChange={e => setDocType(e.target.value as DocType)}>
             <option value="DNI">DNI</option>
@@ -103,7 +103,7 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
         <input className={field} placeholder="Dirección" value={address} onChange={e => setAddress(e.target.value)} />
         {isAdmin && (
           <>
-            <label className="block text-xs font-bold text-slate-500">
+            <label className="block text-xs font-bold text-ink-soft">
               Límite de crédito propio (vacío = límite general)
               <input className={`${field} mt-1`} inputMode="decimal" placeholder="Ej. 800" value={limit} onChange={e => setLimit(e.target.value)} />
             </label>
@@ -116,7 +116,7 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
         )}
         {error && <p className="text-red-600 text-xs">{error}</p>}
         <button type="submit" disabled={saving} className="w-full py-3 bg-brand-600 text-white font-black rounded-xl disabled:opacity-50">
-          {saving ? 'Guardando…' : 'GUARDAR CLIENTE'}
+          {saving ? 'Guardando…' : 'Guardar cliente'}
         </button>
       </form>
     </div>

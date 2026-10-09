@@ -261,7 +261,7 @@ export const CameraScanner: React.FC<Props> = ({ open, onClose, onDetected, kind
             {torchAvailable && status === 'scanning' && (
               <div className="flex justify-center">
                 <button type="button" onClick={() => void toggleTorch()}
-                  className={`flex h-12 items-center gap-2 rounded-full px-5 text-sm font-bold backdrop-blur ${torchOn ? 'bg-amber-400 text-slate-900' : 'bg-white/15 text-white'}`}>
+                  className={`flex h-12 items-center gap-2 rounded-full px-5 text-sm font-bold backdrop-blur ${torchOn ? 'bg-amber-400 text-ink' : 'bg-white/15 text-white'}`}>
                   {torchOn ? <FlashlightOff className="h-5 w-5" /> : <Flashlight className="h-5 w-5" />}
                   {torchOn ? 'Apagar linterna' : 'Linterna'}
                 </button>

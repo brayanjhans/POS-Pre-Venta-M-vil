@@ -142,14 +142,14 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
         {/* Header Elegante */}
         <div className="px-6 py-4 flex items-center justify-between bg-white relative z-10 shadow-sm shadow-slate-100/50 border-b border-slate-100">
           <div className="flex items-center gap-4">
-            <div className="p-2.5 bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-600 rounded-2xl shadow-sm border border-emerald-100/50">
+            <div className="p-2.5 bg-gradient-to-br from-brand-50 to-brand-50 text-brand-600 rounded-2xl shadow-sm border border-brand-100/50">
               <Printer className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-800 tracking-tight leading-none">
+              <h3 className="text-lg font-black text-ink tracking-tight leading-none">
                 Ticket Generado
               </h3>
-              <p className="text-xs text-slate-500 font-medium mt-1">
+              <p className="text-xs text-ink-soft font-medium mt-1">
                 ID: <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded-md">{order.code}</span>
               </p>
             </div>
@@ -159,7 +159,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
             type="button"
             onClick={onClose}
             aria-label="Cerrar ticket"
-            className="p-2.5 rounded-full text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 transition shadow-sm border border-slate-100"
+            className="p-2.5 rounded-full text-slate-400 hover:text-ink-soft bg-slate-50 hover:bg-slate-100 transition shadow-sm border border-slate-100"
           >
             <X className="w-5 h-5" />
           </button>
@@ -172,13 +172,13 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
             <div className="flex bg-slate-200/50 p-1.5 rounded-xl w-max mb-6 shadow-inner">
             <button
               onClick={() => setPaperWidth('58mm')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition duration-200 ${paperWidth === '58mm' ? 'bg-white text-slate-800 shadow-sm ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition duration-200 ${paperWidth === '58mm' ? 'bg-white text-ink shadow-sm ring-1 ring-black/5' : 'text-ink-soft hover:text-slate-700'}`}
             >
               Mini (58mm)
             </button>
             <button
               onClick={() => setPaperWidth('80mm')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition duration-200 ${paperWidth === '80mm' ? 'bg-white text-slate-800 shadow-sm ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition duration-200 ${paperWidth === '80mm' ? 'bg-white text-ink shadow-sm ring-1 ring-black/5' : 'text-ink-soft hover:text-slate-700'}`}
             >
               Estándar (80mm)
             </button>
@@ -194,7 +194,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
             <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjQiPjxwb2x5Z29uIHBvaW50cz0iMCw0IDQsMCA4LDQiIGZpbGw9IiNmOGZhZmMiLz48L3N2Zz4=')] bg-repeat-x"></div>
 
             {/* Render del Ticket Real */}
-            <div className="p-4 pt-6 pb-6 font-mono text-xs leading-tight text-slate-900 flex flex-col items-stretch">
+            <div className="p-4 pt-6 pb-6 font-mono text-xs leading-tight text-ink flex flex-col items-stretch">
               <div className="text-center mb-4">
                 <div className="font-black text-[13px] uppercase tracking-wider mb-1">{storeName}</div>
                 {settings?.store_address && <div className="text-xs">{settings.store_address}</div>}
@@ -236,7 +236,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
                       <td className="py-1.5 px-1 align-top break-words max-w-[120px]">
                         [{item.presentationType.toUpperCase().substring(0,4)}] {item.productName}
                       </td>
-                      <td className="py-1.5 text-right align-top font-bold text-slate-800">S/ {item.subtotal.toFixed(2)}</td>
+                      <td className="py-1.5 text-right align-top font-bold text-ink">S/ {item.subtotal.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -244,7 +244,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
 
               <div className="border-t border-dashed border-slate-300 pt-2 mb-4 space-y-1">
                 {order.discountAmount ? (
-                  <div className="flex justify-between text-xs text-slate-500">
+                  <div className="flex justify-between text-xs text-ink-soft">
                     <span>Descuento:</span>
                     <span>- S/ {order.discountAmount.toFixed(2)}</span>
                   </div>
@@ -266,8 +266,8 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
 
               {order.debtAmount && order.debtAmount > 0 ? (
                 <div className="border border-slate-300 rounded p-1.5 mb-3 text-center bg-slate-50">
-                  <span className="font-bold text-xs text-slate-800 uppercase block">AVISO: SALDO PENDIENTE</span>
-                  <span className="text-xs text-slate-600 font-medium">
+                  <span className="font-bold text-xs text-ink uppercase block">AVISO: SALDO PENDIENTE</span>
+                  <span className="text-xs text-ink-soft font-medium">
                     Evite el bloqueo de sus créditos.
                   </span>
                 </div>
@@ -279,7 +279,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
                 )}
               </div>
 
-              <div className="text-center text-xs text-slate-500 leading-tight">
+              <div className="text-center text-xs text-ink-soft leading-tight">
                 Pase por Caja Central con este QR para cobrar y despachar su mercadería.
               </div>
             </div>
@@ -312,7 +312,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
               onClick={handleCopyTextTicket}
               className="py-3 px-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm rounded-xl text-xs font-bold uppercase flex flex-col items-center justify-center gap-1.5 transition duration-200 active:scale-[0.97]"
             >
-              {copiedText ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+              {copiedText ? <Check className="w-4 h-4 text-brand-600" /> : <Copy className="w-4 h-4" />}
               {copiedText ? 'Copiado' : 'Copiar'}
             </button>
           </div>

@@ -19,8 +19,8 @@ export const CustomersTab: React.FC = () => {
     <div className="space-y-4 animate-in fade-in">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h3 className="text-lg font-black text-slate-900 uppercase">Clientes</h3>
-          <p className="text-xs text-slate-500">
+          <h3 className="text-lg font-black text-ink ">Clientes</h3>
+          <p className="text-xs text-ink-soft">
             Límite de crédito por defecto: {formatSoles(Number(catalog?.settings.default_credit_limit ?? 500))}. Puede fijar uno propio por cliente.
           </p>
         </div>
@@ -28,7 +28,7 @@ export const CustomersTab: React.FC = () => {
           <input type="text" placeholder="Nombre, DNI/RUC o ruta" value={search} onChange={e => setSearch(e.target.value)}
             className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm" />
           <button type="button" onClick={() => setEditing('new')}
-            className="px-4 py-2 bg-brand-600 text-white font-black text-xs uppercase rounded-xl flex items-center gap-1.5">
+            className="px-4 py-2 bg-brand-600 text-white font-black text-xs  rounded-xl flex items-center gap-1.5">
             <Plus className="w-4 h-4" /> Nuevo
           </button>
         </div>
@@ -37,17 +37,17 @@ export const CustomersTab: React.FC = () => {
       <div className="grid gap-3 md:grid-cols-2">
         {list.map(c => (
           <button key={c.id} type="button" onClick={() => setEditing(c)}
-            className={`rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-emerald-400 active:scale-[0.99] ${c.isActive ? '' : 'opacity-60'}`}>
+            className={`rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-brand-400 active:scale-[0.99] ${c.isActive ? '' : 'opacity-60'}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <div className="font-black text-slate-900">
-                  {c.name}{!c.isActive && <span className="ml-1 text-xs font-bold bg-slate-200 px-1 rounded">INACTIVO</span>}
+                <div className="font-black text-ink">
+                  {c.name}{!c.isActive && <span className="ml-1 text-xs font-bold bg-slate-200 px-1 rounded">Inactivo</span>}
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-soft">
                   {missingContact(c) ? (
                     <span className="rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 font-bold text-amber-800">Completar datos</span>
-                  ) : <span className="font-mono font-bold text-slate-700">☎ {formatPhone(c.phone)}</span>}
-                  {c.docType !== 'NINGUNO' && <span className="font-mono">{c.docType} {c.docNumber}</span>}
+                  ) : <span className="font-display font-bold text-slate-700">☎ {formatPhone(c.phone)}</span>}
+                  {c.docType !== 'NINGUNO' && <span className="font-display">{c.docType} {c.docNumber}</span>}
                   {c.route && <span>· {c.route}</span>}
                 </div>
               </div>
@@ -55,12 +55,12 @@ export const CustomersTab: React.FC = () => {
             </div>
             <div className="mt-3 flex items-end justify-between border-t border-slate-100 pt-2.5 text-xs">
               <div>
-                <div className="text-slate-500">Debe</div>
-                <div className={`font-mono text-base font-black ${c.debt > 0 ? 'text-red-600' : 'text-slate-400'}`}>{formatSoles(c.debt)}</div>
+                <div className="text-ink-soft">Debe</div>
+                <div className={`font-display text-base font-black ${c.debt > 0 ? 'text-red-600' : 'text-slate-400'}`}>{formatSoles(c.debt)}</div>
               </div>
               <div className="text-right">
-                <div className="text-slate-500">Límite{c.customCreditLimit != null && ' propio'}</div>
-                <div className="font-mono font-bold text-slate-700">{formatSoles(c.creditLimit)}</div>
+                <div className="text-ink-soft">Límite{c.customCreditLimit != null && ' propio'}</div>
+                <div className="font-display font-bold text-slate-700">{formatSoles(c.creditLimit)}</div>
               </div>
             </div>
           </button>

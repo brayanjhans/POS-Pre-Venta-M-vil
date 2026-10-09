@@ -45,11 +45,11 @@ export const SettingsTab: React.FC = () => {
   };
 
   const field = 'w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm mt-1';
-  const label = 'block text-xs font-bold text-slate-600 uppercase';
+  const label = 'block text-xs font-bold text-ink-soft ';
 
   return (
     <form onSubmit={submit} className="space-y-4 max-w-xl mx-auto bg-white p-6 rounded-3xl border border-slate-200 animate-in fade-in">
-      <h3 className="text-lg font-black uppercase">Configuración</h3>
+      <h3 className="text-lg font-black ">Configuración</h3>
       <label className={label}>Nombre de la tienda (sale en el ticket)
         <input className={field} value={storeName} onChange={e => setStoreName(e.target.value)} maxLength={60} />
       </label>
@@ -72,12 +72,12 @@ export const SettingsTab: React.FC = () => {
           <input className={field} inputMode="numeric" value={sessionHours} onChange={e => setSessionHours(e.target.value)} />
         </label>
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-soft">
         El límite de fiado aplica a clientes sin límite propio y lo valida el servidor en cada venta a crédito y en cada fiado en caja.
       </p>
-      {message && <p className={`text-sm ${message.error ? 'text-red-600' : 'text-emerald-700'}`}>{message.text}</p>}
+      {message && <p className={`text-sm ${message.error ? 'text-red-600' : 'text-brand-700'}`}>{message.text}</p>}
       <button type="submit" disabled={saving} className="w-full py-3 bg-brand-600 text-white font-black rounded-xl disabled:opacity-50">
-        {saving ? 'Guardando…' : 'GUARDAR CONFIGURACIÓN'}
+        {saving ? 'Guardando…' : 'Guardar configuración'}
       </button>
     </form>
   );

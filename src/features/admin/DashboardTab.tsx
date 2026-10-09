@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, Package, RefreshCw, TrendingUp, Users, Wallet } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { formatSoles } from '../../domain/money';
 import { usePos } from '../../state/PosContext';
 import type { Dashboard, Product } from '../../types/pos';
@@ -10,8 +10,34 @@ interface Props {
 }
 
 const daysUntil = (date: string) => Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000);
+const time = (iso: string) => new Date(iso).toLocaleTimeString('es-PE', { hour: 'numeric', minute: '2-digit' });
 
-/** Resumen con cifras reales del servidor (ventas, cobros, deudas, turnos) y alertas de inventario. */
+/** Fila de la cinta: concepto a la izquierda, monto a la derecha. */
+const TapeRow: React.FC<{ label: string; hint?: string; value: React.ReactNode; tone?: 'fresa' | 'muted' }> = ({ label, hint, value, tone }) => (
+  <div className="flex items-baseline justify-between gap-4 py-2">
+    <div className="min-w-0">
+      <div className="text-[15px] text-ink">{label}</div>
+      {hint && <div className="text-sm text-ink-soft">{hint}</div>}
+    </div>
+    <div className={`shrink-0 font-display text-lg font-bold ${tone === 'fresa' ? 'text-fresa' : tone === 'muted' ? 'text-ink-soft' : 'text-ink'}`}>{value}</div>
+  </div>
+);
+
+/** Encabezado de sección: título y, si hace falta, una cifra al costado. */
+const Section: React.FC<{ title: string; count?: number; children: React.ReactNode }> = ({ title, count, children }) => (
+  <section>
+    <h3 className="flex items-baseline gap-2 font-display text-xl font-bold text-ink">
+      {title}
+      {count !== undefined && count > 0 && <span className="text-base font-semibold text-ink-soft">{count}</span>}
+    </h3>
+    <div className="mt-2">{children}</div>
+  </section>
+);
+
+/**
+ * Resumen del dueño. El día se presenta como la cinta del cierre de caja (ticket térmico):
+ * lo vendido arriba, en grande; debajo cobrado, fiado y el mes. El resto son listas simples.
+ */
 export const DashboardTab: React.FC<Props> = ({ products, onRegularize }) => {
   const { api, handleError } = usePos();
   const [data, setData] = React.useState<Dashboard | null>(null);
@@ -39,101 +65,121 @@ export const DashboardTab: React.FC<Props> = ({ products, onRegularize }) => {
     .filter(p => p.expirationDate && daysUntil(p.expirationDate) <= 30)
     .sort((a, b) => daysUntil(a.expirationDate!) - daysUntil(b.expirationDate!));
   const vsYesterday = data && data.salesYesterday > 0 ? ((data.salesToday - data.salesYesterday) / data.salesYesterday) * 100 : null;
-
-  const card = (icon: React.ReactNode, title: string, value: React.ReactNode, sub?: React.ReactNode) => (
-    <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-      <div className="text-slate-500 mb-1 flex items-center gap-2 text-xs font-bold uppercase">{icon} {title}</div>
-      <div className="text-2xl font-black text-slate-900 font-mono">{value}</div>
-      {sub && <div className="text-xs font-bold mt-1 text-slate-500">{sub}</div>}
-    </div>
-  );
+  const todayRaw = new Date().toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' });
+  const today = todayRaw.charAt(0).toUpperCase() + todayRaw.slice(1);
 
   return (
-    <div className="space-y-6 animate-in fade-in">
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-lg font-black text-slate-900 uppercase">Dashboard General</h3>
-          <p className="text-xs text-slate-500">Cifras del servidor en tiempo real</p>
-        </div>
-        <button type="button" onClick={() => void load()} className="p-2 bg-white border border-slate-300 rounded-xl" title="Actualizar">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+    <div className="mx-auto max-w-2xl space-y-8 text-ink">
+      {/* La cinta del día */}
+      <div>
+        <button type="button" onClick={() => void load()} aria-label="Actualizar cifras"
+          className="inline-flex h-10 items-center gap-2 rounded-xl text-[15px] font-bold text-ink-soft transition hover:text-ink">
+          {today}
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : 'opacity-60'}`} />
         </button>
-      </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-2 text-[15px] font-bold text-fresa">{error}</p>}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {card(<TrendingUp className="w-4 h-4 text-brand-600" />, 'Ventas de hoy', data ? formatSoles(data.salesToday) : '…',
-          data && <>{data.ordersToday} pedidos{vsYesterday !== null && <> · <span className={vsYesterday >= 0 ? 'text-emerald-600' : 'text-red-600'}>{vsYesterday >= 0 ? '+' : ''}{vsYesterday.toFixed(1)}% vs ayer</span></>}</>)}
-        {card(<Wallet className="w-4 h-4 text-blue-500" />, 'Cobrado hoy', data ? formatSoles(data.collectedToday) : '…', 'Ventas + abonos − devoluciones')}
-        {card(<Calendar className="w-4 h-4 text-indigo-500" />, 'Ventas del mes', data ? formatSoles(data.salesMonth) : '…',
-          data && (data.profitMonth !== null ? `Ganancia estimada: ${formatSoles(data.profitMonth)}` : 'Cargue costos para ver la ganancia'))}
-        {card(<Users className="w-4 h-4 text-red-500" />, 'Por cobrar (fiado)', data ? formatSoles(data.totalDebt) : '…',
-          data && `${data.debtors} clientes · ${data.pendingOrders} pedidos pendientes`)}
+        <div className="tape relative mt-2 bg-white px-5 pb-7 pt-5 shadow-[0_1px_0_rgba(31,42,48,0.06),0_18px_30px_-24px_rgba(31,42,48,0.6)]">
+          <div className="text-[15px] text-ink-soft">Vendido hoy</div>
+          <div className="mt-1 font-display text-[52px] font-bold leading-none tracking-tight [font-stretch:85%]">
+            {data ? formatSoles(data.salesToday) : '—'}
+          </div>
+          {data && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-[15px]">
+              <span className="text-ink-soft">{data.ordersToday === 1 ? '1 pedido' : `${data.ordersToday} pedidos`}</span>
+              {vsYesterday !== null && (
+                <span className={`rounded-md px-2 py-0.5 text-sm font-bold ${vsYesterday >= 0 ? 'bg-tag text-ink' : 'bg-fresa/10 text-fresa'}`}>
+                  {vsYesterday >= 0 ? '+' : ''}{vsYesterday.toFixed(0)}% que ayer
+                </span>
+              )}
+            </div>
+          )}
+
+          <div className="my-4 border-t-2 border-dashed border-ink/15" />
+
+          <TapeRow label="Cobrado en caja" hint="Ventas y abonos, menos devoluciones" value={data ? formatSoles(data.collectedToday) : '—'} />
+          <TapeRow
+            label="Por cobrar (fiado)"
+            hint={data ? (data.debtors === 1 ? '1 cliente' : `${data.debtors} clientes`) : undefined}
+            value={data ? formatSoles(data.totalDebt) : '—'}
+            tone={data && data.totalDebt > 0 ? 'fresa' : undefined}
+          />
+          <TapeRow label="Pedidos sin cobrar" value={data ? data.pendingOrders : '—'} tone={data && data.pendingOrders === 0 ? 'muted' : undefined} />
+
+          <div className="my-3 border-t-2 border-dashed border-ink/15" />
+
+          <TapeRow label="Vendido este mes" value={data ? formatSoles(data.salesMonth) : '—'} />
+          <TapeRow
+            label="Ganancia del mes"
+            hint={data && data.profitMonth === null ? 'Cargue el costo de los productos para calcularla' : undefined}
+            value={data && data.profitMonth !== null ? formatSoles(data.profitMonth) : '—'}
+            tone={data && data.profitMonth === null ? 'muted' : undefined}
+          />
+        </div>
       </div>
 
-      {data && data.openShifts.length > 0 && (
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-          <h4 className="text-sm font-black text-slate-900 uppercase border-b border-slate-100 pb-2 mb-3">Turnos abiertos</h4>
-          <div className="grid md:grid-cols-3 gap-2 text-xs">
-            {data.openShifts.map(s => (
-              <div key={s.id} className="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
-                <div className="font-bold">{s.userName}</div>
-                <div className="text-slate-500">Desde {new Date(s.openedAt).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}</div>
-                <div className="font-mono">Efectivo esperado: {formatSoles(s.expectedCashNow)}</div>
+      <Section title="Trabajando ahora" count={data?.openShifts.length}>
+        {data && data.openShifts.length === 0 && <p className="text-[15px] text-ink-soft">Nadie tiene la caja abierta.</p>}
+        <ul className="divide-y divide-ink/10">
+          {data?.openShifts.map(s => (
+            <li key={s.id} className="flex items-center justify-between gap-3 py-3">
+              <div className="min-w-0">
+                <div className="truncate text-[15px] font-bold">{s.userName}</div>
+                <div className="text-sm text-ink-soft">Desde las {time(s.openedAt)}</div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-          <h4 className="text-sm font-black text-slate-900 uppercase border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
-            <Package className="w-4 h-4 text-amber-500" /> Alertas de stock ({lowStock.length})
-          </h4>
-          <div className="space-y-3 max-h-72 overflow-y-auto">
-            {lowStock.length === 0 && <div className="text-xs text-slate-400 py-4 text-center">Todo en orden.</div>}
-            {lowStock.map(p => (
-              <div key={p.id} className="flex justify-between items-center text-xs">
-                <div className="truncate max-w-[70%]">
-                  <div className="font-bold text-slate-900 truncate">{p.name}</div>
-                  {p.stockInBaseUnits < 0 && (
-                    <button type="button" onClick={() => onRegularize(p)} className="text-xs mt-0.5 text-blue-600 font-bold hover:underline">
-                      Regularizar compra externa
-                    </button>
-                  )}
-                </div>
-                <div className={`font-black font-mono px-2 py-1 rounded ${p.stockInBaseUnits < 0 ? 'bg-red-100 text-red-700' : 'bg-amber-50 text-amber-600'}`}>
-                  {p.stockInBaseUnits} u
-                </div>
+              <div className="shrink-0 text-right">
+                <div className="font-display text-lg font-bold">{formatSoles(s.expectedCashNow)}</div>
+                <div className="text-sm text-ink-soft">en efectivo</div>
               </div>
-            ))}
-          </div>
-        </div>
+            </li>
+          ))}
+        </ul>
+      </Section>
 
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-red-500">
-          <h4 className="text-sm font-black text-slate-900 uppercase border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-red-500" /> Próximos a vencer ({expiring.length})
-          </h4>
-          <div className="space-y-3 max-h-72 overflow-y-auto">
-            {expiring.length === 0 && <div className="text-xs text-slate-400 py-4 text-center">Todo en orden.</div>}
-            {expiring.map(p => {
-              const d = daysUntil(p.expirationDate!);
-              return (
-                <div key={p.id} className="flex justify-between items-center text-xs">
-                  <div className="truncate max-w-[65%]">
-                    <div className="font-bold text-slate-900 truncate">{p.name}</div>
-                    <div className="text-xs text-slate-500">{p.expirationDate}</div>
-                  </div>
-                  <div className={`font-black font-mono px-2 py-1 rounded ${d < 0 ? 'bg-red-100 text-red-700' : d <= 7 ? 'bg-orange-100 text-orange-700' : 'bg-yellow-50 text-yellow-700'}`}>
-                    {d < 0 ? 'Expiró' : `${d} d`}
+      <Section title="Por reponer" count={lowStock.length}>
+        {lowStock.length === 0 && <p className="text-[15px] text-ink-soft">Ningún producto bajo el mínimo.</p>}
+        <ul className="divide-y divide-ink/10">
+          {lowStock.map(p => (
+            <li key={p.id} className="flex items-center justify-between gap-3 py-3">
+              <div className="min-w-0">
+                <div className="truncate text-[15px] font-bold">{p.name}</div>
+                {p.stockInBaseUnits < 0 ? (
+                  <button type="button" onClick={() => onRegularize(p)} className="mt-0.5 text-sm font-bold text-brand-700 underline underline-offset-2">
+                    Registrar la compra a otra tienda
+                  </button>
+                ) : (
+                  <div className="text-sm text-ink-soft">Mínimo {p.minStockAlert} {p.baseUnitName}s</div>
+                )}
+              </div>
+              <div className={`shrink-0 font-display text-lg font-bold ${p.stockInBaseUnits < 0 ? 'text-fresa' : 'text-ink'}`}>
+                {p.stockInBaseUnits} <span className="text-sm font-semibold text-ink-soft">{p.baseUnitName}s</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section title="Por vencer" count={expiring.length}>
+        {expiring.length === 0 && <p className="text-[15px] text-ink-soft">Nada vence en los próximos 30 días.</p>}
+        <ul className="divide-y divide-ink/10">
+          {expiring.map(p => {
+            const d = daysUntil(p.expirationDate!);
+            return (
+              <li key={p.id} className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <div className="truncate text-[15px] font-bold">{p.name}</div>
+                  <div className="text-sm text-ink-soft">
+                    {new Date(`${p.expirationDate}T12:00:00`).toLocaleDateString('es-PE', { day: 'numeric', month: 'long' })}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+                <span className={`shrink-0 rounded-md px-2 py-1 text-sm font-bold ${d < 0 ? 'bg-fresa text-white' : d <= 7 ? 'bg-tag text-ink' : 'bg-ink/5 text-ink-soft'}`}>
+                  {d < 0 ? 'Vencido' : d === 0 ? 'Vence hoy' : d === 1 ? 'Mañana' : `En ${d} días`}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </Section>
     </div>
   );
 };

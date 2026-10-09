@@ -31,14 +31,14 @@ export const ChangePinScreen: React.FC = () => {
 
   const pinInput = (value: string, onChange: (v: string) => void, label: string) => (
     <label className="block">
-      <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</span>
+      <span className="block text-xs font-bold text-ink-soft   mb-1">{label}</span>
       <input
         type="password"
         inputMode="numeric"
         autoComplete="off"
         value={value}
         onChange={e => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
-        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-center text-2xl font-black tracking-[0.4em] focus:outline-none focus:border-emerald-500"
+        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-center text-2xl font-black tracking-[0.4em] focus:outline-none focus:border-brand-500"
         required
         minLength={4}
       />
@@ -54,7 +54,7 @@ export const ChangePinScreen: React.FC = () => {
           </div>
         </div>
         <h1 className="text-xl font-black text-center">Cambie su PIN</h1>
-        <p className="text-slate-500 text-center text-sm">
+        <p className="text-ink-soft text-center text-sm">
           Hola <strong>{session?.user.fullName}</strong>. Por seguridad, elija un PIN personal de 4 a 6 dígitos
           que solo usted conozca.
         </p>
@@ -63,8 +63,8 @@ export const ChangePinScreen: React.FC = () => {
         {pinInput(confirm, setConfirm, 'Repita el PIN nuevo')}
         {error && <p className="text-red-600 text-sm text-center font-medium">{error}</p>}
         <button type="submit" disabled={loading}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl">
-          {loading ? 'Guardando…' : 'GUARDAR PIN'}
+          className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl">
+          {loading ? 'Guardando…' : 'Guardar PIN'}
         </button>
         <button type="button" onClick={() => void logout()} className="w-full py-2 text-sm font-bold text-slate-400">
           Cerrar sesión
