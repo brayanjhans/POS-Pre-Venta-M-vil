@@ -1,175 +1,147 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MotionConfig, motion } from 'motion/react';
-import { Delete, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Lock, LockOpen, LogIn, Store, User } from 'lucide-react';
+import { useDialog } from '../../app/DialogProvider';
 import { errorMessage, isNetworkError } from '../../services/rpc';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
 import { setScreenTheme } from '../../lib/screenTheme';
+import type { Catalog } from '../../types/pos';
 
 /*
- * Login con usuario y PIN. No se muestra la lista de personas: cada quien escribe su usuario
- * y, según su rol, entra a su pantalla (admin, caja o pre-venta).
- * La credencial (fotocheck) se completa mientras se escribe el usuario: es el único elemento
- * llamativo; el resto es sobrio. El PIN se marca con el teclado propio (nunca el del celular).
+ * Inicio de sesión con usuario y PIN (diseño de referencia: carpeta /login).
+ * No se lista a las personas: cada quien escribe sus datos y entra a su pantalla según su rol.
+ * El PIN usa solo el teclado numérico del celular (no hay teclado propio en pantalla).
  */
-
-const greeting = (d: Date) => {
-  const h = d.getHours();
-  return h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
-};
-
-const KEYPAD = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
-const KEY_CLASS = 'h-[64px] rounded-2xl border border-ink/10 bg-white font-display text-[28px] font-semibold text-ink shadow-[0_1px_0_rgba(31,42,48,0.08)] transition active:scale-95 active:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-600';
 
 export const LoginScreen: React.FC = () => {
   const { login } = usePos();
+  const dialog = useDialog();
   const [username, setUsername] = useState('');
   const [pin, setPin] = useState('');
+  const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState('');
-  const [shake, setShake] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [now, setNow] = useState(() => new Date());
+  const [storeName, setStoreName] = useState('Pre-Venta');
   const userRef = useRef<HTMLInputElement>(null);
-  const typingUser = useRef(false);
+  const pinRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setScreenTheme('paper');
-    const id = setInterval(() => setNow(new Date()), 30000);
-    // En el celular de cada vendedor queda escrito su usuario: solo marca el PIN.
-    void storage.get<string>(KEYS.lastUsername).then(last => {
-      if (last) setUsername(last);
-      else userRef.current?.focus();
+    void Promise.all([storage.get<string>(KEYS.lastUsername), storage.get<Catalog>(KEYS.catalog)]).then(([last, catalog]) => {
+      if (catalog?.settings.store_name) setStoreName(catalog.settings.store_name);
+      // En el celular de cada vendedor su usuario queda escrito: solo marca el PIN.
+      if (last) { setUsername(last); pinRef.current?.focus(); } else userRef.current?.focus();
     });
-    return () => { clearInterval(id); setScreenTheme('ink'); };
+    return () => setScreenTheme('ink');
   }, []);
 
-  const fail = (message: string) => {
-    setError(message);
-    setPin('');
-    setShake(s => s + 1);
-  };
-
-  const submit = async (value: string) => {
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
     const user = username.trim().toLowerCase();
     if (loading) return;
-    if (!user) { fail('Escriba su usuario.'); userRef.current?.focus(); return; }
-    if (value.length < 4) { fail('El PIN tiene de 4 a 6 números.'); return; }
+    if (!user) { setError('Escriba su usuario.'); userRef.current?.focus(); return; }
+    if (!/^\d{4,6}$/.test(pin)) { setError('El PIN tiene de 4 a 6 números.'); pinRef.current?.focus(); return; }
     setLoading(true);
     setError('');
     try {
-      const result = await login(user, value);
-      if (!result.ok) fail(result.message ?? 'Usuario o PIN incorrecto.');
-    } catch (e) {
-      fail(isNetworkError(e) ? 'Sin conexión. Para entrar se necesita internet.' : errorMessage(e));
+      const result = await login(user, pin);
+      if (!result.ok) {
+        setError(result.message ?? 'Usuario o PIN incorrecto.');
+        setPin('');
+        pinRef.current?.focus();
+      }
+    } catch (err) {
+      setError(isNetworkError(err) ? 'Sin conexión. Para entrar se necesita internet.' : errorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
-  const pressDigit = (d: string) => {
-    if (loading) return;
-    userRef.current?.blur();
-    setPin(p => (p.length >= 6 ? p : p + d));
-    setError('');
-  };
-  const backspace = () => setPin(p => p.slice(0, -1));
-
-  // Teclado físico para el PIN (lector o PC), salvo mientras se escribe el usuario.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (typingUser.current) return;
-      if (/^\d$/.test(e.key)) pressDigit(e.key);
-      else if (e.key === 'Backspace') backspace();
-      else if (e.key === 'Enter') void submit(pin);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  });
-
-  const initials = username.trim().slice(0, 2).toUpperCase();
+  const field = 'h-12 w-full rounded-xl border border-ink/15 bg-white text-[15px] text-ink shadow-[0_1px_2px_rgba(31,42,48,0.04)] outline-none transition placeholder:text-ink/35 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20';
 
   return (
-    <MotionConfig reducedMotion="user">
-      <div className="h-full overflow-y-auto bg-paper text-ink">
-        <form
-          className="mx-auto flex min-h-full w-full max-w-md flex-col px-5 pb-6 pt-5"
-          onSubmit={e => { e.preventDefault(); void submit(pin); }}
-        >
-          {/* Marca + hora */}
-          <header className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="relative flex h-9 w-9 items-center justify-center rounded-[10px] bg-brand-600 font-display text-lg font-extrabold text-white">
-                P
-                <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-paper bg-tag" />
-              </span>
-              <span className="font-display text-xl font-bold tracking-tight">Pre-Venta</span>
-            </div>
-            <span className="text-[15px] font-bold tabular-nums text-ink-soft">
-              {now.toLocaleTimeString('es-PE', { hour: 'numeric', minute: '2-digit' })}
-            </span>
-          </header>
+    <div className="flex h-full flex-col overflow-y-auto bg-paper text-ink">
+      {/* Cabecera mínima con la marca */}
+      <header className="sticky top-0 z-10 border-b border-ink/5 bg-paper/90 backdrop-blur">
+        <div className="flex h-16 items-center justify-center gap-2 px-4">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white shadow-sm">
+            <Store className="h-[18px] w-[18px]" />
+          </span>
+          <span className="truncate font-display text-base font-bold tracking-tight">{storeName}</span>
+        </div>
+      </header>
 
-          <h1 className="mt-7 font-display text-[40px] font-bold leading-[1.02] tracking-tight [font-stretch:88%]">{greeting(now)}</h1>
-          <p className="mt-2 text-[17px] text-ink-soft">Escriba su usuario y su PIN.</p>
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-8">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-100 bg-brand-50 text-brand-600 shadow-sm">
+            <LockOpen className="h-7 w-7" />
+          </div>
+          <h1 className="mb-1.5 font-display text-2xl font-bold tracking-tight">Iniciar sesión</h1>
+          <p className="text-sm text-ink-soft">Ingrese su usuario y PIN para entrar a su cuenta</p>
+        </div>
 
-          {/* Credencial: se completa con el usuario escrito */}
-          <div className="mt-6 overflow-hidden rounded-[20px] border border-ink/10 bg-white shadow-[0_1px_0_rgba(31,42,48,0.06),0_14px_28px_-20px_rgba(31,42,48,0.55)]">
-            <div className="flex justify-center pt-3">
-              <span className="h-2.5 w-10 rounded-full bg-paper ring-1 ring-inset ring-ink/15" />
-            </div>
-            <div className="flex items-center gap-4 p-4 pt-3">
-              <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl font-display text-[28px] font-bold transition-colors ${
-                initials ? 'bg-brand-50 text-brand-800' : 'bg-paper text-ink/25'}`}>
-                {initials || '?'}
-              </div>
-              <div className="min-w-0 flex-1">
-                <label htmlFor="login-user" className="block text-sm font-bold text-ink-soft">Usuario</label>
-                <input
-                  id="login-user"
-                  ref={userRef}
-                  value={username}
-                  onChange={e => { setUsername(e.target.value.replace(/\s/g, '').toLowerCase()); setError(''); }}
-                  onFocus={() => { typingUser.current = true; }}
-                  onBlur={() => { typingUser.current = false; }}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); userRef.current?.blur(); } }}
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  autoComplete="username"
-                  enterKeyHint="next"
-                  placeholder="ej. carlos.m"
-                  className="mt-0.5 w-full border-b-2 border-ink/15 bg-transparent pb-1 font-display text-[22px] font-bold text-ink outline-none placeholder:font-sans placeholder:text-lg placeholder:font-normal placeholder:text-ink/30 focus:border-brand-600"
-                />
-              </div>
+        <form className="space-y-4" onSubmit={e => void submit(e)} noValidate>
+          <div>
+            <label htmlFor="login-user" className="mb-1.5 block text-sm font-semibold text-ink">Usuario</label>
+            <div className="relative flex items-center">
+              <User className="pointer-events-none absolute left-3.5 h-5 w-5 text-ink/40" />
+              <input
+                id="login-user"
+                ref={userRef}
+                value={username}
+                onChange={e => { setUsername(e.target.value.replace(/\s/g, '').toLowerCase()); setError(''); }}
+                autoCapitalize="none"
+                autoCorrect="off"
+                autoComplete="username"
+                enterKeyHint="next"
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); pinRef.current?.focus(); } }}
+                placeholder="ej. carlos.m"
+                className={`${field} pl-11 pr-4`}
+              />
             </div>
           </div>
 
-          {/* PIN */}
-          <p className="mt-6 text-center text-[17px] font-bold">PIN</p>
-          <motion.div key={shake} animate={shake ? { x: [0, -9, 9, -6, 6, -2, 0] } : undefined} transition={{ duration: 0.4 }}
-            className="mt-3 flex justify-center gap-4" role="status" aria-label={`PIN ingresado: ${pin.length} dígitos`}>
-            {Array.from({ length: Math.max(4, pin.length) }).map((_, i) => (
-              <span key={i} className={`h-4 w-4 rounded-full transition-colors duration-150 ${
-                error ? 'bg-fresa' : i < pin.length ? 'bg-brand-600' : 'bg-transparent ring-2 ring-inset ring-ink/25'}`} />
-            ))}
-          </motion.div>
-          <p className="mt-3 min-h-6 text-center text-[15px] font-bold text-fresa" role="alert">{error}</p>
+          <div>
+            <label htmlFor="login-pin" className="mb-1.5 block text-sm font-semibold text-ink">PIN</label>
+            <div className="relative flex items-center">
+              <Lock className="pointer-events-none absolute left-3.5 h-5 w-5 text-ink/40" />
+              <input
+                id="login-pin"
+                ref={pinRef}
+                type={showPin ? 'text' : 'password'}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="current-password"
+                enterKeyHint="go"
+                maxLength={6}
+                value={pin}
+                onChange={e => { setPin(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
+                placeholder="••••"
+                className={`${field} pl-11 pr-12 font-display tracking-[0.3em] placeholder:tracking-[0.3em]`}
+              />
+              <button type="button" onClick={() => setShowPin(v => !v)} aria-label={showPin ? 'Ocultar PIN' : 'Mostrar PIN'}
+                className="absolute right-1.5 flex h-10 w-10 items-center justify-center rounded-lg text-ink/45 transition hover:text-ink active:scale-95">
+                {showPin ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
 
-          <div className="mt-auto grid grid-cols-3 gap-2.5 pt-3">
-            {KEYPAD.map(d => (
-              <button key={d} type="button" onClick={() => pressDigit(d)} className={KEY_CLASS}>{d}</button>
-            ))}
-            <button type="button" onClick={backspace} aria-label="Borrar"
-              className="flex h-[64px] items-center justify-center rounded-2xl text-ink-soft transition active:scale-95 active:bg-ink/5">
-              <Delete className="h-7 w-7" />
-            </button>
-            <button type="button" onClick={() => pressDigit('0')} className={KEY_CLASS}>0</button>
-            <button type="submit" disabled={pin.length < 4 || !username.trim() || loading}
-              className="flex h-[64px] items-center justify-center rounded-2xl bg-brand-600 text-[17px] font-bold text-white transition active:scale-95 disabled:bg-ink/10 disabled:text-ink/35">
-              {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : 'Entrar'}
+          <p className="min-h-5 text-sm font-semibold text-fresa" role="alert">{error}</p>
+
+          <button type="submit" disabled={loading}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-base font-semibold text-white shadow-md shadow-brand-600/20 transition hover:bg-brand-700 active:scale-[0.99] disabled:opacity-70">
+            {loading ? <><Loader2 className="h-5 w-5 animate-spin" /> Ingresando…</> : <><LogIn className="h-5 w-5" /> Iniciar sesión</>}
+          </button>
+
+          <div className="pt-1 text-center">
+            <button type="button"
+              onClick={() => void dialog.alert('Pida al administrador que le restablezca el PIN desde Administración → Usuarios.', { title: '¿Olvidó su PIN?' })}
+              className="text-sm font-medium text-ink-soft transition hover:text-brand-700">
+              ¿Olvidó su PIN?
             </button>
           </div>
         </form>
-      </div>
-    </MotionConfig>
+      </main>
+    </div>
   );
 };
