@@ -4,6 +4,7 @@ import { playBarcodeBeep, playSuccessChime } from '../../lib/audioBeep';
 import { escapeHtml } from '../../lib/html';
 import { parseAmount, round2 } from '../../domain/money';
 import { usePos } from '../../state/PosContext';
+import { useDialog } from '../../app/DialogProvider';
 import { DebtsPanel } from '../shared/DebtsPanel';
 import {
   QrCode,
@@ -27,6 +28,7 @@ const roundUpBill = (total: number) => Math.max(total, Math.ceil(total / 10) * 1
 
 export const CajaScreen: React.FC = () => {
   const { api, orders, catalog, online, session, upsertOrder, handleError, refreshOrders } = usePos();
+  const dialog = useDialog();
   const settings = catalog?.settings;
   const [scannedCode, setScannedCode] = React.useState<string>('');
   const [selectedOrderId, setSelectedOrderId] = React.useState<string | null>(null);
@@ -77,7 +79,7 @@ export const CajaScreen: React.FC = () => {
         found = await api.getOrder(cleanCode);
         upsertOrder(found);
       } catch (err) {
-        alert(handleError(err));
+        void dialog.alert(handleError(err), { tone: 'danger', title: 'Pedido no encontrado' });
         return;
       }
     }
@@ -85,7 +87,7 @@ export const CajaScreen: React.FC = () => {
       loadOrder(found);
       setScannedCode('');
     } else {
-      alert(`No se encontró ningún pedido con el código: ${cleanCode}`);
+      void dialog.alert(`No se encontró ningún pedido con el código ${cleanCode}.`, { tone: 'warning', title: 'Pedido no encontrado' });
     }
   };
 
@@ -115,15 +117,15 @@ export const CajaScreen: React.FC = () => {
   const handleExecuteCheckout = async () => {
     if (!selectedOrder || !api || isProcessing) return;
     if (invalidChange) {
-      alert('Los pagos con Yape o Tarjeta no pueden superar el total: el vuelto solo se entrega en efectivo.');
+      void dialog.alert('Los pagos con Yape o Tarjeta no pueden superar el total: el vuelto solo se entrega en efectivo.', { tone: 'warning' });
       return;
     }
     if (!isCashSufficient && !isFiado) {
-      alert('El monto ingresado es menor al total a pagar. Si deseas dar fiado, activa el interruptor de Crédito.');
+      void dialog.alert('El monto ingresado es menor al total a pagar. Si desea dar fiado, active el interruptor de Crédito.', { tone: 'warning', title: 'Falta dinero' });
       return;
     }
     if (isFiado && !isCashSufficient && !selectedOrder.customerId) {
-      alert('Para fiar, el pedido debe tener un cliente registrado. Pida al vendedor que lo asigne.');
+      void dialog.alert('Para fiar, el pedido debe tener un cliente registrado. Pida al vendedor que lo asigne.', { tone: 'warning', title: 'Falta el cliente' });
       return;
     }
 
@@ -135,7 +137,7 @@ export const CajaScreen: React.FC = () => {
       const { change: _change, ...order } = result;
       upsertOrder(order);
     } catch (err) {
-      alert(`❌ No se pudo cobrar\n\n${handleError(err)}`);
+      void dialog.alert(handleError(err), { tone: 'danger', title: 'No se pudo cobrar' });
       void refreshOrders();
     } finally {
       setIsProcessing(false);
@@ -144,13 +146,14 @@ export const CajaScreen: React.FC = () => {
 
   const handleCancelPending = async () => {
     if (!selectedOrder || !api) return;
-    const reason = window.prompt(`Anular el pedido ${selectedOrder.code}. Motivo:`);
+    const reason = await dialog.prompt('Escriba el motivo de la anulación:',
+      { title: `Anular ${selectedOrder.code}`, tone: 'danger', placeholder: 'Ej. Cliente canceló el pedido', confirmText: 'Anular', validate: v => (v.trim().length < 3 ? 'Escriba el motivo (mínimo 3 letras).' : null) });
     if (!reason?.trim()) return;
     try {
       upsertOrder(await api.cancelOrder(selectedOrder.id, reason.trim()));
       setSelectedOrderId(null);
     } catch (err) {
-      alert(handleError(err));
+      void dialog.alert(handleError(err), { tone: 'danger' });
     }
   };
 
@@ -215,7 +218,7 @@ export const CajaScreen: React.FC = () => {
               <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight">
                 Caja Principal de Cobro
               </h2>
-              <span className="text-[10px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase">
+              <span className="text-xs bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase">
                 {session?.user.fullName}
               </span>
             </div>
@@ -278,7 +281,7 @@ export const CajaScreen: React.FC = () => {
                 Cargar
               </button>
             </form>
-            <p className="text-[10px] text-slate-500">
+            <p className="text-xs text-slate-500">
               El cliente entrega el papel con el QR que generó el preventista en la app móvil.
             </p>
           </div>
@@ -289,7 +292,7 @@ export const CajaScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setQueueTab('PENDIENTE')}
-                className={`flex-1 py-1.5 text-[11px] font-black uppercase rounded-lg transition ${
+                className={`flex-1 py-1.5 text-xs font-black uppercase rounded-lg transition ${
                   queueTab === 'PENDIENTE' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -298,7 +301,7 @@ export const CajaScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setQueueTab('PAGADO')}
-                className={`flex-1 py-1.5 text-[11px] font-black uppercase rounded-lg transition ${
+                className={`flex-1 py-1.5 text-xs font-black uppercase rounded-lg transition ${
                   queueTab === 'PAGADO' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -310,7 +313,7 @@ export const CajaScreen: React.FC = () => {
               <span className="font-black text-slate-700 uppercase">
                 {queueTab === 'PENDIENTE' ? 'Pedidos en Cola' : 'Tickets Completados'} ({filteredList.length})
               </span>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${queueTab === 'PENDIENTE' ? 'text-amber-700 bg-amber-100' : 'text-emerald-700 bg-emerald-100'}`}>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${queueTab === 'PENDIENTE' ? 'text-amber-700 bg-amber-100' : 'text-emerald-700 bg-emerald-100'}`}>
                 {queueTab === 'PENDIENTE' ? 'Pendientes de Pago' : 'Ya Pagados'}
               </span>
             </div>
@@ -347,17 +350,17 @@ export const CajaScreen: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <strong className="text-sm font-mono text-slate-900">{ord.code}</strong>
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800">
+                        <span className="text-xs font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800">
                           {ord.status}
                         </span>
                       </div>
-                      <div className="text-[11px] font-bold text-slate-700 mt-1 flex items-center justify-between gap-2">
+                      <div className="text-xs font-bold text-slate-700 mt-1 flex items-center justify-between gap-2">
                         <span className="truncate">{ord.customerName || 'Cliente Genérico'}</span>
-                        <span className="text-[9px] font-mono font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
+                        <span className="text-xs font-mono font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
                           {new Date(ord.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </span>
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">
+                      <div className="text-xs text-slate-500 mt-0.5">
                         {ord.sellerName} · {ord.items.length} productos ({ord.totalBaseUnits} unds)
                       </div>
                     </div>
@@ -366,7 +369,7 @@ export const CajaScreen: React.FC = () => {
                       <div className="text-base font-black font-mono text-slate-900">
                         S/ {ord.totalAmount.toFixed(2)}
                       </div>
-                      <span className={`text-[10px] font-bold ${ord.status === 'PAGADO' ? 'text-blue-600' : 'text-emerald-700'}`}>
+                      <span className={`text-xs font-bold ${ord.status === 'PAGADO' ? 'text-blue-600' : 'text-emerald-700'}`}>
                         {ord.status === 'PENDIENTE_PAGO' ? 'Cobrar ➔' : 'Ver Boleta ➔'}
                       </span>
                     </div>
@@ -385,13 +388,13 @@ export const CajaScreen: React.FC = () => {
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2">
                   <div>
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Cuenta Cargada:</span>
+                    <span className="text-xs text-slate-400 uppercase font-bold">Cuenta Cargada:</span>
                     <h3 className="text-lg font-black text-slate-900 font-mono">
                       {selectedOrder.code}
                     </h3>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Total Cuenta:</span>
+                    <span className="text-xs text-slate-400 uppercase font-bold">Total Cuenta:</span>
                     <div className="text-2xl font-black text-[#16a34a] font-mono">
                       S/ {selectedOrder.totalAmount.toFixed(2)}
                     </div>
@@ -406,7 +409,7 @@ export const CajaScreen: React.FC = () => {
                         <strong className="text-slate-800">
                           {item.quantity}x [{item.presentationType.toUpperCase()}] {item.productName}
                         </strong>
-                        <span className="text-[10px] text-slate-500 ml-1">
+                        <span className="text-xs text-slate-500 ml-1">
                           (x{item.conversionFactor} = {item.baseUnitsDeducted} base)
                         </span>
                       </div>
@@ -496,7 +499,7 @@ export const CajaScreen: React.FC = () => {
                     <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="text-[11px] font-bold text-slate-600 uppercase block mb-1">
+                          <label className="text-xs font-bold text-slate-600 uppercase block mb-1">
                             {paymentMethod === 'Efectivo' ? 'Efectivo Recibido (S/):' : `Monto por ${paymentMethod} (S/):`}
                           </label>
                           <input
@@ -508,7 +511,7 @@ export const CajaScreen: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label className="text-[11px] font-bold text-slate-600 uppercase block mb-1">
+                          <label className="text-xs font-bold text-slate-600 uppercase block mb-1">
                             Vuelto a Entregar:
                           </label>
                           <div className={`text-xl font-black font-mono py-1.5 px-3 rounded-xl border ${
@@ -549,21 +552,21 @@ export const CajaScreen: React.FC = () => {
                     <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
                       <div className="grid grid-cols-3 gap-3">
                         <div>
-                          <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">Efectivo S/</label>
+                          <label className="text-xs font-bold text-slate-600 uppercase block mb-1">Efectivo S/</label>
                           <input type="text" inputMode="decimal" value={mixedAmounts.efectivo} onChange={(e) => setMixedAmounts({...mixedAmounts, efectivo: e.target.value})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:border-[#16a34a] focus:outline-hidden" />
                         </div>
                         <div>
-                          <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">Yape S/</label>
+                          <label className="text-xs font-bold text-slate-600 uppercase block mb-1">Yape S/</label>
                           <input type="text" inputMode="decimal" value={mixedAmounts.yape} onChange={(e) => setMixedAmounts({...mixedAmounts, yape: e.target.value})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:border-[#16a34a] focus:outline-hidden" />
                         </div>
                         <div>
-                          <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">Tarjeta S/</label>
+                          <label className="text-xs font-bold text-slate-600 uppercase block mb-1">Tarjeta S/</label>
                           <input type="text" inputMode="decimal" value={mixedAmounts.tarjeta} onChange={(e) => setMixedAmounts({...mixedAmounts, tarjeta: e.target.value})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:border-[#16a34a] focus:outline-hidden" />
                         </div>
                       </div>
                       
                       <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-                        <span className="text-[11px] font-bold text-slate-600 uppercase">Suma Ingresada: S/ {received.toFixed(2)}</span>
+                        <span className="text-xs font-bold text-slate-600 uppercase">Suma Ingresada: S/ {received.toFixed(2)}</span>
                         <div className={`text-sm font-black font-mono py-1 px-3 rounded-lg border ${
                           isCashSufficient
                             ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
@@ -580,7 +583,7 @@ export const CajaScreen: React.FC = () => {
                     <div className="p-3 bg-amber-50 border-2 border-amber-300 rounded-xl flex items-center justify-between animate-in zoom-in-95">
                       <div className="space-y-0.5">
                         <label className="text-xs font-black text-amber-900 uppercase">Falta S/ {missingAmount.toFixed(2)}</label>
-                        <p className="text-[10px] text-amber-700 font-bold">¿Registrar esta falta como Crédito / Fiado?</p>
+                        <p className="text-xs text-amber-700 font-bold">¿Registrar esta falta como Crédito / Fiado?</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" className="sr-only peer" checked={isFiado} onChange={(e) => setIsFiado(e.target.checked)} />

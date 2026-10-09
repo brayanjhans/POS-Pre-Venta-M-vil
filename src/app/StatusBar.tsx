@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AlertTriangle, CloudOff, LogOut, Lock, RefreshCw, Wifi } from 'lucide-react';
 import { usePos } from '../state/PosContext';
+import { useDialog } from './DialogProvider';
 import { ShiftCloseModal } from '../features/shift/ShiftCloseModal';
 import { ROLE_LABELS } from '../types/pos';
 
@@ -16,6 +17,7 @@ const VIEW_LABELS: Record<MainView, string> = { preventa: 'Pre-Venta', caja: 'Ca
 /** Barra superior común: usuario, conexión, cola de sincronización, cambio de vista (admin) y salida. */
 export const StatusBar: React.FC<Props> = ({ view, onChangeView }) => {
   const { session, online, syncing, outbox, syncNow, retryOp, discardOp, logout } = usePos();
+  const dialog = useDialog();
   const [showClose, setShowClose] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
   if (!session) return null;
@@ -26,7 +28,7 @@ export const StatusBar: React.FC<Props> = ({ view, onChangeView }) => {
 
   return (
     <>
-      <div className="bg-slate-900 text-white text-[11px] px-3 py-1.5 flex items-center justify-between gap-2 z-40">
+      <div className="bg-slate-900 text-white text-xs px-3 py-1.5 flex items-center justify-between gap-2 z-40">
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-bold truncate">{session.user.fullName}</span>
           <span className="text-slate-400 hidden sm:inline">· {ROLE_LABELS[session.user.role]}</span>
@@ -59,8 +61,10 @@ export const StatusBar: React.FC<Props> = ({ view, onChangeView }) => {
               <Lock className="w-3.5 h-3.5" />
             </button>
           )}
-          <button type="button" onClick={() => {
-            if (!pending || window.confirm('Hay operaciones sin sincronizar. Se enviarán cuando vuelva a iniciar sesión con este usuario. ¿Salir?')) {
+          <button type="button" onClick={async () => {
+            if (!pending || await dialog.confirm(
+              'Hay operaciones sin sincronizar. Se enviarán cuando vuelva a iniciar sesión con este usuario.',
+              { title: '¿Cerrar sesión?', confirmText: 'Salir' })) {
               void logout();
             }
           }} className="p-1 rounded hover:bg-slate-700" title="Cerrar sesión">
@@ -91,8 +95,9 @@ export const StatusBar: React.FC<Props> = ({ view, onChangeView }) => {
                       <div className="flex gap-2 mt-2">
                         <button type="button" onClick={() => void retryOp(op.opId)}
                           className="flex-1 py-1.5 bg-slate-900 text-white rounded-lg font-bold">Reintentar</button>
-                        <button type="button" onClick={() => {
-                          if (window.confirm('¿Descartar esta operación? Si es un ticket, se eliminará del celular.')) void discardOp(op.opId);
+                        <button type="button" onClick={async () => {
+                          if (await dialog.confirm('Si es un ticket, se eliminará del celular.',
+                            { title: '¿Descartar esta operación?', tone: 'danger', confirmText: 'Descartar' })) void discardOp(op.opId);
                         }} className="flex-1 py-1.5 bg-red-600 text-white rounded-lg font-bold">Descartar</button>
                       </div>
                     </>

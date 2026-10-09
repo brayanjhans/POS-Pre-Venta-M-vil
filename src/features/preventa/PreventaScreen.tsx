@@ -15,6 +15,7 @@ import { buildCartItem, computeCartTotals, editedPrice, refreshCartWithCatalog }
 import { checkCredit, requiresCustomer } from '../../domain/credit';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
+import { useDialog } from '../../app/DialogProvider';
 import {
   Barcode,
   Trash2,
@@ -49,6 +50,7 @@ const STATUS_BADGE: Record<Order['status'], { label: string; className: string }
 
 export const PreventaScreen: React.FC = () => {
   const { session, catalog, orders, createOrder, cancelOrder, online } = usePos();
+  const dialog = useDialog();
   const userId = session!.user.id;
   const products = React.useMemo(() => (catalog?.products ?? []).filter(p => p.isActive !== false), [catalog]);
   const promos = catalog?.promos ?? [];
@@ -280,13 +282,15 @@ export const PreventaScreen: React.FC = () => {
     if (cart.length === 0 || isSubmitting) return;
 
     if (requiresCustomer(paymentTerm) && !selectedCustomer) {
-      window.alert('Para vender al fiado o a crédito, seleccione o registre al cliente.');
+      void dialog.alert('Para vender al fiado o a crédito, seleccione o registre al cliente (basta con el nombre).', { tone: 'warning', title: 'Falta el cliente' });
       return;
     }
     if (selectedCustomer && requiresCustomer(paymentTerm)) {
       const credit = checkCredit(selectedCustomer, totalAmount, orders);
       if (credit.allowed && credit.currentDebt > 0 &&
-          !window.confirm(`⚠️ ¡ALERTA DE DEUDA!\n\nEl cliente "${selectedCustomer.name}" ya debe S/ ${credit.currentDebt.toFixed(2)}.\n\n¿Emitir un NUEVO ${paymentTerm.toUpperCase()} por S/ ${totalAmount.toFixed(2)}?`)) {
+          !(await dialog.confirm(
+            `"${selectedCustomer.name}" ya debe S/ ${credit.currentDebt.toFixed(2)}.\n\n¿Emitir un NUEVO ${paymentTerm.toUpperCase()} por S/ ${totalAmount.toFixed(2)}?`,
+            { title: '¡Alerta de deuda!', confirmText: 'Sí, emitir' }))) {
         return;
       }
     }
@@ -308,7 +312,7 @@ export const PreventaScreen: React.FC = () => {
       setIsCartDrawerOpen(false);
       resetSaleForm();
     } catch (e) {
-      window.alert(`❌ No se pudo emitir el ticket\n\n${e instanceof Error ? e.message : e}`);
+      void dialog.alert(e instanceof Error ? e.message : String(e), { tone: 'danger', title: 'No se pudo emitir el ticket' });
     } finally {
       setIsSubmitting(false);
     }
@@ -326,7 +330,7 @@ export const PreventaScreen: React.FC = () => {
     try {
       await cancelOrder(order, 'Modificación de ticket');
     } catch (e) {
-      window.alert(`No se pudo anular el ticket: ${e instanceof Error ? e.message : e}`);
+      void dialog.alert(e instanceof Error ? e.message : String(e), { tone: 'danger', title: 'No se pudo anular el ticket' });
       return;
     }
 
@@ -393,7 +397,7 @@ export const PreventaScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveScreenTab('catalogo')}
-                className={`px-3 py-1 rounded-full font-black text-[10px] uppercase flex items-center gap-1 transition ${
+                className={`px-3 py-1 rounded-full font-black text-xs uppercase flex items-center gap-1 transition ${
                   activeScreenTab === 'catalogo' 
                     ? 'text-slate-900 bg-slate-100 shadow-sm' 
                     : 'text-slate-500 hover:text-slate-900'
@@ -405,7 +409,7 @@ export const PreventaScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveScreenTab('ofertas')}
-                className={`px-3 py-1 rounded-full font-black text-[10px] uppercase flex items-center gap-1 transition ${
+                className={`px-3 py-1 rounded-full font-black text-xs uppercase flex items-center gap-1 transition ${
                   activeScreenTab === 'ofertas' 
                     ? 'text-amber-600 bg-amber-50 shadow-sm' 
                     : 'text-slate-500 hover:text-amber-600'
@@ -416,7 +420,7 @@ export const PreventaScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsCameraScannerOpen(true)}
-                className="px-3 py-1 rounded-full font-black text-[10px] uppercase text-slate-500 hover:text-slate-900 flex items-center gap-1 transition"
+                className="px-3 py-1 rounded-full font-black text-xs uppercase text-slate-500 hover:text-slate-900 flex items-center gap-1 transition"
               >
                 <Camera className="w-3.5 h-3.5" />
                 CÁMARA
@@ -431,7 +435,7 @@ export const PreventaScreen: React.FC = () => {
               onClick={() => setIsOrderHistoryOpen(true)}
               className="px-3 py-1 bg-[#064e3b] hover:bg-[#022c22] rounded-xl flex items-center gap-1.5 transition border border-[#047857]"
             >
-              <div className="text-[10px] font-black uppercase leading-tight text-emerald-100 text-right">MIS VENTAS<br/>
+              <div className="text-xs font-black uppercase leading-tight text-emerald-100 text-right">MIS VENTAS<br/>
                 <span className="text-white text-xs">S/ {todaysTotal.toFixed(2)}</span>
               </div>
             </button>
@@ -451,7 +455,7 @@ export const PreventaScreen: React.FC = () => {
                     <span className="text-xl">🍬</span>
                     <div>
                       <h3 className="font-black text-sm text-slate-900 leading-tight">DULCES & BEBIDAS</h3>
-                      <p className="text-[10px] text-slate-400">Distribuidora & Pre-Venta</p>
+                      <p className="text-xs text-slate-400">Distribuidora & Pre-Venta</p>
                     </div>
                   </div>
                   <button 
@@ -476,7 +480,7 @@ export const PreventaScreen: React.FC = () => {
                       <Package className="w-4 h-4 text-[#16a34a]" />
                       <span>Catálogo de Productos</span>
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400">{products.length}</span>
+                    <span className="text-xs font-mono text-slate-400">{products.length}</span>
                   </button>
 
                   <button
@@ -491,7 +495,7 @@ export const PreventaScreen: React.FC = () => {
                       <Flame className="w-4 h-4 text-amber-500" />
                       <span>Promociones Destacadas</span>
                     </span>
-                    <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-black">TOP</span>
+                    <span className="text-xs bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-black">TOP</span>
                   </button>
 
                   <button
@@ -506,7 +510,7 @@ export const PreventaScreen: React.FC = () => {
                       <ShoppingCart className="w-4 h-4 text-emerald-600" />
                       <span>Ver Carrito Abajo</span>
                     </span>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-black">{cart.length}</span>
+                    <span className="text-xs bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-black">{cart.length}</span>
                   </button>
 
                   <button
@@ -521,7 +525,7 @@ export const PreventaScreen: React.FC = () => {
                       <Receipt className="w-4 h-4 text-amber-500" />
                       <span>Mis Preventas de Hoy</span>
                     </span>
-                    <span className="text-[10px] bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded font-black">{todaysOrders.length}</span>
+                    <span className="text-xs bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded font-black">{todaysOrders.length}</span>
                   </button>
 
                   <div className="my-2 border-t border-slate-200" />
@@ -535,12 +539,12 @@ export const PreventaScreen: React.FC = () => {
                       {soundEnabled ? <Volume2 className="w-4 h-4 text-emerald-600" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
                       <span>Sonido del escáner</span>
                     </span>
-                    <span className="text-[10px] font-black text-slate-500">{soundEnabled ? 'ON' : 'OFF'}</span>
+                    <span className="text-xs font-black text-slate-500">{soundEnabled ? 'ON' : 'OFF'}</span>
                   </button>
                 </div>
               </div>
 
-              <div className="border-t border-slate-200 pt-3 text-[11px] text-slate-400">
+              <div className="border-t border-slate-200 pt-3 text-xs text-slate-400">
                 <div>{catalog?.settings.store_name ?? 'POS Pre-Venta'} · {online ? 'En línea' : 'Modo sin internet'}</div>
               </div>
             </div>
@@ -586,7 +590,7 @@ export const PreventaScreen: React.FC = () => {
                   key={cat}
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-1.5 rounded-full text-[11px] font-black uppercase whitespace-nowrap transition-all duration-200 ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-black uppercase whitespace-nowrap transition-all duration-200 ${
                     selectedCategory === cat
                       ? 'bg-emerald-600 text-white shadow-[0_4px_12px_rgba(5,150,105,0.3)] scale-105'
                       : 'bg-white text-slate-500 border border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50'
@@ -626,7 +630,7 @@ export const PreventaScreen: React.FC = () => {
                 <ShoppingCart className="w-4 h-4 stroke-[2.5]" />
               </div>
               <div className="flex flex-col">
-                <div className="text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 text-emerald-400">
+                <div className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 text-emerald-400">
                   <span>Añadido al Carrito</span>
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 </div>
@@ -674,17 +678,17 @@ export const PreventaScreen: React.FC = () => {
                     <div>
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="flex items-center gap-1 text-[9px] font-black tracking-wider uppercase bg-emerald-500 text-white px-2 py-0.5 rounded-md shadow-sm">
+                          <span className="flex items-center gap-1 text-xs font-black tracking-wider uppercase bg-emerald-500 text-white px-2 py-0.5 rounded-md shadow-sm">
                             {promo.badgeText}
                           </span>
                           {promo.tag && (
-                            <span className="text-[9px] font-bold text-amber-300 border border-amber-400/30 px-1.5 py-0.5 rounded-md uppercase">
+                            <span className="text-xs font-bold text-amber-300 border border-amber-400/30 px-1.5 py-0.5 rounded-md uppercase">
                               {promo.tag}
                             </span>
                           )}
                         </div>
                         {promo.discountBadge && (
-                          <span className="text-[10px] font-black text-white bg-red-500 px-1.5 py-0.5 rounded-md shadow-sm rotate-3 transform">
+                          <span className="text-xs font-black text-white bg-red-500 px-1.5 py-0.5 rounded-md shadow-sm rotate-3 transform">
                             {promo.discountBadge}
                           </span>
                         )}
@@ -693,7 +697,7 @@ export const PreventaScreen: React.FC = () => {
                       <h3 className="text-base font-black leading-tight text-white uppercase tracking-tight w-10/12">
                         {promo.title}
                       </h3>
-                      <p className="text-[10px] text-slate-300 leading-snug mt-1 w-11/12 line-clamp-2">
+                      <p className="text-xs text-slate-300 leading-snug mt-1 w-11/12 line-clamp-2">
                         {promo.subtitle}
                       </p>
                     </div>
@@ -701,10 +705,10 @@ export const PreventaScreen: React.FC = () => {
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
                       <div className="flex flex-col">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-slate-400 line-through font-semibold">
+                          <span className="text-xs text-slate-400 line-through font-semibold">
                             S/ {promo.originalPrice.toFixed(2)}
                           </span>
-                          <span className="text-[9px] text-emerald-400 font-bold bg-emerald-950/40 px-1 rounded-sm">
+                          <span className="text-xs text-emerald-400 font-bold bg-emerald-950/40 px-1 rounded-sm">
                             {promo.savingText}
                           </span>
                         </div>
@@ -719,7 +723,7 @@ export const PreventaScreen: React.FC = () => {
                         onClick={() => {
                           promo.associatedBarcodes.forEach(bc => handleScanBarcode(bc));
                         }}
-                        className="px-3 py-2 bg-gradient-to-tr from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-white font-black text-[10px] uppercase tracking-wider rounded-xl shadow-[0_4px_12px_rgba(16,185,129,0.3)] active:scale-95 transition flex items-center gap-1 cursor-pointer border border-emerald-400/30"
+                        className="px-3 py-2 bg-gradient-to-tr from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-[0_4px_12px_rgba(16,185,129,0.3)] active:scale-95 transition flex items-center gap-1 cursor-pointer border border-emerald-400/30"
                       >
                         <Plus className="w-3.5 h-3.5 stroke-[3]" />
                         <span>AGREGAR</span>
@@ -734,7 +738,7 @@ export const PreventaScreen: React.FC = () => {
           {/* Indicador de Catálogo */}
           <div className="flex items-center justify-between text-xs text-slate-500 font-semibold px-1">
             <span>{filteredProducts.length} productos en exhibición</span>
-            <span className="text-[11px] text-emerald-700 font-bold">
+            <span className="text-xs text-emerald-700 font-bold">
               Escaneo HID activo en segundo plano
             </span>
           </div>
@@ -752,13 +756,13 @@ export const PreventaScreen: React.FC = () => {
                     className="bg-white rounded-[20px] overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg hover:border-[#059669] transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98]"
                   >
                     {/* Cintillo de Categoría Verde */}
-                    <div className="bg-[#059669] text-white px-3 py-1.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-between">
+                    <div className="bg-[#059669] text-white px-3 py-1.5 text-xs font-black uppercase tracking-wider flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <span className="w-1.5 h-1.5 bg-white rounded-full block" />
                         <span className="truncate">{product.category}</span>
                       </div>
                       {product.isPromo && (
-                        <span className="bg-amber-400 text-slate-950 text-[9px] px-1.5 py-0.5 rounded-md font-black">
+                        <span className="bg-amber-400 text-slate-950 text-xs px-1.5 py-0.5 rounded-md font-black">
                           OFERTA
                         </span>
                       )}
@@ -774,7 +778,7 @@ export const PreventaScreen: React.FC = () => {
                              product.category === 'Galletas' ? '🍪' :
                              product.category === 'Snacks' ? '🍿' : '🍬'}
                           </div>
-                          <span className="absolute bottom-2 bg-white/90 backdrop-blur-xs border border-white shadow-xs px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase text-slate-700 tracking-wider">
+                          <span className="absolute bottom-2 bg-white/90 backdrop-blur-xs border border-white shadow-xs px-2.5 py-0.5 rounded-full text-xs font-black uppercase text-slate-700 tracking-wider">
                             {product.packagingType}
                           </span>
                         </div>
@@ -784,7 +788,7 @@ export const PreventaScreen: React.FC = () => {
                             {product.name}
                           </h4>
                           {product.flavorNote && (
-                            <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
+                            <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
                               {product.flavorNote}
                             </p>
                           )}
@@ -792,7 +796,7 @@ export const PreventaScreen: React.FC = () => {
                       </div>
 
                       <div className="pt-2 border-t border-slate-100">
-                        <div className="flex items-center justify-center gap-1 text-[9px] font-bold text-slate-500 mb-2">
+                        <div className="flex items-center justify-center gap-1 text-xs font-bold text-slate-500 mb-2">
                           <span className="border border-slate-200 rounded px-1.5 py-0.5">Unidad</span>
                           <span className="text-slate-300">|</span>
                           <span className="text-slate-400">Paq x{product.piecesPerPack}</span>
@@ -800,7 +804,7 @@ export const PreventaScreen: React.FC = () => {
 
                         <div className="flex items-center justify-between gap-1 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 rounded-2xl px-3 py-2 border border-emerald-100/60 shadow-inner">
                           <div className="flex flex-col">
-                            <span className="text-[9px] text-emerald-700 font-black uppercase tracking-wider">PRECIO</span>
+                            <span className="text-xs text-emerald-700 font-black uppercase tracking-wider">PRECIO</span>
                             <span className="text-emerald-950 text-sm font-black tracking-tight font-mono">
                               S/ {minPrice.toFixed(2)}
                             </span>
@@ -838,19 +842,19 @@ export const PreventaScreen: React.FC = () => {
                        product.category === 'Snacks' ? '🍿' : '🍬'}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[10px] text-slate-400 font-mono">{product.barcode}</div>
+                      <div className="text-xs text-slate-400 font-mono">{product.barcode}</div>
                       <h4 className="text-xs font-bold text-slate-900 truncate">{product.name}</h4>
-                      <div className="text-[10px] text-slate-500">
+                      <div className="text-xs text-slate-500">
                         Stock: {product.stockInBaseUnits} {product.baseUnitName}s {product.presentations.pack ? `· Paq: S/ ${product.presentations.pack.price.toFixed(2)}` : ''}
                       </div>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="bg-[#ea580c] text-white px-2 py-0.5 rounded-md text-[11px] font-black block">
+                    <span className="bg-[#ea580c] text-white px-2 py-0.5 rounded-md text-xs font-black block">
                       DESDE S/ {product.presentations.unit.price.toFixed(2)}
                     </span>
-                    <span className="text-[9px] text-[#16a34a] font-bold mt-0.5 block">
+                    <span className="text-xs text-[#16a34a] font-bold mt-0.5 block">
                       Elegir pres. ↗
                     </span>
                   </div>
@@ -873,7 +877,7 @@ export const PreventaScreen: React.FC = () => {
             <div className="flex items-center gap-3.5">
               <div className="relative w-12 h-12 bg-gradient-to-tr from-emerald-100 to-teal-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner border border-emerald-200/50">
                 <ShoppingCart className={`w-5 h-5 ${isCartBouncing ? 'animate-bounce text-emerald-500' : ''}`} />
-                <span className="absolute -top-1.5 -right-1.5 bg-slate-800 text-white font-black text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm transition-transform duration-300">
+                <span className="absolute -top-1.5 -right-1.5 bg-slate-800 text-white font-black text-xs w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm transition-transform duration-300">
                   {cart.length}
                 </span>
               </div>
@@ -884,7 +888,7 @@ export const PreventaScreen: React.FC = () => {
                 </span>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className={`w-1.5 h-1.5 rounded-full shadow-xs ${cart.length === 0 ? 'bg-slate-300' : 'bg-emerald-500 animate-pulse'}`} />
-                  <span className="text-[11px] text-slate-500 font-bold">
+                  <span className="text-xs text-slate-500 font-bold">
                     {cart.length === 0 ? 'Escanea para añadir' : `${totalBaseUnits} unid. en total`}
                   </span>
                 </div>
@@ -893,7 +897,7 @@ export const PreventaScreen: React.FC = () => {
 
             <div className="flex items-center gap-4">
               <div className="flex flex-col items-end">
-                <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                <span className="text-xs font-black uppercase text-slate-400 tracking-widest">
                   TOTAL
                 </span>
                 <span className="text-lg font-black text-slate-900 font-mono leading-none tracking-tight">
@@ -910,7 +914,7 @@ export const PreventaScreen: React.FC = () => {
                 className="px-4 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-[0_8px_20px_rgba(16,185,129,0.3)] transition-all active:scale-95 flex items-center gap-1.5 border border-emerald-400/30"
               >
                 <span>Ver Pedido</span>
-                <span className="text-[10px] font-bold">❯</span>
+                <span className="text-xs font-bold">❯</span>
               </button>
             </div>
           </div>
@@ -941,7 +945,7 @@ export const PreventaScreen: React.FC = () => {
                     <h3 className="text-sm font-black text-slate-900 uppercase">
                       Detalle de Pre-Venta ({cart.length} líneas)
                     </h3>
-                    <p className="text-[10px] text-slate-500">
+                    <p className="text-xs text-slate-500">
                       Total de inventario a descontar: <strong className="text-emerald-700">{totalBaseUnits}</strong> unidades base
                     </p>
                   </div>
@@ -981,20 +985,20 @@ export const PreventaScreen: React.FC = () => {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                            <span className="text-xs font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
                               {pres.shortLabel}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-mono">
+                            <span className="text-xs text-slate-400 font-mono">
                               {item.product.barcode}
                             </span>
                           </div>
                           <h4 className="text-xs font-bold text-slate-900 mt-1 truncate">
                             {item.product.name}
                           </h4>
-                          <div className="text-[11px] text-slate-500 mt-0.5">
+                          <div className="text-xs text-slate-500 mt-0.5">
                             Cant: <strong className="text-slate-800">{item.quantity}</strong> × S/ {item.unitPrice.toFixed(2)}
                             {editedPrice(item) !== undefined && (
-                              <span className="ml-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1">
+                              <span className="ml-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1">
                                 editado (lista S/ {item.listPrice.toFixed(2)})
                               </span>
                             )}
@@ -1021,7 +1025,7 @@ export const PreventaScreen: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="mt-2 pt-1 border-t border-slate-200 text-[10px] text-emerald-700 font-bold flex justify-between">
+                      <div className="mt-2 pt-1 border-t border-slate-200 text-xs text-emerald-700 font-bold flex justify-between">
                         <span>Tocar para cambiar Unidad / Medio / Paquete</span>
                         <span>Editar ↗</span>
                       </div>
@@ -1034,13 +1038,13 @@ export const PreventaScreen: React.FC = () => {
               <div className="pt-2 border-t border-slate-200 space-y-2 mt-1">
                 {/* Selector de Cliente / Bodega */}
                 <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-700">
                     <span className="flex items-center gap-1 text-slate-900">
                       <UserCheck className="w-3.5 h-3.5 text-[#16a34a]" />
                       <span>Cliente / Bodega:</span>
                     </span>
                     {selectedCustomer?.route && (
-                      <span className="text-[10px] text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded font-semibold">
+                      <span className="text-xs text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded font-semibold">
                         {selectedCustomer.route}
                       </span>
                     )}
@@ -1056,27 +1060,27 @@ export const PreventaScreen: React.FC = () => {
                   />
 
                   {/* Condición de Pago & Descuento en 2 columnas */}
-                  <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                  <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
                     <div>
-                      <span className="text-[10px] text-slate-500 font-bold block mb-0.5">Condición:</span>
+                      <span className="text-xs text-slate-500 font-bold block mb-0.5">Condición:</span>
                       <select
                         value={paymentTerm}
                         onChange={(e) => setPaymentTerm(e.target.value as PaymentTerm)}
-                        className="w-full bg-white border border-slate-300 rounded-lg p-1 text-[11px] font-bold text-slate-800"
+                        className="w-full bg-white border border-slate-300 rounded-lg p-1 text-xs font-bold text-slate-800"
                       >
                         {PAYMENT_TERMS.map(term => <option key={term} value={term}>{term}</option>)}
                       </select>
                     </div>
 
                     <div>
-                      <span className="text-[10px] text-slate-500 font-bold block mb-0.5">Dscto Mayorista:</span>
+                      <span className="text-xs text-slate-500 font-bold block mb-0.5">Dscto Mayorista:</span>
                       <div className="flex gap-1">
                         {[0, 3, 5, 10].filter(pct => pct <= maxDiscount).map(pct => (
                           <button
                             key={pct}
                             type="button"
                             onClick={() => setDiscountPercent(pct)}
-                            className={`flex-1 py-1 rounded text-[10px] font-black transition ${
+                            className={`flex-1 py-1 rounded text-xs font-black transition ${
                               discountPercent === pct 
                                 ? 'bg-[#16a34a] text-white shadow-2xs' 
                                 : 'bg-white text-slate-600 border border-slate-200'
@@ -1095,8 +1099,8 @@ export const PreventaScreen: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <span className="text-xl">🍾</span>
                     <div>
-                      <span className="text-[11px] font-bold text-amber-900 block">Envases Devueltos</span>
-                      <span className="text-[9px] text-amber-700 leading-tight block">Si el cliente deja botellas<br/>o cajas vacías, anótalas aquí.</span>
+                      <span className="text-xs font-bold text-amber-900 block">Envases Devueltos</span>
+                      <span className="text-xs text-amber-700 leading-tight block">Si el cliente deja botellas<br/>o cajas vacías, anótalas aquí.</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-amber-300">
@@ -1143,7 +1147,7 @@ export const PreventaScreen: React.FC = () => {
                   <div className="flex items-center justify-between px-1 pt-0.5">
                     <div>
                       <span className="text-xs font-bold text-slate-600 uppercase">Total Pre-Venta:</span>
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-xs text-slate-400">
                         {paymentTerm === 'Contado' ? 'Cobrado por el vendedor' : paymentTerm === 'Fiado (Libreta)' ? 'Queda como deuda del cliente' : 'Pendiente de pago en caja'}
                       </div>
                     </div>
@@ -1154,12 +1158,12 @@ export const PreventaScreen: React.FC = () => {
                 </div>
 
                 {replacingOrderId && (
-                  <div className="text-[11px] text-blue-800 bg-blue-50 border border-blue-200 rounded-lg p-2">
+                  <div className="text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded-lg p-2">
                     Modificando un ticket anulado: el nuevo ticket quedará enlazado al anterior.
                   </div>
                 )}
                 {!online && (
-                  <div className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 flex items-center gap-1.5">
+                  <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 flex items-center gap-1.5">
                     <CloudOff className="w-3.5 h-3.5 shrink-0" />
                     Sin internet: el ticket se guarda en el celular y se envía al reconectar.
                   </div>
@@ -1216,7 +1220,7 @@ export const PreventaScreen: React.FC = () => {
                     <h3 className="text-xs font-black uppercase text-white tracking-wide">
                       Escáner por Cámara & Láser
                     </h3>
-                    <p className="text-[10px] text-zinc-400">Apunta el visor al código de barras</p>
+                    <p className="text-xs text-zinc-400">Apunta el visor al código de barras</p>
                   </div>
                 </div>
                 <button
@@ -1241,12 +1245,12 @@ export const PreventaScreen: React.FC = () => {
 
                 {/* Ícono central de código de barras */}
                 <Barcode className="w-16 h-16 text-zinc-600 opacity-60" />
-                <span className="text-[10px] text-emerald-400 font-bold mt-2 tracking-wider">
+                <span className="text-xs text-emerald-400 font-bold mt-2 tracking-wider">
                   VISOR ACTIVO · DISPARO ULTRA RÁPIDO
                 </span>
               </div>
 
-              <p className="text-[10px] text-zinc-400">
+              <p className="text-xs text-zinc-400">
                 Escriba el código o use la pistola lectora (Bluetooth/USB). El escaneo con la cámara del celular se agrega con el plugin nativo de códigos de barras.
               </p>
 
@@ -1302,7 +1306,7 @@ export const PreventaScreen: React.FC = () => {
                     <h3 className="text-sm font-black text-slate-900 uppercase">
                       Mis Preventas de Hoy
                     </h3>
-                    <p className="text-[10px] text-slate-500">Preventista: {session!.user.fullName}</p>
+                    <p className="text-xs text-slate-500">Preventista: {session!.user.fullName}</p>
                   </div>
                 </div>
                 <button
@@ -1317,13 +1321,13 @@ export const PreventaScreen: React.FC = () => {
               {/* Resumen de Métricas */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 text-center">
-                  <span className="text-[10px] font-bold text-emerald-800 block uppercase">Total Emitido Hoy</span>
+                  <span className="text-xs font-bold text-emerald-800 block uppercase">Total Emitido Hoy</span>
                   <span className="text-base font-black text-emerald-900 font-mono">
                     S/ {todaysTotal.toFixed(2)}
                   </span>
                 </div>
                 <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-center">
-                  <span className="text-[10px] font-bold text-amber-800 block uppercase">Pedidos Generados</span>
+                  <span className="text-xs font-bold text-amber-800 block uppercase">Pedidos Generados</span>
                   <span className="text-base font-black text-amber-900 font-mono">
                     {todaysOrders.length} pedidos
                   </span>
@@ -1336,7 +1340,7 @@ export const PreventaScreen: React.FC = () => {
                   <div className="p-6 text-center text-slate-400 space-y-2">
                     <Clock className="w-8 h-8 mx-auto text-slate-300" />
                     <p className="font-bold text-xs">No hay pedidos emitidos hoy</p>
-                    <p className="text-[10px]">Añade productos y emite una pre-venta para verla aquí.</p>
+                    <p className="text-xs">Añade productos y emite una pre-venta para verla aquí.</p>
                   </div>
                 ) : (
                   todaysOrders.map((ord) => (
@@ -1352,20 +1356,20 @@ export const PreventaScreen: React.FC = () => {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <strong className="text-xs font-mono text-slate-900">{ord.code}</strong>
-                          <span className={`text-[9px] font-black px-1.5 py-0.2 rounded ${STATUS_BADGE[ord.status].className}`}>
+                          <span className={`text-xs font-black px-1.5 py-0.2 rounded ${STATUS_BADGE[ord.status].className}`}>
                             {STATUS_BADGE[ord.status].label}
                           </span>
                           {ord.syncStatus === 'pending_sync' && (
-                            <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-blue-100 text-blue-800">SIN ENVIAR</span>
+                            <span className="text-xs font-black px-1.5 py-0.2 rounded bg-blue-100 text-blue-800">SIN ENVIAR</span>
                           )}
                           {ord.syncStatus === 'error' && (
-                            <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-red-100 text-red-700" title={ord.syncError}>RECHAZADO</span>
+                            <span className="text-xs font-black px-1.5 py-0.2 rounded bg-red-100 text-red-700" title={ord.syncError}>RECHAZADO</span>
                           )}
                         </div>
-                        <div className="text-[11px] text-slate-600 font-semibold truncate mt-0.5">
+                        <div className="text-xs text-slate-600 font-semibold truncate mt-0.5">
                           {ord.customerName || 'Cliente General'}
                         </div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-xs text-slate-400">
                           {ord.items.length} productos · {new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
@@ -1374,7 +1378,7 @@ export const PreventaScreen: React.FC = () => {
                         <div className="text-xs font-black font-mono text-slate-900">
                           S/ {ord.totalAmount.toFixed(2)}
                         </div>
-                        <span className="text-[10px] text-emerald-700 font-bold block mt-1">
+                        <span className="text-xs text-emerald-700 font-bold block mt-1">
                           Ver Ticket ↗
                         </span>
                       </div>

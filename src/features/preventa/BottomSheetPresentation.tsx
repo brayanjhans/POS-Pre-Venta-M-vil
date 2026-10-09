@@ -102,7 +102,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
               <span className="font-bold text-[#16a34a] uppercase bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                 {product.category}
               </span>
-              <span className="text-slate-400 font-mono text-[11px]">
+              <span className="text-slate-400 font-mono text-xs">
                 {product.barcode}
               </span>
             </div>
@@ -131,10 +131,10 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         {/* Selector de Presentación: 3 Opciones Táctiles (Unidad, Medio, Paquete) */}
         <div className="space-y-2 mb-4">
           <div className="flex items-center justify-between">
-            <label className="text-[11px] font-bold text-slate-700 tracking-wider uppercase">
+            <label className="text-xs font-bold text-slate-700 tracking-wider uppercase">
               Seleccionar Presentación de Venta
             </label>
-            <span className="text-[10px] text-emerald-700 font-bold">Precios independientes</span>
+            <span className="text-xs text-emerald-700 font-bold">Precios independientes</span>
           </div>
 
           <div className="grid grid-cols-1 gap-2.5">
@@ -171,7 +171,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                           {pres.label}
                         </span>
                         {isSelected && (
-                          <span className="text-[9px] bg-[#16a34a] text-white font-black px-1.5 py-0.2 rounded-full uppercase">
+                          <span className="text-xs bg-[#16a34a] text-white font-black px-1.5 py-0.2 rounded-full uppercase">
                             ACTIVO
                           </span>
                         )}
@@ -188,7 +188,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                       </div>
 
                       {savingForThis > 0 && (
-                        <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-bold mt-1">
+                        <div className="flex items-center gap-1 text-xs text-emerald-700 font-bold mt-1">
                           <TrendingDown className="w-3 h-3" />
                           <span>Ahorro cliente: S/ {savingForThis.toFixed(2)} vs suelto</span>
                         </div>
@@ -200,7 +200,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                     <div className="text-lg font-black text-slate-900 font-mono">
                       S/ {pres.price.toFixed(2)}
                     </div>
-                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                    <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">
                       {pres.shortLabel}
                     </div>
                   </div>
@@ -271,7 +271,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
           </div>
 
           {!isStockSufficient && (
-            <div className="mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-[11px] flex items-center gap-2 font-medium">
+            <div className="mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-xs flex items-center gap-2 font-medium">
               <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
               <span>
                 <strong>⚠️ Venta sin Stock:</strong> Solo hay {product.stockInBaseUnits} {product.baseUnitName}s. Se descontará en negativo y requerirá compra a terceros.
@@ -286,7 +286,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
             <label htmlFor="sheet-unit-price" className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1">
               <Pencil className="w-3.5 h-3.5" /> Precio por {currentPresentation.shortLabel}
             </label>
-            <span className="text-[11px] text-slate-500">
+            <span className="text-xs text-slate-500">
               Lista: <strong className="font-mono text-slate-700">S/ {listPrice.toFixed(2)}</strong>
             </span>
           </div>
@@ -316,10 +316,10 @@ export const BottomSheetPresentation: React.FC<Props> = ({
             )}
           </div>
           {!isPriceValid && (
-            <p className="mt-2 text-[11px] font-medium text-red-600">Ingrese un precio mayor a 0 (máximo 2 decimales).</p>
+            <p className="mt-2 text-xs font-medium text-red-600">Ingrese un precio mayor a 0 (máximo 2 decimales).</p>
           )}
           {isPriceEdited && (
-            <p className="mt-2 text-[11px] font-medium text-amber-800">
+            <p className="mt-2 text-xs font-medium text-amber-800">
               Precio editado: {unitPrice > listPrice ? '+' : '-'}S/ {Math.abs(round2(unitPrice - listPrice)).toFixed(2)} por {currentPresentation.shortLabel} respecto a la lista.
             </p>
           )}
@@ -328,7 +328,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         {/* Resumen del Subtotal y Botón de Aplicar */}
         <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-4">
           <div>
-            <div className="text-[11px] text-slate-500 font-medium">Subtotal a la fila:</div>
+            <div className="text-xs text-slate-500 font-medium">Subtotal a la fila:</div>
             <div className="text-2xl font-black text-slate-900 font-mono">
               S/ {subtotal.toFixed(2)}
             </div>

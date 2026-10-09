@@ -2,6 +2,7 @@ import React from 'react';
 import { Ban, Receipt, RefreshCw } from 'lucide-react';
 import { formatSoles } from '../../domain/money';
 import { usePos } from '../../state/PosContext';
+import { useDialog } from '../../app/DialogProvider';
 import { OrderReceiptModal } from '../shared/OrderReceiptModal';
 import type { Order, OrderStatus } from '../../types/pos';
 
@@ -15,6 +16,7 @@ const STATUS_STYLE: Record<OrderStatus, string> = {
 /** Historial de boletas/pedidos (últimos 7 días) con filtros y anulación. */
 export const OrdersTab: React.FC = () => {
   const { api, orders, refreshOrders, refreshCatalog, upsertOrder, handleError } = usePos();
+  const dialog = useDialog();
   const [status, setStatus] = React.useState<OrderStatus | 'TODOS'>('TODOS');
   const [search, setSearch] = React.useState('');
   const [viewOrder, setViewOrder] = React.useState<Order | null>(null);
@@ -34,7 +36,9 @@ export const OrdersTab: React.FC = () => {
 
   const cancel = async (order: Order) => {
     if (!api) return;
-    const reason = window.prompt(`Anular ${order.code} (${formatSoles(order.totalAmount)}).\nSe devolverá el stock${order.paidAmount ? ' y se registrará la devolución del dinero' : ''}.\n\nMotivo:`);
+    const reason = await dialog.prompt(
+      `Total ${formatSoles(order.totalAmount)}. Se devolverá el stock${order.paidAmount ? ' y se registrará la devolución del dinero' : ''}.\n\nEscriba el motivo:`,
+      { title: `Anular ${order.code}`, tone: 'danger', placeholder: 'Ej. Cliente canceló el pedido', confirmText: 'Anular', validate: v => (v.trim().length < 3 ? 'Escriba el motivo (mínimo 3 letras).' : null) });
     if (!reason?.trim()) return;
     try {
       const updated = await api.cancelOrder(order.id, reason.trim());
@@ -42,7 +46,7 @@ export const OrdersTab: React.FC = () => {
       setViewOrder(updated);
       void refreshCatalog();
     } catch (e) {
-      alert(handleError(e));
+      void dialog.alert(handleError(e), { tone: 'danger' });
     }
   };
 
@@ -79,16 +83,16 @@ export const OrdersTab: React.FC = () => {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <strong className="text-sm font-mono text-slate-900">{ord.code}</strong>
-                  <span className={`px-2 py-0.5 rounded-full font-black text-[10px] ${STATUS_STYLE[ord.status]}`}>{ord.status}</span>
-                  <span className="text-[10px] text-slate-400">{ord.paymentTerm}</span>
+                  <span className={`px-2 py-0.5 rounded-full font-black text-xs ${STATUS_STYLE[ord.status]}`}>{ord.status}</span>
+                  <span className="text-xs text-slate-400">{ord.paymentTerm}</span>
                 </div>
-                <div className="text-[11px] text-slate-500 mt-1 truncate">
+                <div className="text-xs text-slate-500 mt-1 truncate">
                   {new Date(ord.createdAt).toLocaleString('es-PE')} · {ord.sellerName} · {ord.customerName || 'Cliente genérico'} · {ord.items.length} productos
                 </div>
               </div>
               <div className="text-right shrink-0">
                 <div className="text-base font-black font-mono text-emerald-800">{formatSoles(ord.totalAmount)}</div>
-                {!!ord.debtAmount && <div className="text-[10px] font-bold text-red-600">Debe {formatSoles(ord.debtAmount)}</div>}
+                {!!ord.debtAmount && <div className="text-xs font-bold text-red-600">Debe {formatSoles(ord.debtAmount)}</div>}
                 <Receipt className="w-3.5 h-3.5 text-slate-400 ml-auto" />
               </div>
             </button>

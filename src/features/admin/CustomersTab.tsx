@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pencil, Plus } from 'lucide-react';
 import { formatSoles } from '../../domain/money';
+import { formatPhone, missingContact } from '../../domain/customer';
 import { usePos } from '../../state/PosContext';
 import { CustomerForm } from '../shared/CustomerForm';
 import type { Customer } from '../../types/pos';
@@ -12,7 +13,7 @@ export const CustomersTab: React.FC = () => {
   const [search, setSearch] = React.useState('');
   const customers = catalog?.customers ?? [];
   const q = search.toLowerCase().trim();
-  const list = customers.filter(c => !q || c.name.toLowerCase().includes(q) || (c.docNumber ?? '').includes(q) || (c.route ?? '').toLowerCase().includes(q));
+  const list = customers.filter(c => !q || c.name.toLowerCase().includes(q) || (c.docNumber ?? '').includes(q) || (c.route ?? '').toLowerCase().includes(q) || (c.phone ?? '').includes(q));
 
   return (
     <div className="space-y-4 animate-in fade-in">
@@ -38,6 +39,7 @@ export const CustomersTab: React.FC = () => {
           <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
             <tr>
               <th className="p-3">Cliente</th>
+              <th className="p-3">Celular</th>
               <th className="p-3">Documento</th>
               <th className="p-3">Ruta</th>
               <th className="p-3 text-right">Deuda</th>
@@ -48,7 +50,15 @@ export const CustomersTab: React.FC = () => {
           <tbody className="divide-y divide-slate-100">
             {list.map(c => (
               <tr key={c.id} className={c.isActive ? '' : 'opacity-50'}>
-                <td className="p-3 font-bold">{c.name}{!c.isActive && <span className="ml-1 text-[10px] bg-slate-200 px-1 rounded">INACTIVO</span>}</td>
+                <td className="p-3 font-bold">{c.name}{!c.isActive && <span className="ml-1 text-xs bg-slate-200 px-1 rounded">INACTIVO</span>}</td>
+                <td className="p-3 text-xs">
+                  {missingContact(c) ? (
+                    <button type="button" onClick={() => setEditing(c)}
+                      className="rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-xs font-bold text-amber-800">
+                      Completar datos
+                    </button>
+                  ) : <span className="font-mono">{formatPhone(c.phone)}</span>}
+                </td>
                 <td className="p-3 font-mono text-xs">{c.docType !== 'NINGUNO' ? `${c.docType} ${c.docNumber}` : '—'}</td>
                 <td className="p-3 text-xs">{c.route ?? '—'}</td>
                 <td className={`p-3 text-right font-mono font-bold ${c.debt > 0 ? 'text-red-600' : 'text-slate-400'}`}>{formatSoles(c.debt)}</td>
@@ -60,7 +70,7 @@ export const CustomersTab: React.FC = () => {
                 </td>
               </tr>
             ))}
-            {list.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-slate-400">Sin clientes.</td></tr>}
+            {list.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-slate-400">Sin clientes.</td></tr>}
           </tbody>
         </table>
       </div>

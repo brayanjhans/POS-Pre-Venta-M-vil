@@ -8,6 +8,7 @@ import { PreventaScreen } from './features/preventa/PreventaScreen';
 import { CajaScreen } from './features/caja/CajaScreen';
 import { AdminPanel } from './features/admin/AdminPanel';
 import { StatusBar, type MainView } from './app/StatusBar';
+import { DialogProvider } from './app/DialogProvider';
 
 const FullScreenMessage: React.FC<{ title: string; children?: React.ReactNode }> = ({ title, children }) => (
   <div className="min-h-full flex flex-col items-center justify-center bg-slate-900 text-white p-6 text-center gap-3">
@@ -56,8 +57,10 @@ const AppRoutes: React.FC = () => {
 
 export default function App() {
   return (
-    <PosProvider>
-      <AppRoutes />
-    </PosProvider>
+    <DialogProvider>
+      <PosProvider>
+        <AppRoutes />
+      </PosProvider>
+    </DialogProvider>
   );
 }

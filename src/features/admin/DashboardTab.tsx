@@ -44,7 +44,7 @@ export const DashboardTab: React.FC<Props> = ({ products, onRegularize }) => {
     <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
       <div className="text-slate-500 mb-1 flex items-center gap-2 text-xs font-bold uppercase">{icon} {title}</div>
       <div className="text-2xl font-black text-slate-900 font-mono">{value}</div>
-      {sub && <div className="text-[10px] font-bold mt-1 text-slate-500">{sub}</div>}
+      {sub && <div className="text-xs font-bold mt-1 text-slate-500">{sub}</div>}
     </div>
   );
 
@@ -98,7 +98,7 @@ export const DashboardTab: React.FC<Props> = ({ products, onRegularize }) => {
                 <div className="truncate max-w-[70%]">
                   <div className="font-bold text-slate-900 truncate">{p.name}</div>
                   {p.stockInBaseUnits < 0 && (
-                    <button type="button" onClick={() => onRegularize(p)} className="text-[10px] mt-0.5 text-blue-600 font-bold hover:underline">
+                    <button type="button" onClick={() => onRegularize(p)} className="text-xs mt-0.5 text-blue-600 font-bold hover:underline">
                       Regularizar compra externa
                     </button>
                   )}
@@ -123,7 +123,7 @@ export const DashboardTab: React.FC<Props> = ({ products, onRegularize }) => {
                 <div key={p.id} className="flex justify-between items-center text-xs">
                   <div className="truncate max-w-[65%]">
                     <div className="font-bold text-slate-900 truncate">{p.name}</div>
-                    <div className="text-[10px] text-slate-500">{p.expirationDate}</div>
+                    <div className="text-xs text-slate-500">{p.expirationDate}</div>
                   </div>
                   <div className={`font-black font-mono px-2 py-1 rounded ${d < 0 ? 'bg-red-100 text-red-700' : d <= 7 ? 'bg-orange-100 text-orange-700' : 'bg-yellow-50 text-yellow-700'}`}>
                     {d < 0 ? 'Expiró' : `${d} d`}

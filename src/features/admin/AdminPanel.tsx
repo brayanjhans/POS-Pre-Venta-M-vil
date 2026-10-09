@@ -2,6 +2,8 @@ import React from 'react';
 import type { PresentationType, Product, PromoBanner } from '../../types/pos';
 import { PRODUCT_CATEGORIES } from '../../types/pos';
 import { usePos } from '../../state/PosContext';
+import { useDialog } from '../../app/DialogProvider';
+import { parseAmount } from '../../domain/money';
 import { DashboardTab } from './DashboardTab';
 import { OrdersTab } from './OrdersTab';
 import { UsersTab } from './UsersTab';
@@ -37,6 +39,7 @@ import {
 
 export const AdminPanel: React.FC = () => {
   const { api, catalog, orders, refreshCatalog, handleError } = usePos();
+  const dialog = useDialog();
   const products = catalog?.products ?? [];
   const promos = catalog?.promos ?? [];
 
@@ -48,29 +51,32 @@ export const AdminPanel: React.FC = () => {
       await refreshCatalog();
       return true;
     } catch (e) {
-      alert(handleError(e));
+      void dialog.alert(handleError(e), { tone: 'danger' });
       return false;
     }
   };
   const onAddProduct = (product: Partial<Product>) => run(() => api!.saveProduct(product));
   const onDeleteProduct = (product: Product) => run(async () => {
     const res = await api!.deleteProduct(product.id);
-    if (res.deactivated) alert(`"${product.name}" tiene ventas registradas: se desactivó en lugar de eliminarse (el historial se conserva).`);
+    if (res.deactivated) {
+      void dialog.alert(`"${product.name}" tiene ventas registradas: se desactivó en lugar de eliminarse (el historial se conserva).`,
+        { title: 'Producto desactivado' });
+    }
   });
   const onToggleActive = (product: Product) => run(() => api!.setProductActive(product.id, product.isActive === false));
   const onAddPromo = (promo: Partial<PromoBanner>) => run(() => api!.savePromo(promo));
   const onDeletePromo = (promoId: string) => run(() => api!.deletePromo(promoId));
-  const onRegularize = (product: Product) => {
-    const cost = window.prompt(`Regularizar ${product.name}\nSe vendieron ${Math.abs(product.stockInBaseUnits)} ${product.baseUnitName}s sin stock.\n¿Cuánto costó comprarlos en la otra tienda? (S/)`);
+  const onRegularize = async (product: Product) => {
+    const cost = await dialog.prompt(
+      `Se vendieron ${Math.abs(product.stockInBaseUnits)} ${product.baseUnitName}s sin stock.\n¿Cuánto costó comprarlos en la otra tienda? (S/)`,
+      {
+        title: `Regularizar ${product.name}`, placeholder: 'Ej. 12.50', inputMode: 'decimal', confirmText: 'Regularizar',
+        validate: v => (Number.isNaN(parseAmount(v)) ? 'Ingrese un monto válido (ej. 12.50).' : null),
+      });
     if (cost === null) return;
-    const costNum = parseFloat(cost.replace(',', '.'));
-    if (Number.isNaN(costNum) || costNum < 0) {
-      alert('Monto inválido.');
-      return;
-    }
-    void run(() => api!.regularizeStock(product.id, costNum)).then(ok => {
-      if (ok) alert(`Se regularizó la compra externa por S/ ${costNum.toFixed(2)}. El stock volvió a 0.`);
-    });
+    const costNum = parseAmount(cost);
+    const ok = await run(() => api!.regularizeStock(product.id, costNum));
+    if (ok) void dialog.alert(`Se regularizó la compra externa por S/ ${costNum.toFixed(2)}. El stock volvió a 0.`, { tone: 'success' });
   };
 
   // Estados del panel
@@ -151,7 +157,7 @@ export const AdminPanel: React.FC = () => {
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.barcode.trim()) {
-      alert('Por favor complete el nombre y código de barras.');
+      void dialog.alert('Complete el nombre y el código de barras del producto.', { tone: 'warning' });
       return;
     }
 
@@ -235,7 +241,7 @@ export const AdminPanel: React.FC = () => {
   const handleCreatePromo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!promoFormData.title.trim()) {
-      alert('El título de la promoción es obligatorio.');
+      void dialog.alert('El título de la promoción es obligatorio.', { tone: 'warning' });
       return;
     }
 
@@ -296,7 +302,7 @@ export const AdminPanel: React.FC = () => {
               <h2 className="text-lg md:text-xl font-black uppercase tracking-tight">
                 Panel Administrador
               </h2>
-              <span className="hidden md:inline text-[10px] bg-white text-emerald-950 font-black px-2 py-0.5 rounded-full">
+              <span className="hidden md:inline text-xs bg-white text-emerald-950 font-black px-2 py-0.5 rounded-full">
                 {products.filter(p => p.isActive !== false).length} PRODUCTOS ACTIVOS
               </span>
             </div>
@@ -450,7 +456,7 @@ export const AdminPanel: React.FC = () => {
             {/* Tabla de Productos */}
             <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-xs">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 text-slate-700 font-black uppercase text-[10px] tracking-wider border-b border-slate-200">
+                <thead className="bg-slate-100 text-slate-700 font-black uppercase text-xs tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="p-3">Código / EAN</th>
                     <th className="p-3">Producto</th>
@@ -470,12 +476,12 @@ export const AdminPanel: React.FC = () => {
                       <td className="p-3">
                         <div className="font-bold text-slate-900">
                           {p.name}
-                          {p.isActive === false && <span className="ml-1 text-[9px] bg-slate-200 text-slate-600 px-1 rounded">OCULTO</span>}
+                          {p.isActive === false && <span className="ml-1 text-xs bg-slate-200 text-slate-600 px-1 rounded">OCULTO</span>}
                         </div>
-                        <div className="text-[10px] text-slate-500">{p.flavorNote || p.packagingType}</div>
+                        <div className="text-xs text-slate-500">{p.flavorNote || p.packagingType}</div>
                       </td>
                       <td className="p-3">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
                           {p.category}
                         </span>
                       </td>
@@ -484,13 +490,13 @@ export const AdminPanel: React.FC = () => {
                       </td>
                       <td className="p-3 font-mono text-slate-700">
                         {p.presentations.half ? `S/ ${p.presentations.half.price.toFixed(2)}` : '-'}
-                        <span className="text-[10px] text-slate-400 block font-normal">
+                        <span className="text-xs text-slate-400 block font-normal">
                           {p.presentations.half ? `(x${p.presentations.half.conversionFactor}u)` : ''}
                         </span>
                       </td>
                       <td className="p-3 font-mono text-emerald-800 font-bold">
                         {p.presentations.pack ? `S/ ${p.presentations.pack.price.toFixed(2)}` : '-'}
-                        <span className="text-[10px] text-slate-400 block font-normal">
+                        <span className="text-xs text-slate-400 block font-normal">
                           {p.presentations.pack ? `(x${p.presentations.pack.conversionFactor}u)` : ''}
                         </span>
                       </td>
@@ -541,7 +547,7 @@ export const AdminPanel: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => void onToggleActive(p)}
-                            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold"
+                            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold"
                             title={p.isActive === false ? 'Mostrar en el catálogo de venta' : 'Ocultar del catálogo de venta'}
                           >
                             {p.isActive === false ? 'Mostrar' : 'Ocultar'}
@@ -689,8 +695,8 @@ export const AdminPanel: React.FC = () => {
                 {/* Unidad */}
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                   <div className="font-bold text-xs text-slate-800">1. Unidad Individual</div>
-                  <div className="text-[10px] text-slate-400 mb-2">Factor fijo: x1 base</div>
-                  <label className="text-[11px] text-slate-600 block">Precio Venta (S/):</label>
+                  <div className="text-xs text-slate-400 mb-2">Factor fijo: x1 base</div>
+                  <label className="text-xs text-slate-600 block">Precio Venta (S/):</label>
                   <input
                     type="number"
                     step="0.10"
@@ -705,7 +711,7 @@ export const AdminPanel: React.FC = () => {
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                   <div className="font-bold text-xs text-slate-800">2. Medio Paquete / Display</div>
                   <div className="flex gap-2 items-center my-1">
-                    <span className="text-[10px] text-slate-500">Factor:</span>
+                    <span className="text-xs text-slate-500">Factor:</span>
                     <input
                       type="number"
                       min="2"
@@ -713,9 +719,9 @@ export const AdminPanel: React.FC = () => {
                       onChange={(e) => setFormData({ ...formData, halfFactor: parseInt(e.target.value) || 6 })}
                       className="w-16 bg-white border border-slate-300 rounded px-1.5 py-0.5 text-xs font-mono"
                     />
-                    <span className="text-[10px] text-slate-500">unds</span>
+                    <span className="text-xs text-slate-500">unds</span>
                   </div>
-                  <label className="text-[11px] text-slate-600 block">Precio Medio (S/):</label>
+                  <label className="text-xs text-slate-600 block">Precio Medio (S/):</label>
                   <input
                     type="number"
                     step="0.10"
@@ -730,7 +736,7 @@ export const AdminPanel: React.FC = () => {
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                   <div className="font-bold text-xs text-slate-800">3. Paquete Cerrado / Fardo</div>
                   <div className="flex gap-2 items-center my-1">
-                    <span className="text-[10px] text-slate-500">Factor:</span>
+                    <span className="text-xs text-slate-500">Factor:</span>
                     <input
                       type="number"
                       min="2"
@@ -738,9 +744,9 @@ export const AdminPanel: React.FC = () => {
                       onChange={(e) => setFormData({ ...formData, packFactor: parseInt(e.target.value) || 12 })}
                       className="w-16 bg-white border border-slate-300 rounded px-1.5 py-0.5 text-xs font-mono"
                     />
-                    <span className="text-[10px] text-slate-500">unds</span>
+                    <span className="text-xs text-slate-500">unds</span>
                   </div>
-                  <label className="text-[11px] text-slate-600 block">Precio Mayorista (S/):</label>
+                  <label className="text-xs text-slate-600 block">Precio Mayorista (S/):</label>
                   <input
                     type="number"
                     step="0.10"
@@ -807,11 +813,11 @@ export const AdminPanel: React.FC = () => {
                   <div key={promo.id} className="relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white p-4 flex flex-col justify-between">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase bg-[#10b981] text-white px-2 py-0.5 rounded">
+                        <span className="text-xs font-black uppercase bg-[#10b981] text-white px-2 py-0.5 rounded">
                           {promo.badgeText}
                         </span>
                         {promo.discountBadge && (
-                          <span className="text-[10px] font-black bg-red-100 text-red-700 px-2 py-0.5 rounded">
+                          <span className="text-xs font-black bg-red-100 text-red-700 px-2 py-0.5 rounded">
                             {promo.discountBadge}
                           </span>
                         )}
@@ -822,14 +828,14 @@ export const AdminPanel: React.FC = () => {
                       <p className="text-xs text-slate-500 line-clamp-2">
                         {promo.subtitle}
                       </p>
-                      <div className="pt-2 text-[10px] text-slate-400 font-mono">
+                      <div className="pt-2 text-xs text-slate-400 font-mono">
                         Códigos de barra incluidos: {promo.associatedBarcodes.join(', ')}
                       </div>
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-slate-400 line-through">S/ {promo.originalPrice.toFixed(2)}</span>
+                        <span className="text-xs text-slate-400 line-through">S/ {promo.originalPrice.toFixed(2)}</span>
                         <span className="text-lg font-black text-amber-600 font-mono leading-none">
                           S/ {promo.offerPrice.toFixed(2)}
                         </span>
@@ -919,10 +925,10 @@ export const AdminPanel: React.FC = () => {
 
             <div className="grid gap-3 md:grid-cols-2">
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                <h4 className="text-[11px] font-black uppercase text-slate-500">Precios</h4>
+                <h4 className="text-xs font-black uppercase text-slate-500">Precios</h4>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[10px] text-slate-600 block">Precio Original (S/):</label>
+                    <label className="text-xs text-slate-600 block">Precio Original (S/):</label>
                     <input
                       type="number"
                       step="0.10"
@@ -933,7 +939,7 @@ export const AdminPanel: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] text-slate-600 block">Precio Oferta (S/):</label>
+                    <label className="text-xs text-slate-600 block">Precio Oferta (S/):</label>
                     <input
                       required
                       type="number"
@@ -946,20 +952,20 @@ export const AdminPanel: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-600 block">Texto de ahorro:</label>
+                  <label className="text-xs text-slate-600 block">Texto de ahorro:</label>
                   <input
                     type="text"
                     value={promoFormData.savingText}
                     onChange={(e) => setPromoFormData({...promoFormData, savingText: e.target.value})}
-                    className="w-full border border-slate-300 rounded px-2 py-1 text-[10px]"
+                    className="w-full border border-slate-300 rounded px-2 py-1 text-xs"
                   />
                 </div>
               </div>
 
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                <h4 className="text-[11px] font-black uppercase text-slate-500">Productos del Combo</h4>
+                <h4 className="text-xs font-black uppercase text-slate-500">Productos del Combo</h4>
                 <div>
-                  <label className="text-[10px] text-slate-600 block mb-1">
+                  <label className="text-xs text-slate-600 block mb-1">
                     Códigos de Barra (separados por comas):
                   </label>
                   <textarea
@@ -968,9 +974,9 @@ export const AdminPanel: React.FC = () => {
                     placeholder="Ej: 7750182001011, 7750885002012"
                     value={promoFormData.associatedBarcodes}
                     onChange={(e) => setPromoFormData({...promoFormData, associatedBarcodes: e.target.value})}
-                    className="w-full border border-slate-300 rounded px-2 py-1.5 text-[10px] font-mono resize-none"
+                    className="w-full border border-slate-300 rounded px-2 py-1.5 text-xs font-mono resize-none"
                   />
-                  <p className="text-[9px] text-slate-400 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     Al tocar "Añadir Combo", estos códigos se escanearán y añadirán al carrito de forma automática.
                   </p>
                 </div>
@@ -1099,7 +1105,7 @@ export const AdminPanel: React.FC = () => {
                   onChange={(e) => setRestockData({ ...restockData, unitPrice: parseFloat(e.target.value) || 0 })}
                   className="w-full bg-slate-50 border border-emerald-300 rounded-xl px-3 py-2 text-sm font-mono font-black text-emerald-800 focus:outline-hidden focus:border-[#10b981]"
                 />
-                <p className="text-[10px] text-slate-400 mt-1 leading-tight">Este precio se actualizará para todo el stock acumulado.</p>
+                <p className="text-xs text-slate-400 mt-1 leading-tight">Este precio se actualizará para todo el stock acumulado.</p>
               </div>
 
               <div className="flex gap-2 pt-2">

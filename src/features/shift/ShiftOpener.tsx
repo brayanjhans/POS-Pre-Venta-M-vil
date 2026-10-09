@@ -43,7 +43,7 @@ export const ShiftOpener: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Fondo de Caja (Opcional)</label>
-            <p className="text-[10px] text-slate-400 mb-3 leading-tight">Si empiezas tu turno con sencillo para dar vueltos, anótalo aquí. Si no, déjalo en blanco.</p>
+            <p className="text-xs text-slate-400 mb-3 leading-tight">Si empiezas tu turno con sencillo para dar vueltos, anótalo aquí. Si no, déjalo en blanco.</p>
 
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

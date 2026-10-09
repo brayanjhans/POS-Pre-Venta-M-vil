@@ -1,4 +1,5 @@
 import React from 'react';
+import { useDialog } from '../../app/DialogProvider';
 import QRCode from 'qrcode';
 import type { Order, StoreSettings } from '../../types/pos';
 import { 
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrder, settings }) => {
+  const dialog = useDialog();
   const storeName = settings?.store_name || 'DULCES & BEBIDAS MAYORISTA';
   const [paperWidth, setPaperWidth] = React.useState<'58mm' | '80mm'>('58mm');
   const [qrDataUrl, setQrDataUrl] = React.useState<string>('');
@@ -119,7 +121,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
           </style>
         </head>
         <body>
-          <div class="font-mono text-[11px] leading-tight text-black">
+          <div class="font-mono text-xs leading-tight text-black">
             ${ticketHtml}
           </div>
           <script>
@@ -195,11 +197,11 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
             <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjQiPjxwb2x5Z29uIHBvaW50cz0iMCw0IDQsMCA4LDQiIGZpbGw9IiNmOGZhZmMiLz48L3N2Zz4=')] bg-repeat-x"></div>
 
             {/* Render del Ticket Real */}
-            <div className="p-4 pt-6 pb-6 font-mono text-[11px] leading-tight text-slate-900 flex flex-col items-stretch">
+            <div className="p-4 pt-6 pb-6 font-mono text-xs leading-tight text-slate-900 flex flex-col items-stretch">
               <div className="text-center mb-4">
                 <div className="font-black text-[13px] uppercase tracking-wider mb-1">{storeName}</div>
-                {settings?.store_address && <div className="text-[10px]">{settings.store_address}</div>}
-                {settings?.store_ruc && <div className="text-[10px]">RUC: {settings.store_ruc}</div>}
+                {settings?.store_address && <div className="text-xs">{settings.store_address}</div>}
+                {settings?.store_ruc && <div className="text-xs">RUC: {settings.store_ruc}</div>}
               </div>
 
               <div className="border-b border-dashed border-slate-300 pb-2 mb-2 text-center font-bold">
@@ -210,19 +212,19 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
                 {order.code}
               </div>
 
-              <div className="text-[10px] space-y-0.5 mb-3">
+              <div className="text-xs space-y-0.5 mb-3">
                 <div>ESTADO: {order.status}</div>
                 <div>FECHA: {new Date(order.createdAt).toLocaleString()}</div>
                 <div>VENDEDOR: {order.sellerName}</div>
               </div>
 
-              <div className="bg-slate-50 p-2 border border-slate-100 rounded mb-3 text-[10px] space-y-0.5">
+              <div className="bg-slate-50 p-2 border border-slate-100 rounded mb-3 text-xs space-y-0.5">
                 <div className="font-bold">CLIENTE: {order.customerName || 'Cliente General'}</div>
                 {order.customerRuc && <div>DNI/RUC: {order.customerRuc}</div>}
                 <div>CONDICIÓN: {order.paymentTerm || 'Contado'}</div>
               </div>
 
-              <table className="w-full text-[10px] mb-3">
+              <table className="w-full text-xs mb-3">
                 <thead className="border-b border-dashed border-slate-300">
                   <tr>
                     <th className="text-left py-1 font-bold">CANT</th>
@@ -245,7 +247,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
 
               <div className="border-t border-dashed border-slate-300 pt-2 mb-4 space-y-1">
                 {order.discountAmount ? (
-                  <div className="flex justify-between text-[10px] text-slate-500">
+                  <div className="flex justify-between text-xs text-slate-500">
                     <span>Descuento:</span>
                     <span>- S/ {order.discountAmount.toFixed(2)}</span>
                   </div>
@@ -258,7 +260,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
               
               {order.returnedContainers && order.returnedContainers > 0 ? (
                 <div className="border-b border-dashed border-slate-300 pb-2 mb-3">
-                  <div className="flex justify-between font-bold text-[11px] text-slate-700 bg-slate-100 p-1.5 rounded">
+                  <div className="flex justify-between font-bold text-xs text-slate-700 bg-slate-100 p-1.5 rounded">
                     <span>Envases Devueltos:</span>
                     <span>{order.returnedContainers} unid.</span>
                   </div>
@@ -267,8 +269,8 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
 
               {order.debtAmount && order.debtAmount > 0 ? (
                 <div className="border border-slate-300 rounded p-1.5 mb-3 text-center bg-slate-50">
-                  <span className="font-bold text-[10px] text-slate-800 uppercase block">AVISO: SALDO PENDIENTE</span>
-                  <span className="text-[9px] text-slate-600 font-medium">
+                  <span className="font-bold text-xs text-slate-800 uppercase block">AVISO: SALDO PENDIENTE</span>
+                  <span className="text-xs text-slate-600 font-medium">
                     Evite el bloqueo de sus créditos.
                   </span>
                 </div>
@@ -280,7 +282,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
                 )}
               </div>
 
-              <div className="text-center text-[9px] text-slate-500 leading-tight">
+              <div className="text-center text-xs text-slate-500 leading-tight">
                 Pase por Caja Central con este QR para cobrar y despachar su mercadería.
               </div>
             </div>
@@ -294,7 +296,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
             <button
               type="button"
               onClick={handlePrintPDF}
-              className="py-3 px-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-bold uppercase flex flex-col items-center justify-center gap-1.5 transition duration-200 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.3)] active:scale-[0.97]"
+              className="py-3 px-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold uppercase flex flex-col items-center justify-center gap-1.5 transition duration-200 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.3)] active:scale-[0.97]"
             >
               <Printer className="w-4 h-4" />
               Imprimir
@@ -302,7 +304,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
             <button
               type="button"
               onClick={handleWhatsAppShare}
-              className="py-3 px-2 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-[10px] font-bold uppercase flex flex-col items-center justify-center gap-1.5 transition duration-200 shadow-[0_4px_12px_-4px_rgba(37,211,102,0.4)] active:scale-[0.97]"
+              className="py-3 px-2 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold uppercase flex flex-col items-center justify-center gap-1.5 transition duration-200 shadow-[0_4px_12px_-4px_rgba(37,211,102,0.4)] active:scale-[0.97]"
             >
               <Share2 className="w-4 h-4" />
               WhatsApp
@@ -310,7 +312,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
             <button
               type="button"
               onClick={handleCopyTextTicket}
-              className="py-3 px-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm rounded-xl text-[10px] font-bold uppercase flex flex-col items-center justify-center gap-1.5 transition duration-200 active:scale-[0.97]"
+              className="py-3 px-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm rounded-xl text-xs font-bold uppercase flex flex-col items-center justify-center gap-1.5 transition duration-200 active:scale-[0.97]"
             >
               {copiedText ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
               {copiedText ? 'Copiado' : 'Copiar'}
@@ -320,12 +322,14 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
           {onEditOrder && order.status !== 'CANCELADO' && (
             <button
               type="button"
-              onClick={() => {
-                if (window.confirm('⚠️ ¿Estás seguro de modificar este ticket?\nEl ticket actual se ANULARÁ permanentemente y los productos volverán a tu carrito para que agregues más. Luego deberás emitir un NUEVO ticket.')) {
+              onClick={async () => {
+                if (await dialog.confirm(
+                  'El ticket actual se ANULARÁ y los productos volverán a su carrito para que agregue más. Luego deberá emitir un NUEVO ticket.',
+                  { title: '¿Modificar este ticket?', confirmText: 'Sí, modificar' })) {
                   onEditOrder(order);
                 }
               }}
-              className="w-full mt-2.5 py-3 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-[11px] font-black uppercase tracking-wider rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
+              className="w-full mt-2.5 py-3 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-black uppercase tracking-wider rounded-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
             >
               <span>✏️</span> Modificar / Añadir Productos
             </button>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Search, UserPlus, X } from 'lucide-react';
+import { Loader2, Plus, Search, UserPlus, X } from 'lucide-react';
+import { findSameName } from '../../domain/customer';
 import { CustomerForm } from '../shared/CustomerForm';
 import { usePos } from '../../state/PosContext';
 import type { Customer } from '../../types/pos';
@@ -16,10 +17,32 @@ interface Props {
 
 /** Selector de cliente con búsqueda por nombre, DNI/RUC o ruta, y alta rápida. */
 export const CustomerPicker: React.FC<Props> = ({ customers, selected, onSelect, walkInName, onWalkInNameChange, allowWalkIn }) => {
-  const { online } = usePos();
+  const { api, online, refreshCatalog, handleError } = usePos();
   const [query, setQuery] = React.useState('');
   const [open, setOpen] = React.useState(false);
   const [creating, setCreating] = React.useState(false);
+  const [quickSaving, setQuickSaving] = React.useState(false);
+  const [quickError, setQuickError] = React.useState('');
+
+  // Alta rápida: crea el cliente solo con el nombre escrito en el buscador.
+  const quickName = query.trim().replace(/\s+/g, ' ');
+  const canQuickCreate = quickName.length >= 2 && findSameName(customers, quickName).length === 0;
+  const quickCreate = async () => {
+    if (!api || !canQuickCreate || quickSaving) return;
+    setQuickSaving(true);
+    setQuickError('');
+    try {
+      const saved = await api.saveCustomer({ name: quickName, docType: 'NINGUNO' });
+      void refreshCatalog();
+      onSelect(saved);
+      setQuery('');
+      setOpen(false);
+    } catch (e) {
+      setQuickError(handleError(e));
+    } finally {
+      setQuickSaving(false);
+    }
+  };
 
   const q = query.toLowerCase().trim();
   const matches = customers
@@ -32,11 +55,11 @@ export const CustomerPicker: React.FC<Props> = ({ customers, selected, onSelect,
       <div className="bg-white border border-emerald-300 rounded-lg p-2 flex items-start justify-between gap-2">
         <div className="min-w-0 text-xs">
           <div className="font-black text-slate-900 truncate">{selected.name}</div>
-          <div className="text-[10px] text-slate-500">
+          <div className="text-xs text-slate-500">
             {selected.docType !== 'NINGUNO' ? `${selected.docType}: ${selected.docNumber}` : 'Sin documento'}
           </div>
           {selected.debt > 0 && (
-            <div className={`text-[10px] font-bold ${nearLimit ? 'text-red-600' : 'text-amber-700'}`}>
+            <div className={`text-xs font-bold ${nearLimit ? 'text-red-600' : 'text-amber-700'}`}>
               Debe S/ {selected.debt.toFixed(2)} de S/ {selected.creditLimit.toFixed(2)} permitidos
             </div>
           )}
@@ -54,7 +77,7 @@ export const CustomerPicker: React.FC<Props> = ({ customers, selected, onSelect,
         <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
         <input
           type="text"
-          placeholder="Buscar cliente por nombre, DNI/RUC o ruta…"
+          placeholder="Buscar o escribir el nombre del cliente…"
           value={query}
           onFocus={() => setOpen(true)}
           onChange={e => { setQuery(e.target.value); setOpen(true); }}
@@ -67,13 +90,22 @@ export const CustomerPicker: React.FC<Props> = ({ customers, selected, onSelect,
                 onClick={() => { onSelect(c); setQuery(''); setOpen(false); }}
                 className="w-full text-left px-3 py-2 text-xs hover:bg-emerald-50 border-b border-slate-100 last:border-0">
                 <div className="font-bold text-slate-900">{c.name}</div>
-                <div className="text-[10px] text-slate-500">
+                <div className="text-xs text-slate-500">
                   {c.docNumber ?? 'Sin documento'}{c.route ? ` · ${c.route}` : ''}{c.debt > 0 ? ` · Debe S/ ${c.debt.toFixed(2)}` : ''}
                 </div>
               </button>
             ))}
-            {matches.length === 0 && <div className="px-3 py-2 text-xs text-slate-400">Sin resultados</div>}
-            <button type="button" onClick={() => setOpen(false)} className="w-full text-center text-[10px] text-slate-400 py-1.5">Cerrar</button>
+            {matches.length === 0 && !canQuickCreate && <div className="px-3 py-2 text-xs text-slate-400">Sin resultados</div>}
+            {canQuickCreate && (
+              <button type="button" onClick={() => void quickCreate()} disabled={!online || quickSaving}
+                className="w-full text-left px-3 py-2.5 text-sm font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 flex items-center gap-2 disabled:opacity-50">
+                {quickSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                <span className="truncate">Crear cliente «{quickName}»</span>
+                {!online && <span className="ml-auto text-xs font-medium text-slate-500">requiere internet</span>}
+              </button>
+            )}
+            {quickError && <div className="px-3 py-2 text-xs font-medium text-red-600">{quickError}</div>}
+            <button type="button" onClick={() => setOpen(false)} className="w-full text-center text-xs text-slate-400 py-1.5">Cerrar</button>
           </div>
         )}
       </div>
@@ -90,7 +122,7 @@ export const CustomerPicker: React.FC<Props> = ({ customers, selected, onSelect,
         )}
         <button type="button" onClick={() => setCreating(true)} disabled={!online}
           title={online ? 'Registrar cliente nuevo' : 'Se necesita internet para registrar clientes'}
-          className="px-2.5 py-2 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[10px] font-black flex items-center gap-1 disabled:opacity-40">
+          className="px-2.5 py-2 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-black flex items-center gap-1 disabled:opacity-40">
           <UserPlus className="w-3.5 h-3.5" /> NUEVO
         </button>
       </div>

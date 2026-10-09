@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildCartItem, computeCartTotals, editedPrice, isValidUnitPrice, refreshCartWithCatalog } from './cart';
 import { checkCredit, initialStatus, orderExposure } from './credit';
 import { parseAmount, round2 } from './money';
-import { formatPhone, isValidPhone } from './customer';
+import { findSameName, formatPhone, isValidPhone, missingContact } from './customer';
 import { generateOrderCode, isValidOrderCode } from './orderCode';
 import type { Customer, Order, Product } from '../types/pos';
 
@@ -150,5 +150,21 @@ describe('celular del cliente', () => {
   it('formatea el celular para mostrar', () => {
     expect(formatPhone('987654321')).toBe('987 654 321');
     expect(formatPhone(null)).toBe('');
+  });
+});
+
+describe('clientes con solo el nombre', () => {
+  const list = [{ id: '1', name: 'José  Pérez' }, { id: '2', name: 'Bodega San Martín' }];
+
+  it('detecta nombres repetidos sin importar mayúsculas, tildes ni espacios', () => {
+    expect(findSameName(list, 'jose perez')).toHaveLength(1);
+    expect(findSameName(list, ' BODEGA san martin ')).toHaveLength(1);
+    expect(findSameName(list, 'Jose Perez Rojas')).toHaveLength(0);
+    expect(findSameName(list, 'José Pérez', '1')).toHaveLength(0);
+  });
+
+  it('marca a quien le falta el celular', () => {
+    expect(missingContact({ phone: null })).toBe(true);
+    expect(missingContact({ phone: '987654321' })).toBe(false);
   });
 });

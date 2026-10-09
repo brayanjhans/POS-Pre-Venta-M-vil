@@ -92,7 +92,7 @@ export const ShiftCloseModal: React.FC<Props> = ({ onClose }) => {
                   <span className="font-mono">{formatSoles(Math.abs(closed.difference ?? 0))}</span>
                 </div>
               )}
-              <div className="text-[11px] text-slate-400 pt-1">Pedidos emitidos en el turno: {shown.ordersCreated}</div>
+              <div className="text-xs text-slate-400 pt-1">Pedidos emitidos en el turno: {shown.ordersCreated}</div>
             </div>
           )}
 

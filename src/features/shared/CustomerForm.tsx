@@ -2,7 +2,8 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { parseAmount } from '../../domain/money';
 import { usePos } from '../../state/PosContext';
-import { isValidPhone } from '../../domain/customer';
+import { findSameName, isValidPhone } from '../../domain/customer';
+import { useDialog } from '../../app/DialogProvider';
 import type { Customer, DocType } from '../../types/pos';
 
 interface Props {
@@ -11,12 +12,16 @@ interface Props {
   onSaved: (customer: Customer) => void;
 }
 
-/** Alta/edición de cliente. Vendedores y cajeros pueden crear; solo el admin edita y fija límites. */
+/**
+ * Alta/edición de cliente. Solo el nombre es obligatorio; documento y celular son opcionales
+ * (si se escriben, se validan). Vendedores y cajeros pueden crear; solo el admin edita y fija límites.
+ */
 export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) => {
-  const { api, session, refreshCatalog, handleError } = usePos();
+  const { api, session, catalog, refreshCatalog, handleError } = usePos();
+  const dialog = useDialog();
   const isAdmin = session?.user.role === 'admin';
   const [name, setName] = React.useState(customer?.name ?? '');
-  const [docType, setDocType] = React.useState<DocType>(customer?.docType ?? 'DNI');
+  const [docType, setDocType] = React.useState<DocType>(customer?.docType ?? 'NINGUNO');
   const [docNumber, setDocNumber] = React.useState(customer?.docNumber ?? '');
   const [route, setRoute] = React.useState(customer?.route ?? '');
   const [phone, setPhone] = React.useState(customer?.phone ?? '');
@@ -30,8 +35,14 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
     e.preventDefault();
     if (!api) return;
     const phoneDigits = phone.replace(/\D/g, '');
-    if (!isValidPhone(phoneDigits)) {
-      setError('Ingrese un celular válido: 9 dígitos que empiecen con 9.');
+    if (phoneDigits && !isValidPhone(phoneDigits)) {
+      setError('El celular debe tener 9 dígitos y empezar con 9 (o déjelo vacío).');
+      return;
+    }
+    const twins = findSameName(catalog?.customers ?? [], name, customer?.id);
+    if (twins.length > 0 && !(await dialog.confirm(
+      `Ya existe un cliente llamado "${twins[0].name}"${twins[0].phone ? ` (cel. ${twins[0].phone})` : ''}.\n\n¿Registrar otro cliente con el mismo nombre?`,
+      { title: 'Cliente repetido', confirmText: 'Sí, es otra persona', cancelText: 'No, revisar' }))) {
       return;
     }
     const customLimit = limit.trim() ? parseAmount(limit) : null;
@@ -48,7 +59,7 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
         docType,
         docNumber: docType === 'NINGUNO' ? null : docNumber.trim(),
         route: route.trim() || null,
-        phone: phoneDigits,
+        phone: phoneDigits || null,
         address: address.trim() || null,
         customCreditLimit: customLimit,
         isActive,
@@ -72,7 +83,8 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
           <h3 className="font-black uppercase text-sm">{customer ? 'Editar cliente' : 'Nuevo cliente'}</h3>
           <button type="button" onClick={onClose} aria-label="Cerrar"><X className="w-5 h-5 text-slate-400" /></button>
         </div>
-        <input className={field} placeholder="Nombre o razón social *" value={name} onChange={e => setName(e.target.value)} required minLength={2} />
+        <input className={field} placeholder="Nombre o razón social *" value={name} onChange={e => setName(e.target.value)} required minLength={2} autoFocus />
+        <p className="text-xs text-slate-500">Solo el nombre es obligatorio. Los demás datos puede completarlos después.</p>
         <div className="grid grid-cols-3 gap-2">
           <select className={field} value={docType} onChange={e => setDocType(e.target.value as DocType)}>
             <option value="DNI">DNI</option>
@@ -86,8 +98,8 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
           )}
         </div>
         <input className={field} placeholder="Ruta / zona (ej. Ruta 1 - Centro)" value={route} onChange={e => setRoute(e.target.value)} />
-        <input className={field} placeholder="Celular * (ej. 987654321)" type="tel" inputMode="tel" autoComplete="tel"
-          value={phone} onChange={e => setPhone(e.target.value.replace(/[^\d ]/g, '').slice(0, 11))} required />
+        <input className={field} placeholder="Celular (opcional, ej. 987654321)" type="tel" inputMode="tel" autoComplete="tel"
+          value={phone} onChange={e => setPhone(e.target.value.replace(/[^\d ]/g, '').slice(0, 11))} />
         <input className={field} placeholder="Dirección" value={address} onChange={e => setAddress(e.target.value)} />
         {isAdmin && (
           <>

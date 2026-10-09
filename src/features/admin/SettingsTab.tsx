@@ -72,7 +72,7 @@ export const SettingsTab: React.FC = () => {
           <input className={field} inputMode="numeric" value={sessionHours} onChange={e => setSessionHours(e.target.value)} />
         </label>
       </div>
-      <p className="text-[11px] text-slate-500">
+      <p className="text-xs text-slate-500">
         El límite de fiado aplica a clientes sin límite propio y lo valida el servidor en cada venta a crédito y en cada fiado en caja.
       </p>
       {message && <p className={`text-sm ${message.error ? 'text-red-600' : 'text-emerald-700'}`}>{message.text}</p>}

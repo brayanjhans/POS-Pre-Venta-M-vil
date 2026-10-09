@@ -1,6 +1,7 @@
 import React from 'react';
 import { KeyRound, LifeBuoy, Lock, Pencil, Plus, RotateCcw, ShieldCheck, Unlock, UserX, X } from 'lucide-react';
 import { usePos } from '../../state/PosContext';
+import { useDialog } from '../../app/DialogProvider';
 import { ROLE_LABELS, type User, type UserRole } from '../../types/pos';
 
 interface FormState {
@@ -20,6 +21,7 @@ const EMPTY_FORM: FormState = { username: '', fullName: '', role: 'vendedor', se
  */
 export const UsersTab: React.FC = () => {
   const { api, session, handleError } = usePos();
+  const dialog = useDialog();
   const [users, setUsers] = React.useState<User[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [editing, setEditing] = React.useState<User | 'new' | null>(null);
@@ -91,12 +93,12 @@ export const UsersTab: React.FC = () => {
   };
 
   const quickUpdate = async (u: User, patch: Parameters<NonNullable<typeof api>['updateUser']>[1], confirmText?: string) => {
-    if (!api || (confirmText && !window.confirm(confirmText))) return;
+    if (!api || (confirmText && !(await dialog.confirm(confirmText, { tone: 'danger', confirmText: 'Sí, continuar' })))) return;
     try {
       await api.updateUser(u.id, patch);
       await load();
     } catch (err) {
-      alert(handleError(err));
+      void dialog.alert(handleError(err), { tone: 'danger' });
     }
   };
 
@@ -181,19 +183,19 @@ export const UsersTab: React.FC = () => {
               return (
                 <tr key={u.id} className={u.isActive ? '' : 'opacity-50'}>
                   <td className="p-3 font-bold text-slate-900">
-                    {u.fullName} {isMe && <span className="text-[10px] text-emerald-700">(usted)</span>}
-                    {!u.isActive && <span className="ml-1 text-[10px] bg-slate-200 px-1.5 rounded">INACTIVO</span>}
-                    {u.lockedUntil && <span className="ml-1 text-[10px] bg-red-100 text-red-700 px-1.5 rounded">BLOQUEADO</span>}
-                    {u.mustChangePin && u.isActive && <span className="ml-1 text-[10px] bg-amber-100 text-amber-800 px-1.5 rounded">PIN TEMPORAL</span>}
+                    {u.fullName} {isMe && <span className="text-xs text-emerald-700">(usted)</span>}
+                    {!u.isActive && <span className="ml-1 text-xs bg-slate-200 px-1.5 rounded">INACTIVO</span>}
+                    {u.lockedUntil && <span className="ml-1 text-xs bg-red-100 text-red-700 px-1.5 rounded">BLOQUEADO</span>}
+                    {u.mustChangePin && u.isActive && <span className="ml-1 text-xs bg-amber-100 text-amber-800 px-1.5 rounded">PIN TEMPORAL</span>}
                     {u.isSupport && (
-                      <span className="ml-1 inline-flex items-center gap-0.5 text-[10px] bg-indigo-100 text-indigo-800 px-1.5 rounded">
+                      <span className="ml-1 inline-flex items-center gap-0.5 text-xs bg-indigo-100 text-indigo-800 px-1.5 rounded">
                         <LifeBuoy className="w-3 h-3" /> SOPORTE TÉCNICO (PROTEGIDO)
                       </span>
                     )}
                   </td>
                   <td className="p-3 font-mono text-slate-600">@{u.username}</td>
                   <td className="p-3">
-                    <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-slate-900 text-white' : u.role === 'cajero' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                    <span className={`text-xs font-black px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-slate-900 text-white' : u.role === 'cajero' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}`}>
                       {ROLE_LABELS[u.role]}
                     </span>
                   </td>
@@ -201,7 +203,7 @@ export const UsersTab: React.FC = () => {
                   <td className="p-3 text-xs text-slate-500">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('es-PE') : 'Nunca'}</td>
                   <td className="p-3">
                     {isProtected ? (
-                      <div className="flex justify-end items-center gap-1 text-[11px] text-slate-400"><Lock className="w-3.5 h-3.5" /> Protegido</div>
+                      <div className="flex justify-end items-center gap-1 text-xs text-slate-400"><Lock className="w-3.5 h-3.5" /> Protegido</div>
                     ) : (
                     <div className="flex justify-end gap-1.5">
                       {!isMe && (
@@ -260,7 +262,7 @@ export const UsersTab: React.FC = () => {
                 <input className={`${field} mt-1 font-mono tracking-[0.3em]`} type="password" inputMode="numeric" autoComplete="new-password"
                   value={form.pin} required pattern="[0-9]{4,6}"
                   onChange={e => setForm({ ...form, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })} />
-                <span className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-700">
+                <span className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-700">
                   <Lock className="w-3 h-3" /> Anótelo y entrégueselo. El usuario no podrá cambiarlo; solo usted puede restablecerlo.
                 </span>
               </label>
@@ -270,9 +272,9 @@ export const UsersTab: React.FC = () => {
                 <div className="mt-1 flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-100 p-2 text-slate-500"
                   aria-readonly="true">
                   <span className="font-mono tracking-[0.3em]">••••</span>
-                  <span className="flex items-center gap-1 text-[11px]"><Lock className="w-3 h-3" /> Bloqueado</span>
+                  <span className="flex items-center gap-1 text-xs"><Lock className="w-3 h-3" /> Bloqueado</span>
                 </div>
-                <span className="mt-1 block text-[11px] font-medium">Aquí no se edita el PIN. Si lo olvidó, use el botón «Restablecer PIN» de la lista.</span>
+                <span className="mt-1 block text-xs font-medium">Aquí no se edita el PIN. Si lo olvidó, use el botón «Restablecer PIN» de la lista.</span>
               </div>
             )}
             {error && <p className="text-xs text-red-600">{error}</p>}
