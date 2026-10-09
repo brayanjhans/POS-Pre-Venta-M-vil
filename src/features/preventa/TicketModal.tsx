@@ -239,7 +239,7 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
                       <td className="py-1.5 px-1 align-top break-words max-w-[120px]">
                         [{item.presentationType.toUpperCase().substring(0,4)}] {item.productName}
                       </td>
-                      <td className="py-1.5 text-right align-top font-bold text-slate-800">S/ {item.subtotal.toFixed(2)}</td>
+                      <td className="py-1.5 text-right align-top font-bold text-slate-800">S/ {item.subtotal.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -249,12 +249,12 @@ export const TicketModal: React.FC<Props> = ({ order, isOpen, onClose, onEditOrd
                 {order.discountAmount ? (
                   <div className="flex justify-between text-xs text-slate-500">
                     <span>Descuento:</span>
-                    <span>- S/ {order.discountAmount.toFixed(2)}</span>
+                    <span>- S/ {order.discountAmount.toFixed(2)}</span>
                   </div>
                 ) : null}
                 <div className="flex justify-between font-black text-[13px] pt-1">
                   <span>TOTAL A PAGAR:</span>
-                  <span>S/ {order.totalAmount.toFixed(2)}</span>
+                  <span>S/ {order.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
               

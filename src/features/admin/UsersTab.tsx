@@ -154,84 +154,81 @@ export const UsersTab: React.FC = () => {
 
       {error && !editing && <p className="text-sm text-red-600">{error}</p>}
 
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
-            <tr>
-              <th className="p-3">Nombre</th>
-              <th className="p-3">Usuario</th>
-              <th className="p-3">Rol</th>
-              <th className="p-3">Cód. vendedor</th>
-              <th className="p-3">Último ingreso</th>
-              <th className="p-3 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {resetDone && (
-              <tr><td colSpan={6} className="p-3">
-                <div className="flex items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800">
-                  {resetDone}
-                  <button type="button" onClick={() => setResetDone('')} aria-label="Cerrar"><X className="w-4 h-4" /></button>
+      {resetDone && (
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm font-bold text-emerald-800">
+          {resetDone}
+          <button type="button" onClick={() => setResetDone('')} aria-label="Cerrar" className="p-1"><X className="w-4 h-4" /></button>
+        </div>
+      )}
+
+      {loading && <p className="p-6 text-center text-slate-400">Cargando…</p>}
+      <div className="grid gap-3 md:grid-cols-2">
+        {!loading && users.map(u => {
+          const isMe = u.id === session?.user.id;
+          // La cuenta de soporte solo la puede tocar soporte.
+          const isProtected = u.isSupport === true && !amSupport;
+          const action = 'inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition active:scale-95';
+          return (
+            <div key={u.id} className={`rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ${u.isActive ? '' : 'opacity-60'}`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-black text-slate-900">
+                    {u.fullName} {isMe && <span className="text-xs font-bold text-emerald-700">(usted)</span>}
+                  </div>
+                  <div className="mt-0.5 font-mono text-sm text-slate-500">@{u.username}{u.sellerCode ? ` · ${u.sellerCode}` : ''}</div>
                 </div>
-              </td></tr>
-            )}
-            {loading && <tr><td colSpan={6} className="p-6 text-center text-slate-400">Cargando…</td></tr>}
-            {!loading && users.map(u => {
-              const isMe = u.id === session?.user.id;
-              // La cuenta de soporte solo la puede tocar soporte.
-              const isProtected = u.isSupport === true && !amSupport;
-              return (
-                <tr key={u.id} className={u.isActive ? '' : 'opacity-50'}>
-                  <td className="p-3 font-bold text-slate-900">
-                    {u.fullName} {isMe && <span className="text-xs text-emerald-700">(usted)</span>}
-                    {!u.isActive && <span className="ml-1 text-xs bg-slate-200 px-1.5 rounded">INACTIVO</span>}
-                    {u.lockedUntil && <span className="ml-1 text-xs bg-red-100 text-red-700 px-1.5 rounded">BLOQUEADO</span>}
-                    {u.mustChangePin && u.isActive && <span className="ml-1 text-xs bg-amber-100 text-amber-800 px-1.5 rounded">PIN TEMPORAL</span>}
-                    {u.isSupport && (
-                      <span className="ml-1 inline-flex items-center gap-0.5 text-xs bg-indigo-100 text-indigo-800 px-1.5 rounded">
-                        <LifeBuoy className="w-3 h-3" /> SOPORTE TÉCNICO (PROTEGIDO)
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-3 font-mono text-slate-600">@{u.username}</td>
-                  <td className="p-3">
-                    <span className={`text-xs font-black px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-slate-900 text-white' : u.role === 'cajero' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                      {ROLE_LABELS[u.role]}
-                    </span>
-                  </td>
-                  <td className="p-3 font-mono">{u.sellerCode ?? '—'}</td>
-                  <td className="p-3 text-xs text-slate-500">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('es-PE') : 'Nunca'}</td>
-                  <td className="p-3">
-                    {isProtected ? (
-                      <div className="flex justify-end items-center gap-1 text-xs text-slate-400"><Lock className="w-3.5 h-3.5" /> Protegido</div>
-                    ) : (
-                    <div className="flex justify-end gap-1.5">
-                      {!isMe && (
-                        <button type="button" title="Restablecer PIN (si lo olvidó)" onClick={() => openReset(u)}
-                          className="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg"><RotateCcw className="w-3.5 h-3.5" /></button>
-                      )}
-                      <button type="button" title="Editar datos" onClick={() => openEdit(u)}
-                        className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg"><Pencil className="w-3.5 h-3.5" /></button>
-                      {u.lockedUntil && (
-                        <button type="button" title="Desbloquear" onClick={() => void quickUpdate(u, { unlock: true })}
-                          className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg"><Unlock className="w-3.5 h-3.5" /></button>
-                      )}
-                      {!isMe && (u.isActive ? (
-                        <button type="button" title="Desactivar (no podrá ingresar)"
-                          onClick={() => void quickUpdate(u, { isActive: false }, `¿Desactivar a ${u.fullName}? Se cerrarán sus sesiones abiertas.`)}
-                          className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg"><UserX className="w-3.5 h-3.5" /></button>
-                      ) : (
-                        <button type="button" title="Reactivar" onClick={() => void quickUpdate(u, { isActive: true })}
-                          className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg"><ShieldCheck className="w-3.5 h-3.5" /></button>
-                      ))}
-                    </div>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                <span className={`shrink-0 text-xs font-black px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-slate-900 text-white' : u.role === 'cajero' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                  {ROLE_LABELS[u.role]}
+                </span>
+              </div>
+
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {!u.isActive && <span className="text-xs font-bold bg-slate-200 px-1.5 rounded">INACTIVO</span>}
+                {u.lockedUntil && <span className="text-xs font-bold bg-red-100 text-red-700 px-1.5 rounded">BLOQUEADO</span>}
+                {u.mustChangePin && u.isActive && <span className="text-xs font-bold bg-amber-100 text-amber-800 px-1.5 rounded">PIN TEMPORAL</span>}
+                {u.isSupport && (
+                  <span className="inline-flex items-center gap-0.5 text-xs font-bold bg-indigo-100 text-indigo-800 px-1.5 rounded">
+                    <LifeBuoy className="w-3 h-3" /> SOPORTE TÉCNICO (PROTEGIDO)
+                  </span>
+                )}
+                <span className="text-xs text-slate-500">
+                  Último ingreso: {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('es-PE') : 'nunca'}
+                </span>
+              </div>
+
+              {isProtected ? (
+                <div className="mt-3 flex items-center gap-1 text-xs text-slate-400"><Lock className="w-3.5 h-3.5" /> Protegido: solo lo administra soporte.</div>
+              ) : (
+                <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+                  <button type="button" onClick={() => openEdit(u)} className={`${action} bg-slate-100 text-slate-800 hover:bg-slate-200`}>
+                    <Pencil className="w-4 h-4" /> Editar
+                  </button>
+                  {!isMe && (
+                    <button type="button" onClick={() => openReset(u)} className={`${action} bg-indigo-50 text-indigo-700 hover:bg-indigo-100`}>
+                      <RotateCcw className="w-4 h-4" /> Restablecer PIN
+                    </button>
+                  )}
+                  {u.lockedUntil && (
+                    <button type="button" onClick={() => void quickUpdate(u, { unlock: true })} className={`${action} bg-amber-50 text-amber-700 hover:bg-amber-100`}>
+                      <Unlock className="w-4 h-4" /> Desbloquear
+                    </button>
+                  )}
+                  {!isMe && (u.isActive ? (
+                    <button type="button"
+                      onClick={() => void quickUpdate(u, { isActive: false }, `¿Desactivar a ${u.fullName}? No podrá ingresar y se cerrarán sus sesiones abiertas.`)}
+                      className={`${action} bg-red-50 text-red-600 hover:bg-red-100`}>
+                      <UserX className="w-4 h-4" /> Desactivar
+                    </button>
+                  ) : (
+                    <button type="button" onClick={() => void quickUpdate(u, { isActive: true })} className={`${action} bg-emerald-50 text-emerald-700 hover:bg-emerald-100`}>
+                      <ShieldCheck className="w-4 h-4" /> Reactivar
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {editing && (

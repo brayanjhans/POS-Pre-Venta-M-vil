@@ -183,14 +183,14 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                         </span>
                         <span>·</span>
                         <span className="text-slate-600 font-mono">
-                          equiv. S/ {pricePerUnit.toFixed(2)}/u
+                          equiv. S/ {pricePerUnit.toFixed(2)}/u
                         </span>
                       </div>
 
                       {savingForThis > 0 && (
                         <div className="flex items-center gap-1 text-xs text-emerald-700 font-bold mt-1">
                           <TrendingDown className="w-3 h-3" />
-                          <span>Ahorro cliente: S/ {savingForThis.toFixed(2)} vs suelto</span>
+                          <span>Ahorro cliente: S/ {savingForThis.toFixed(2)} vs suelto</span>
                         </div>
                       )}
                     </div>
@@ -198,7 +198,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
 
                   <div className="text-right">
                     <div className="text-lg font-black text-slate-900 font-mono">
-                      S/ {pres.price.toFixed(2)}
+                      S/ {pres.price.toFixed(2)}
                     </div>
                     <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">
                       {pres.shortLabel}
@@ -287,7 +287,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
               <Pencil className="w-3.5 h-3.5" /> Precio por {currentPresentation.shortLabel}
             </label>
             <span className="text-xs text-slate-500">
-              Lista: <strong className="font-mono text-slate-700">S/ {listPrice.toFixed(2)}</strong>
+              Lista: <strong className="font-mono text-slate-700">S/ {listPrice.toFixed(2)}</strong>
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -320,7 +320,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
           )}
           {isPriceEdited && (
             <p className="mt-2 text-xs font-medium text-amber-800">
-              Precio editado: {unitPrice > listPrice ? '+' : '-'}S/ {Math.abs(round2(unitPrice - listPrice)).toFixed(2)} por {currentPresentation.shortLabel} respecto a la lista.
+              Precio editado: {unitPrice > listPrice ? '+' : '-'}S/ {Math.abs(round2(unitPrice - listPrice)).toFixed(2)} por {currentPresentation.shortLabel} respecto a la lista.
             </p>
           )}
         </div>
@@ -330,7 +330,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
           <div>
             <div className="text-xs text-slate-500 font-medium">Subtotal a la fila:</div>
             <div className="text-2xl font-black text-slate-900 font-mono">
-              S/ {subtotal.toFixed(2)}
+              S/ {subtotal.toFixed(2)}
             </div>
           </div>
 

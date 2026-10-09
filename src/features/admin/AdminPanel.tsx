@@ -486,7 +486,7 @@ export const AdminPanel: React.FC = () => {
                         </span>
                       </td>
                       <td className="p-3 font-mono font-bold text-slate-900">
-                        S/ {p.presentations.unit.price.toFixed(2)}
+                        S/ {p.presentations.unit.price.toFixed(2)}
                       </td>
                       <td className="p-3 font-mono text-slate-700">
                         {p.presentations.half ? `S/ ${p.presentations.half.price.toFixed(2)}` : '-'}
@@ -835,9 +835,9 @@ export const AdminPanel: React.FC = () => {
 
                     <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                       <div className="flex flex-col">
-                        <span className="text-xs text-slate-400 line-through">S/ {promo.originalPrice.toFixed(2)}</span>
+                        <span className="text-xs text-slate-400 line-through">S/ {promo.originalPrice.toFixed(2)}</span>
                         <span className="text-lg font-black text-amber-600 font-mono leading-none">
-                          S/ {promo.offerPrice.toFixed(2)}
+                          S/ {promo.offerPrice.toFixed(2)}
                         </span>
                       </div>
                       <button

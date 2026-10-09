@@ -31,16 +31,16 @@ export const OrderReceiptModal: React.FC<Props> = ({ order, onClose, children })
         {order.items.map((item, i) => (
           <div key={i} className="flex justify-between gap-2">
             <span className="truncate">{item.quantity}x {item.presentationType.toUpperCase()} {item.productName}</span>
-            <span>S/ {item.subtotal.toFixed(2)}</span>
+            <span>S/ {item.subtotal.toFixed(2)}</span>
           </div>
         ))}
         <div className="border-t border-dashed border-slate-300 my-2" />
         {!!order.discountAmount && (
-          <div className="flex justify-between"><span>Descuento:</span><span>- S/ {order.discountAmount.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>Descuento:</span><span>- S/ {order.discountAmount.toFixed(2)}</span></div>
         )}
-        <div className="flex justify-between font-black text-sm text-slate-900"><span>TOTAL:</span><span>S/ {order.totalAmount.toFixed(2)}</span></div>
-        <div className="flex justify-between text-emerald-700"><span>Pagado:</span><span>S/ {(order.paidAmount || 0).toFixed(2)}</span></div>
-        <div className="flex justify-between text-red-600 font-black"><span>Saldo:</span><span>S/ {(order.debtAmount || 0).toFixed(2)}</span></div>
+        <div className="flex justify-between font-black text-sm text-slate-900"><span>TOTAL:</span><span>S/ {order.totalAmount.toFixed(2)}</span></div>
+        <div className="flex justify-between text-emerald-700"><span>Pagado:</span><span>S/ {(order.paidAmount || 0).toFixed(2)}</span></div>
+        <div className="flex justify-between text-red-600 font-black"><span>Saldo:</span><span>S/ {(order.debtAmount || 0).toFixed(2)}</span></div>
         {order.paymentMethod && <div className="text-slate-500">Medio de pago: {order.paymentMethod}</div>}
       </div>
       {children && <div className="p-4 border-t border-slate-100 space-y-2">{children}</div>}

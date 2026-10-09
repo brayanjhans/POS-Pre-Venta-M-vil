@@ -367,7 +367,7 @@ export const CajaScreen: React.FC = () => {
 
                     <div className="text-right">
                       <div className="text-base font-black font-mono text-slate-900">
-                        S/ {ord.totalAmount.toFixed(2)}
+                        S/ {ord.totalAmount.toFixed(2)}
                       </div>
                       <span className={`text-xs font-bold ${ord.status === 'PAGADO' ? 'text-blue-600' : 'text-emerald-700'}`}>
                         {ord.status === 'PENDIENTE_PAGO' ? 'Cobrar ➔' : 'Ver Boleta ➔'}
@@ -396,7 +396,7 @@ export const CajaScreen: React.FC = () => {
                   <div className="text-right">
                     <span className="text-xs text-slate-400 uppercase font-bold">Total Cuenta:</span>
                     <div className="text-2xl font-black text-[#16a34a] font-mono">
-                      S/ {selectedOrder.totalAmount.toFixed(2)}
+                      S/ {selectedOrder.totalAmount.toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -414,7 +414,7 @@ export const CajaScreen: React.FC = () => {
                         </span>
                       </div>
                       <span className="font-mono font-bold text-slate-800">
-                        S/ {item.subtotal.toFixed(2)}
+                        S/ {item.subtotal.toFixed(2)}
                       </span>
                     </div>
                   ))}
@@ -433,10 +433,10 @@ export const CajaScreen: React.FC = () => {
                   <p className="text-xs text-emerald-800 max-w-md mx-auto">
                     El pedido <strong className="font-mono">{selectedOrder.code}</strong> está en estado <strong className="font-mono">{selectedOrder.status}</strong>
                     {selectedOrder.paidAt && <> (cobrado por {selectedOrder.settledByName ?? '—'} el {new Date(selectedOrder.paidAt).toLocaleString('es-PE')})</>}.
-                    {selectedOrder.status === 'FIADO' && <> Saldo pendiente: <strong>S/ {(selectedOrder.debtAmount ?? 0).toFixed(2)}</strong>.</>}
+                    {selectedOrder.status === 'FIADO' && <> Saldo pendiente: <strong>S/ {(selectedOrder.debtAmount ?? 0).toFixed(2)}</strong>.</>}
                   </p>
                   {lastChange > 0 && (
-                    <div className="text-2xl font-black text-emerald-900 font-mono">Vuelto: S/ {lastChange.toFixed(2)}</div>
+                    <div className="text-2xl font-black text-emerald-900 font-mono">Vuelto: S/ {lastChange.toFixed(2)}</div>
                   )}
                   <div className="pt-2 flex flex-col md:flex-row justify-center gap-3">
                     {selectedOrder.status !== 'CANCELADO' && (
@@ -540,7 +540,7 @@ export const CajaScreen: React.FC = () => {
                             onClick={() => setAmountGiven(String(bill))}
                             className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold font-mono"
                           >
-                            S/ {bill}
+                            S/ {bill}
                           </button>
                         ))}
                       </div>
@@ -566,7 +566,7 @@ export const CajaScreen: React.FC = () => {
                       </div>
                       
                       <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-                        <span className="text-xs font-bold text-slate-600 uppercase">Suma Ingresada: S/ {received.toFixed(2)}</span>
+                        <span className="text-xs font-bold text-slate-600 uppercase">Suma Ingresada: S/ {received.toFixed(2)}</span>
                         <div className={`text-sm font-black font-mono py-1 px-3 rounded-lg border ${
                           isCashSufficient
                             ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
@@ -582,7 +582,7 @@ export const CajaScreen: React.FC = () => {
                   {(!isCashSufficient) && (
                     <div className="p-3 bg-amber-50 border-2 border-amber-300 rounded-xl flex items-center justify-between animate-in zoom-in-95">
                       <div className="space-y-0.5">
-                        <label className="text-xs font-black text-amber-900 uppercase">Falta S/ {missingAmount.toFixed(2)}</label>
+                        <label className="text-xs font-black text-amber-900 uppercase">Falta S/ {missingAmount.toFixed(2)}</label>
                         <p className="text-xs text-amber-700 font-bold">¿Registrar esta falta como Crédito / Fiado?</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">

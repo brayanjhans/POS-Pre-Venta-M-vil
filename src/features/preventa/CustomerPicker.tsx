@@ -60,7 +60,7 @@ export const CustomerPicker: React.FC<Props> = ({ customers, selected, onSelect,
           </div>
           {selected.debt > 0 && (
             <div className={`text-xs font-bold ${nearLimit ? 'text-red-600' : 'text-amber-700'}`}>
-              Debe S/ {selected.debt.toFixed(2)} de S/ {selected.creditLimit.toFixed(2)} permitidos
+              Debe S/ {selected.debt.toFixed(2)} de S/ {selected.creditLimit.toFixed(2)} permitidos
             </div>
           )}
         </div>

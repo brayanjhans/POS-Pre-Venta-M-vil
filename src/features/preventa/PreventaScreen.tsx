@@ -381,8 +381,8 @@ export const PreventaScreen: React.FC = () => {
       <div className="w-full h-full flex flex-col overflow-hidden select-none bg-white relative">
 
         {/* HEADER LIMPIO: Botón ☰, CATÁLOGO, OFERTAS, CÁMARA, MIS PEDIDOS y ADMIN */}
-        <div className="bg-[#059669] text-white px-3 md:px-4 py-2 flex items-center justify-between shadow-md z-30">
-          <div className="flex items-center gap-2">
+        <div className="bg-[#059669] text-white px-3 md:px-4 py-2 flex items-center justify-between gap-2 shadow-md z-30">
+          <div className="flex items-center gap-2 min-w-0">
             <button 
               type="button"
               onClick={() => setIsDrawerOpen(true)}
@@ -393,7 +393,7 @@ export const PreventaScreen: React.FC = () => {
             </button>
 
             {/* Pestañas estilo Pill */}
-            <div className="flex items-center bg-white rounded-full p-1 shadow-inner overflow-hidden">
+            <div className="flex items-center bg-white rounded-full p-1 shadow-inner overflow-hidden whitespace-nowrap">
               <button
                 type="button"
                 onClick={() => setActiveScreenTab('catalogo')}
@@ -409,34 +409,36 @@ export const PreventaScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveScreenTab('ofertas')}
-                className={`px-3 py-1 rounded-full font-black text-xs uppercase flex items-center gap-1 transition ${
+                aria-label="Ofertas"
+                className={`px-2.5 sm:px-3 py-1 rounded-full font-black text-xs uppercase flex items-center gap-1 transition ${
                   activeScreenTab === 'ofertas' 
                     ? 'text-amber-600 bg-amber-50 shadow-sm' 
                     : 'text-slate-500 hover:text-amber-600'
                 }`}
               >
-                🔥 OFERTAS
+                🔥<span className="hidden sm:inline">OFERTAS</span>
               </button>
               <button
                 type="button"
                 onClick={() => setIsCameraScannerOpen(true)}
-                className="px-3 py-1 rounded-full font-black text-xs uppercase text-slate-500 hover:text-slate-900 flex items-center gap-1 transition"
+                aria-label="Escanear con cámara"
+                className="px-2.5 sm:px-3 py-1 rounded-full font-black text-xs uppercase text-slate-500 hover:text-slate-900 flex items-center gap-1 transition"
               >
-                <Camera className="w-3.5 h-3.5" />
-                CÁMARA
+                <Camera className="w-4 h-4" />
+                <span className="hidden sm:inline">CÁMARA</span>
               </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             {/* Botón VENTAS S/ 0.00 (Historial de Pre-ventas) */}
             <button
               type="button"
               onClick={() => setIsOrderHistoryOpen(true)}
               className="px-3 py-1 bg-[#064e3b] hover:bg-[#022c22] rounded-xl flex items-center gap-1.5 transition border border-[#047857]"
             >
-              <div className="text-xs font-black uppercase leading-tight text-emerald-100 text-right">MIS VENTAS<br/>
-                <span className="text-white text-xs">S/ {todaysTotal.toFixed(2)}</span>
+              <div className="text-[11px] font-black uppercase leading-tight text-emerald-100 text-right whitespace-nowrap">MIS VENTAS<br/>
+                <span className="text-white text-xs">S/ {todaysTotal.toFixed(2)}</span>
               </div>
             </button>
           </div>
@@ -641,7 +643,7 @@ export const PreventaScreen: React.FC = () => {
             </div>
             <div className="text-right shrink-0">
               <span className="text-[13px] font-mono font-black text-amber-300 bg-amber-400/10 px-2 py-1 rounded-lg">
-                S/ {recentlyAddedItem.price.toFixed(2)}
+                S/ {recentlyAddedItem.price.toFixed(2)}
               </span>
             </div>
           </div>
@@ -706,7 +708,7 @@ export const PreventaScreen: React.FC = () => {
                       <div className="flex flex-col">
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs text-slate-400 line-through font-semibold">
-                            S/ {promo.originalPrice.toFixed(2)}
+                            S/ {promo.originalPrice.toFixed(2)}
                           </span>
                           <span className="text-xs text-emerald-400 font-bold bg-emerald-950/40 px-1 rounded-sm">
                             {promo.savingText}
@@ -806,7 +808,7 @@ export const PreventaScreen: React.FC = () => {
                           <div className="flex flex-col">
                             <span className="text-xs text-emerald-700 font-black uppercase tracking-wider">PRECIO</span>
                             <span className="text-emerald-950 text-sm font-black tracking-tight font-mono">
-                              S/ {minPrice.toFixed(2)}
+                              S/ {minPrice.toFixed(2)}
                             </span>
                           </div>
 
@@ -852,7 +854,7 @@ export const PreventaScreen: React.FC = () => {
 
                   <div className="text-right shrink-0">
                     <span className="bg-[#ea580c] text-white px-2 py-0.5 rounded-md text-xs font-black block">
-                      DESDE S/ {product.presentations.unit.price.toFixed(2)}
+                      DESDE S/ {product.presentations.unit.price.toFixed(2)}
                     </span>
                     <span className="text-xs text-[#16a34a] font-bold mt-0.5 block">
                       Elegir pres. ↗
@@ -901,7 +903,7 @@ export const PreventaScreen: React.FC = () => {
                   TOTAL
                 </span>
                 <span className="text-lg font-black text-slate-900 font-mono leading-none tracking-tight">
-                  S/ {totalAmount.toFixed(2)}
+                  S/ {totalAmount.toFixed(2)}
                 </span>
               </div>
 
@@ -996,10 +998,10 @@ export const PreventaScreen: React.FC = () => {
                             {item.product.name}
                           </h4>
                           <div className="text-xs text-slate-500 mt-0.5">
-                            Cant: <strong className="text-slate-800">{item.quantity}</strong> × S/ {item.unitPrice.toFixed(2)}
+                            Cant: <strong className="text-slate-800">{item.quantity}</strong> × S/ {item.unitPrice.toFixed(2)}
                             {editedPrice(item) !== undefined && (
                               <span className="ml-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1">
-                                editado (lista S/ {item.listPrice.toFixed(2)})
+                                editado (lista S/ {item.listPrice.toFixed(2)})
                               </span>
                             )}
                             <span className="text-emerald-700 ml-1 font-semibold">
@@ -1010,7 +1012,7 @@ export const PreventaScreen: React.FC = () => {
 
                         <div className="text-right">
                           <div className="text-sm font-black text-slate-900 font-mono">
-                            S/ {item.subtotal.toFixed(2)}
+                            S/ {item.subtotal.toFixed(2)}
                           </div>
                           <button
                             type="button"
@@ -1133,14 +1135,14 @@ export const PreventaScreen: React.FC = () => {
                   {discountPercent > 0 && (
                     <div className="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
                       <span>Subtotal bruto:</span>
-                      <span className="font-mono">S/ {grossTotal.toFixed(2)}</span>
+                      <span className="font-mono">S/ {grossTotal.toFixed(2)}</span>
                     </div>
                   )}
 
                   {discountPercent > 0 && (
                     <div className="flex items-center justify-between text-xs text-emerald-700 font-bold px-1">
                       <span>Descuento aplicado ({discountPercent}%):</span>
-                      <span className="font-mono">- S/ {discountAmount.toFixed(2)}</span>
+                      <span className="font-mono">- S/ {discountAmount.toFixed(2)}</span>
                     </div>
                   )}
 
@@ -1152,7 +1154,7 @@ export const PreventaScreen: React.FC = () => {
                       </div>
                     </div>
                     <div className="text-2xl font-black text-slate-900 font-mono">
-                      S/ {totalAmount.toFixed(2)}
+                      S/ {totalAmount.toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -1323,7 +1325,7 @@ export const PreventaScreen: React.FC = () => {
                 <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 text-center">
                   <span className="text-xs font-bold text-emerald-800 block uppercase">Total Emitido Hoy</span>
                   <span className="text-base font-black text-emerald-900 font-mono">
-                    S/ {todaysTotal.toFixed(2)}
+                    S/ {todaysTotal.toFixed(2)}
                   </span>
                 </div>
                 <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-center">
@@ -1376,7 +1378,7 @@ export const PreventaScreen: React.FC = () => {
 
                       <div className="text-right shrink-0">
                         <div className="text-xs font-black font-mono text-slate-900">
-                          S/ {ord.totalAmount.toFixed(2)}
+                          S/ {ord.totalAmount.toFixed(2)}
                         </div>
                         <span className="text-xs text-emerald-700 font-bold block mt-1">
                           Ver Ticket ↗

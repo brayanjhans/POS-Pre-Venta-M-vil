@@ -30,13 +30,13 @@ export const StatusBar: React.FC<Props> = ({ view, onChangeView }) => {
     <>
       <div className="bg-slate-900 text-white text-xs px-3 py-1.5 flex items-center justify-between gap-2 z-40">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="font-bold truncate">{session.user.fullName}</span>
+          <span className="font-bold truncate max-w-[7rem] sm:max-w-none">{session.user.fullName.split(' ')[0]}<span className="hidden sm:inline">{session.user.fullName.slice(session.user.fullName.split(' ')[0].length)}</span></span>
           <span className="text-slate-400 hidden sm:inline">· {ROLE_LABELS[session.user.role]}</span>
           {isAdmin && onChangeView && (
             <div className="flex bg-slate-800 rounded-lg p-0.5 ml-1">
               {(Object.keys(VIEW_LABELS) as MainView[]).map(v => (
                 <button key={v} type="button" onClick={() => onChangeView(v)}
-                  className={`px-2 py-0.5 rounded-md font-bold ${view === v ? 'bg-emerald-600' : 'text-slate-300'}`}>
+                  className={`px-2 py-0.5 rounded-md font-bold whitespace-nowrap ${view === v ? 'bg-emerald-600' : 'text-slate-300'}`}>
                   {VIEW_LABELS[v]}
                 </button>
               ))}
