@@ -1,5 +1,6 @@
 import React from 'react';
-import { RefreshCw } from 'lucide-react';
+import { AlertTriangle, ChevronRight, RefreshCw } from 'lucide-react';
+import { stockAlerts } from '../../domain/stock';
 import { formatSoles } from '../../domain/money';
 import { usePos } from '../../state/PosContext';
 import type { Dashboard, Product } from '../../types/pos';
@@ -7,6 +8,7 @@ import type { Dashboard, Product } from '../../types/pos';
 interface Props {
   products: Product[];
   onRegularize: (product: Product) => void;
+  onOpenInventory?: () => void;
 }
 
 const daysUntil = (date: string) => Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000);
@@ -38,7 +40,7 @@ const Section: React.FC<{ title: string; count?: number; children: React.ReactNo
  * Resumen del dueño. El día se presenta como la cinta del cierre de caja (ticket térmico):
  * lo vendido arriba, en grande; debajo cobrado, fiado y el mes. El resto son listas simples.
  */
-export const DashboardTab: React.FC<Props> = ({ products, onRegularize }) => {
+export const DashboardTab: React.FC<Props> = ({ products, onRegularize, onOpenInventory }) => {
   const { api, handleError } = usePos();
   const [data, setData] = React.useState<Dashboard | null>(null);
   const [error, setError] = React.useState('');
@@ -60,6 +62,7 @@ export const DashboardTab: React.FC<Props> = ({ products, onRegularize }) => {
   React.useEffect(() => { void load(); }, [load]);
 
   const active = products.filter(p => p.isActive !== false);
+  const stock = stockAlerts(products);
   const lowStock = active.filter(p => p.stockInBaseUnits <= p.minStockAlert).sort((a, b) => a.stockInBaseUnits - b.stockInBaseUnits);
   const expiring = active
     .filter(p => p.expirationDate && daysUntil(p.expirationDate) <= 30)
@@ -70,6 +73,22 @@ export const DashboardTab: React.FC<Props> = ({ products, onRegularize }) => {
 
   return (
     <div className="mx-auto max-w-2xl space-y-8 text-ink">
+      {/* Aviso: productos que se están acabando */}
+      {(stock.out.length > 0 || stock.low.length > 0) && (
+        <button type="button" onClick={onOpenInventory}
+          className={`flex w-full items-center gap-3 rounded-3xl p-4 text-left transition active:scale-[0.99] ${stock.out.length ? 'bg-fresa text-white' : 'bg-tag text-ink'}`}>
+          <AlertTriangle className="h-7 w-7 shrink-0" />
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-lg font-bold leading-tight">
+              {[stock.out.length && `${stock.out.length} ${stock.out.length === 1 ? 'agotado' : 'agotados'}`,
+                stock.low.length && `${stock.low.length} por agotarse`].filter(Boolean).join(' y ')}
+            </span>
+            <span className="block text-sm opacity-85">Toque para ver qué reponer</span>
+          </span>
+          <ChevronRight className="h-6 w-6 shrink-0" />
+        </button>
+      )}
+
       {/* La cinta del día */}
       <div>
         <button type="button" onClick={() => void load()} aria-label="Actualizar cifras"

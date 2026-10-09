@@ -8,6 +8,9 @@ import { useDialog } from '../../app/DialogProvider';
 import { parseAmount } from '../../domain/money';
 import { DashboardTab } from './DashboardTab';
 import { CatalogTab } from './CatalogTab';
+import { SalesTab } from './SalesTab';
+import { InventoryTab } from './InventoryTab';
+import { stockAlerts } from '../../domain/stock';
 import { OrdersTab } from './OrdersTab';
 import { UsersTab } from './UsersTab';
 import { CustomersTab } from './CustomersTab';
@@ -31,6 +34,8 @@ import {
   ArrowLeft,
   Star,
   Menu,
+  ChartColumnBig,
+  Warehouse,
   RefreshCw,
   LayoutDashboard,
   TrendingUp,
@@ -43,6 +48,8 @@ import {
 
 const ADMIN_SECTION_LABELS = {
   dashboard: 'Resumen',
+  sales: 'Ventas',
+  inventory: 'Inventario',
   products: 'Catálogo',
   new_product: 'Nuevo producto',
   orders: 'Boletas',
@@ -98,7 +105,7 @@ export const AdminPanel: React.FC = () => {
 
   // Estados del panel
   const [isMenuOpen, setIsMenuOpen] = React.useState<boolean>(false);
-  const [adminTab, setAdminTab] = React.useState<'dashboard' | 'products' | 'new_product' | 'orders' | 'promos' | 'new_promo' | 'deudores' | 'users' | 'customers' | 'settings'>('dashboard');
+  const [adminTab, setAdminTab] = React.useState<'dashboard' | 'sales' | 'inventory' | 'products' | 'new_product' | 'orders' | 'promos' | 'new_promo' | 'deudores' | 'users' | 'customers' | 'settings'>('dashboard');
   const [feedbackMsg, setFeedbackMsg] = React.useState<string | null>(null);
 
   // Formulario de nuevo producto
@@ -132,6 +139,9 @@ export const AdminPanel: React.FC = () => {
     newExpirationDate: '',
     unitPrice: 0,
   });
+
+  const alerts = stockAlerts(products);
+  const stockCount = alerts.out.length + alerts.low.length;
 
   const openRestock = (p: Product) => {
     setRestockProduct(p);
@@ -218,6 +228,23 @@ export const AdminPanel: React.FC = () => {
               <LayoutDashboard className="w-5 h-5" /> Resumen
             </button>
             <button
+              onClick={() => { setAdminTab('sales'); setIsMenuOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'sales' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+            >
+              <ChartColumnBig className="w-5 h-5" /> Ventas y reportes
+            </button>
+            <button
+              onClick={() => { setAdminTab('inventory'); setIsMenuOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'inventory' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+            >
+              <Warehouse className="w-5 h-5" /> Inventario
+              {stockCount > 0 && (
+                <span className="ml-auto min-w-6 rounded-full bg-fresa px-1.5 py-0.5 text-center text-xs font-bold text-white" aria-label={`${stockCount} por reponer`}>
+                  {stockCount}
+                </span>
+              )}
+            </button>
+            <button
               onClick={() => { setAdminTab('products'); setIsMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'products' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
@@ -290,7 +317,11 @@ export const AdminPanel: React.FC = () => {
         )}
 
         {/* TAB 0: DASHBOARD */}
-        {adminTab === 'dashboard' && <DashboardTab products={products} onRegularize={onRegularize} />}
+        {adminTab === 'dashboard' && (
+          <DashboardTab products={products} onRegularize={onRegularize} onOpenInventory={() => setAdminTab('inventory')} />
+        )}
+        {adminTab === 'sales' && <SalesTab />}
+        {adminTab === 'inventory' && <InventoryTab products={products} onRestock={openRestock} />}
 
         {/* TAB 1: LISTADO Y GESTIÓN DE PRODUCTOS */}
         {(adminTab === 'products' || adminTab === 'new_product') && (

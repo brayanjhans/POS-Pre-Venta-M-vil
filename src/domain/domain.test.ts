@@ -3,6 +3,8 @@ import { buildCartItem, computeCartTotals, editedPrice, isValidUnitPrice, refres
 import { checkCredit, initialStatus, orderExposure } from './credit';
 import { parseAmount, round2 } from './money';
 import { findSameName, formatPhone, isValidPhone, missingContact } from './customer';
+import { stockAlerts, stockStatus } from './stock';
+import { periodRange } from './period';
 import { generateOrderCode, isValidOrderCode } from './orderCode';
 import type { Customer, Order, Product } from '../types/pos';
 
@@ -166,5 +168,32 @@ describe('clientes con solo el nombre', () => {
   it('marca a quien le falta el celular', () => {
     expect(missingContact({ phone: null })).toBe(true);
     expect(missingContact({ phone: '987654321' })).toBe(false);
+  });
+});
+
+describe('alertas de stock', () => {
+  const p = (stock: number, min: number, isActive = true) => ({ ...product(), id: `${stock}-${min}`, stockInBaseUnits: stock, minStockAlert: min, isActive });
+
+  it('clasifica agotado, por agotarse y normal', () => {
+    expect(stockStatus(p(0, 10))).toBe('out');
+    expect(stockStatus(p(-3, 10))).toBe('out');
+    expect(stockStatus(p(10, 10))).toBe('low');
+    expect(stockStatus(p(11, 10))).toBe('ok');
+  });
+
+  it('agrupa solo productos activos, los más urgentes primero', () => {
+    const { out, low } = stockAlerts([p(5, 10), p(-2, 10), p(1, 10), p(50, 10), p(0, 10, false)]);
+    expect(out.map(x => x.stockInBaseUnits)).toEqual([-2]);
+    expect(low.map(x => x.stockInBaseUnits)).toEqual([1, 5]);
+  });
+});
+
+describe('períodos de reporte', () => {
+  const now = new Date(2026, 9, 9, 15, 0); // 9 oct 2026
+  it('calcula los rangos', () => {
+    expect(periodRange('today', now)).toEqual({ from: '2026-10-09', to: '2026-10-09' });
+    expect(periodRange('week', now)).toEqual({ from: '2026-10-03', to: '2026-10-09' });
+    expect(periodRange('month', now)).toEqual({ from: '2026-10-01', to: '2026-10-09' });
+    expect(periodRange('lastMonth', now)).toEqual({ from: '2026-09-01', to: '2026-09-30' });
   });
 });

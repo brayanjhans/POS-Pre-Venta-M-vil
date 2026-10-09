@@ -1,6 +1,6 @@
 import { rpc } from './rpc';
 import type {
-  Catalog, Customer, CustomerStatement, Dashboard, DebtorSummary, Order, PaidFiado, PaymentMethod,
+  Catalog, Customer, CustomerStatement, Dashboard, DebtorSummary, Order, PaidFiado, SalesReport, PaymentMethod,
   PaymentTerm, PresentationType, Product, PromoBanner, Shift, StoreSettings, User, UserRole,
 } from '../types/pos';
 
@@ -92,6 +92,7 @@ export function createApi(token: string) {
 
     saveCustomer: (customer: Partial<Customer>) => rpc<Customer>('pos_customer_save', { ...t, p_customer: customer }),
     debts: () => rpc<DebtorSummary[]>('pos_debts_list', t),
+    salesReport: (from: string, to: string) => rpc<SalesReport>('pos_sales_report', { ...t, p_from: from, p_to: to }),
     paidFiados: (search?: string) =>
       rpc<PaidFiado[]>('pos_fiados_paid_list', { ...t, p_search: search?.trim() || null }),
     customerStatement: (customerId: string) =>

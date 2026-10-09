@@ -246,6 +246,22 @@ export interface Catalog {
   settings: StoreSettings;
 }
 
+/** Reporte de ventas de un período (pos_sales_report). */
+export interface SalesReport {
+  from: string;
+  to: string;
+  granularity: 'hour' | 'day';
+  totals: {
+    sales: number; orders: number; avgTicket: number; units: number; fiado: number;
+    collected: number; cancelled: number; profit: number | null; previousSales: number;
+  };
+  series: { key: string; sales: number; orders: number }[];
+  topProducts: { name: string; units: number; revenue: number }[];
+  bySeller: { name: string; sales: number; orders: number }[];
+  byPayment: { method: string; amount: number }[];
+  byCategory: { category: string; revenue: number }[];
+}
+
 export interface Dashboard {
   salesToday: number;
   ordersToday: number;
