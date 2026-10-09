@@ -8,7 +8,9 @@ import { useDialog } from '../../app/DialogProvider';
 import { parseAmount } from '../../domain/money';
 import { DashboardTab } from './DashboardTab';
 import { CatalogTab } from './CatalogTab';
-import { SECTION_TONE, TONE } from '../../app/tones';
+import { ROTATION, SECTION_TONE, TONE } from '../../app/tones';
+import { EmptyState, PageTitle, PillButton } from '../../app/ui';
+import { formatSoles } from '../../domain/money';
 import { SalesTab } from './SalesTab';
 import { InventoryTab } from './InventoryTab';
 import { stockAlerts } from '../../domain/stock';
@@ -358,163 +360,128 @@ export const AdminPanel: React.FC = () => {
 
         {/* TAB 5: GESTIÓN DE PROMOCIONES Y COMBOS */}
         {adminTab === 'promos' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-black text-ink ">
-                  Gestión de Promociones y Combos Activos
-                </h3>
-                <p className="text-xs text-ink-soft">
-                  Estas promociones aparecen en la pasarela principal del Catálogo y en la pestaña Ofertas.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAdminTab('new_promo')}
-                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-black text-xs  rounded-xl shadow-md transition active:scale-95 flex items-center gap-1.5"
-              >
-                <Plus className="w-4 h-4 stroke-[3]" />
-                Crear Nueva Promo
-              </button>
-            </div>
-
+          <div className="mx-auto max-w-3xl space-y-4">
+            <PageTitle
+              title="Combos activos"
+              subtitle="Aparecen arriba en el catálogo de Pre-Venta y en Ofertas."
+              action={<PillButton onClick={() => setAdminTab('new_promo')}><Plus className="h-5 w-5" /> Nueva</PillButton>}
+            />
             {promos.length === 0 ? (
-              <div className="py-12 text-center text-ink/45">
-                No hay promociones configuradas actualmente.
-              </div>
+              <EmptyState icon={<Star className="h-6 w-6" />} tone="pink" title="No hay promociones"
+                hint="Cree un combo para que los vendedores lo ofrezcan." action={<PillButton onClick={() => setAdminTab('new_promo')}><Plus className="h-5 w-5" /> Nueva promoción</PillButton>} />
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {promos.map((promo) => (
-                  <div key={promo.id} className="relative rounded-2xl overflow-hidden shadow-sm border border-ink/10 bg-white p-4 flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black  bg-brand-500 text-white px-2 py-0.5 rounded">
-                          {promo.badgeText}
-                        </span>
-                        {promo.discountBadge && (
-                          <span className="text-xs font-black bg-red-100 text-red-700 px-2 py-0.5 rounded">
-                            {promo.discountBadge}
-                          </span>
-                        )}
+              <ul className="grid gap-3 md:grid-cols-2">
+                {promos.map((promo, i) => (
+                  <li key={promo.id} className={`relative flex flex-col justify-between overflow-hidden rounded-3xl p-5 text-ink ${TONE[ROTATION[i % ROTATION.length]].bg}`}>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-1.5 text-sm font-bold">
+                        <span>{promo.badgeText}</span>
+                        {promo.discountBadge && <span className="rounded-full bg-fresa px-2 text-white">{promo.discountBadge}</span>}
                       </div>
-                      <h4 className="text-sm font-black text-ink leading-tight ">
-                        {promo.title}
-                      </h4>
-                      <p className="text-xs text-ink-soft line-clamp-2">
-                        {promo.subtitle}
-                      </p>
-                      <div className="pt-2 text-xs text-ink/45 font-display">
-                        Códigos de barra incluidos: {promo.associatedBarcodes.join(', ')}
-                      </div>
+                      <h4 className="mt-1.5 font-display text-xl font-bold leading-tight">{promo.title}</h4>
+                      <p className="mt-1 text-[15px] text-ink/75 line-clamp-2">{promo.subtitle}</p>
+                      <p className="mt-2 text-sm text-ink/60">{promo.associatedBarcodes.length === 1 ? '1 producto' : `${promo.associatedBarcodes.length} productos`} en el combo</p>
                     </div>
-
-                    <div className="mt-4 pt-3 border-t border-ink/5 flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-ink/45 line-through">S/ {promo.originalPrice.toFixed(2)}</span>
-                        <span className="text-lg font-black text-amber-600 font-display leading-none">
-                          S/ {promo.offerPrice.toFixed(2)}
-                        </span>
+                    <div className="mt-4 flex items-end justify-between gap-3">
+                      <div>
+                        <div className="text-sm text-ink/60 line-through">Antes {formatSoles(promo.originalPrice)}</div>
+                        <div className="font-display text-[30px] font-bold leading-none">{formatSoles(promo.offerPrice)}</div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if(confirm('¿Eliminar esta promoción?')) {
+                      <button type="button" aria-label="Eliminar promoción"
+                        onClick={async () => {
+                          if (await dialog.confirm(`Se quitará del catálogo de los vendedores.`, { title: `¿Eliminar «${promo.title}»?`, tone: 'danger', confirmText: 'Eliminar' })) {
                             void onDeletePromo(promo.id);
                           }
                         }}
-                        className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition"
-                        title="Eliminar Promo"
-                      >
-                        <Trash2 className="w-4 h-4" />
+                        className="squish flex h-11 w-11 items-center justify-center rounded-full bg-white/70 text-fresa">
+                        <Trash2 className="h-5 w-5" />
                       </button>
                     </div>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
           </div>
         )}
 
         {/* TAB 6: CREAR NUEVA PROMOCIÓN */}
         {adminTab === 'new_promo' && (
-          <form onSubmit={handleCreatePromo} className="space-y-4 max-w-2xl mx-auto">
-            <h3 className="text-sm font-black text-ink  border-b border-ink/10 pb-2">
-              Crear Nueva Promoción / Combo
-            </h3>
+          <form onSubmit={handleCreatePromo} className="mx-auto max-w-2xl space-y-4 rounded-3xl bg-white p-5">
+            <h3 className="font-display text-[26px] font-bold leading-tight">Nueva promoción</h3>
 
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-ink">Título Principal (*):</label>
+                <label className="text-sm font-bold text-ink">Título Principal (*):</label>
                 <input
                   required
                   type="text"
                   placeholder="Ej: COMBO INKA KOLA + SUBLIME"
                   value={promoFormData.title}
                   onChange={(e) => setPromoFormData({...promoFormData, title: e.target.value})}
-                  className="w-full bg-cream/60 border border-ink/10 rounded-lg px-3 py-2 text-xs text-ink font-semibold"
+                  className="h-12 w-full rounded-2xl border-2 border-ink/10 bg-white px-3 text-[15px] font-semibold text-ink outline-none focus:border-brand-600"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-ink">Subtítulo / Descripción:</label>
+                <label className="text-sm font-bold text-ink">Subtítulo / Descripción:</label>
                 <input
                   type="text"
                   placeholder="Ej: Gaseosa helada + display completo..."
                   value={promoFormData.subtitle}
                   onChange={(e) => setPromoFormData({...promoFormData, subtitle: e.target.value})}
-                  className="w-full bg-cream/60 border border-ink/10 rounded-lg px-3 py-2 text-xs text-ink"
+                  className="h-12 w-full rounded-2xl border-2 border-ink/10 bg-white px-3 text-[15px] text-ink outline-none focus:border-brand-600"
                 />
               </div>
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-ink">Etiqueta Principal:</label>
+                <label className="text-sm font-bold text-ink">Etiqueta Principal:</label>
                 <input
                   type="text"
                   value={promoFormData.badgeText}
                   onChange={(e) => setPromoFormData({...promoFormData, badgeText: e.target.value})}
-                  className="w-full bg-cream/60 border border-ink/10 rounded-lg px-3 py-2 text-xs text-ink"
+                  className="h-12 w-full rounded-2xl border-2 border-ink/10 bg-white px-3 text-[15px] text-ink outline-none focus:border-brand-600"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-ink">Tag Secundario:</label>
+                <label className="text-sm font-bold text-ink">Tag Secundario:</label>
                 <input
                   type="text"
                   value={promoFormData.tag}
                   onChange={(e) => setPromoFormData({...promoFormData, tag: e.target.value})}
-                  className="w-full bg-cream/60 border border-ink/10 rounded-lg px-3 py-2 text-xs text-ink"
+                  className="h-12 w-full rounded-2xl border-2 border-ink/10 bg-white px-3 text-[15px] text-ink outline-none focus:border-brand-600"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-ink">Etiqueta Descuento (Roja):</label>
+                <label className="text-sm font-bold text-ink">Etiqueta Descuento (Roja):</label>
                 <input
                   type="text"
                   placeholder="Ej: -20% OFF"
                   value={promoFormData.discountBadge}
                   onChange={(e) => setPromoFormData({...promoFormData, discountBadge: e.target.value})}
-                  className="w-full bg-cream/60 border border-ink/10 rounded-lg px-3 py-2 text-xs text-ink"
+                  className="h-12 w-full rounded-2xl border-2 border-ink/10 bg-white px-3 text-[15px] text-ink outline-none focus:border-brand-600"
                 />
               </div>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <div className="p-3 bg-cream/60 rounded-xl border border-ink/10 space-y-2">
-                <h4 className="text-xs font-black  text-ink-soft">Precios</h4>
+              <div className="space-y-3 rounded-2xl bg-pink/30 p-4">
+                <h4 className="font-display text-lg font-bold text-ink">Precios</h4>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-xs text-ink-soft block">Precio Original (S/):</label>
+                    <label className="block text-sm font-bold text-ink">Precio Original (S/):</label>
                     <input
                       type="number"
                       step="0.10"
                       min="0"
                       value={promoFormData.originalPrice}
                       onChange={(e) => setPromoFormData({...promoFormData, originalPrice: parseFloat(e.target.value) || 0})}
-                      className="w-full border border-ink/15 rounded px-2 py-1 text-xs font-display font-bold"
+                      className="h-11 w-full rounded-2xl border-2 border-ink/10 bg-white px-3 font-display text-[15px] font-bold outline-none focus:border-brand-600"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-ink-soft block">Precio Oferta (S/):</label>
+                    <label className="block text-sm font-bold text-ink">Precio Oferta (S/):</label>
                     <input
                       required
                       type="number"
@@ -522,25 +489,25 @@ export const AdminPanel: React.FC = () => {
                       min="0"
                       value={promoFormData.offerPrice}
                       onChange={(e) => setPromoFormData({...promoFormData, offerPrice: parseFloat(e.target.value) || 0})}
-                      className="w-full border border-brand-500 bg-brand-50 rounded px-2 py-1 text-xs font-display font-black text-brand-800"
+                      className="h-11 w-full rounded-2xl border-2 border-brand-600 bg-white px-3 font-display text-[15px] font-bold text-ink outline-none"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-ink-soft block">Texto de ahorro:</label>
+                  <label className="block text-sm font-bold text-ink">Texto de ahorro:</label>
                   <input
                     type="text"
                     value={promoFormData.savingText}
                     onChange={(e) => setPromoFormData({...promoFormData, savingText: e.target.value})}
-                    className="w-full border border-ink/15 rounded px-2 py-1 text-xs"
+                    className="h-11 w-full rounded-2xl border-2 border-ink/10 bg-white px-3 text-[15px] outline-none focus:border-brand-600"
                   />
                 </div>
               </div>
 
-              <div className="p-3 bg-cream/60 rounded-xl border border-ink/10 space-y-2">
-                <h4 className="text-xs font-black  text-ink-soft">Productos del Combo</h4>
+              <div className="space-y-3 rounded-2xl bg-pink/30 p-4">
+                <h4 className="font-display text-lg font-bold text-ink">Productos del Combo</h4>
                 <div>
-                  <label className="text-xs text-ink-soft block mb-1">
+                  <label className="mb-1 block text-sm font-bold text-ink">
                     Códigos de Barra (separados por comas):
                   </label>
                   <textarea
@@ -549,9 +516,9 @@ export const AdminPanel: React.FC = () => {
                     placeholder="Ej: 7750182001011, 7750885002012"
                     value={promoFormData.associatedBarcodes}
                     onChange={(e) => setPromoFormData({...promoFormData, associatedBarcodes: e.target.value})}
-                    className="w-full border border-ink/15 rounded px-2 py-1.5 text-xs font-display resize-none"
+                    className="w-full resize-none rounded-2xl border-2 border-ink/10 bg-white px-3 py-2 font-display text-[15px] outline-none focus:border-brand-600"
                   />
-                  <p className="text-xs text-ink/45 mt-1">
+                  <p className="mt-1 text-sm text-ink-soft">
                     Al tocar "Añadir Combo", estos códigos se escanearán y añadirán al carrito de forma automática.
                   </p>
                 </div>
@@ -568,7 +535,7 @@ export const AdminPanel: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-black text-xs  rounded-xl shadow-md transition active:scale-95 flex items-center gap-2"
+                className="squish flex h-12 items-center gap-2 rounded-full bg-ink px-6 text-[15px] font-bold text-white"
               >
                 <Save className="w-4 h-4" />
                 Guardar Promoción

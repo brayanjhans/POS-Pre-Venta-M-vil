@@ -1,6 +1,8 @@
 import React from 'react';
 import { parseAmount } from '../../domain/money';
 import { usePos } from '../../state/PosContext';
+import { HandCoins, ShieldCheck, Store } from 'lucide-react';
+import { IconBubble, PageTitle } from '../../app/ui';
 
 /** Datos de la tienda (salen en los tickets) y reglas generales de crédito y descuento. */
 export const SettingsTab: React.FC = () => {
@@ -44,39 +46,55 @@ export const SettingsTab: React.FC = () => {
     }
   };
 
-  const field = 'w-full bg-white border border-ink/15 rounded-xl p-2.5 text-sm mt-1';
-  const label = 'block text-xs font-bold text-ink-soft ';
+  const field = 'mt-1.5 h-12 w-full rounded-2xl border-2 border-ink/10 bg-white px-3 text-[15px] text-ink outline-none focus:border-brand-600';
+  const label = 'block text-sm font-bold text-ink';
+  const block = (tone: 'sun' | 'pink' | 'mint', icon: React.ReactNode, title: string, hint: string, children: React.ReactNode) => (
+    <section className="rounded-3xl bg-white p-5">
+      <div className="mb-4 flex items-center gap-3">
+        <IconBubble tone={tone} size="sm">{icon}</IconBubble>
+        <div>
+          <h3 className="font-display text-xl font-bold leading-tight">{title}</h3>
+          <p className="text-sm text-ink-soft">{hint}</p>
+        </div>
+      </div>
+      <div className="space-y-4">{children}</div>
+    </section>
+  );
 
   return (
-    <form onSubmit={submit} className="space-y-4 max-w-xl mx-auto bg-white p-6 rounded-3xl border border-ink/10 animate-in fade-in">
-      <h3 className="text-lg font-black ">Configuración</h3>
-      <label className={label}>Nombre de la tienda (sale en el ticket)
-        <input className={field} value={storeName} onChange={e => setStoreName(e.target.value)} maxLength={60} />
-      </label>
-      <div className="grid grid-cols-2 gap-3">
-        <label className={label}>RUC
-          <input className={field} inputMode="numeric" value={storeRuc} onChange={e => setStoreRuc(e.target.value.replace(/\D/g, '').slice(0, 11))} />
+    <form onSubmit={submit} className="mx-auto max-w-xl space-y-4 text-ink">
+      <PageTitle title="Ajustes de la tienda" subtitle="Datos del ticket y reglas de venta." />
+      {block('sun', <Store className="h-5 w-5" />, 'Su tienda', 'Salen en el ticket y en los reportes.', <>
+        <label className={label}>Nombre de la tienda
+          <input className={field} value={storeName} onChange={e => setStoreName(e.target.value)} maxLength={60} />
         </label>
-        <label className={label}>Dirección
-          <input className={field} value={storeAddress} onChange={e => setStoreAddress(e.target.value)} maxLength={100} />
-        </label>
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        <label className={label}>Límite de fiado (S/)
-          <input className={field} inputMode="decimal" value={creditLimit} onChange={e => setCreditLimit(e.target.value)} />
-        </label>
-        <label className={label}>Descuento máx. (%)
-          <input className={field} inputMode="decimal" value={maxDiscount} onChange={e => setMaxDiscount(e.target.value)} />
-        </label>
-        <label className={label}>Duración sesión (h)
+        <div className="grid grid-cols-2 gap-3">
+          <label className={label}>RUC
+            <input className={field} inputMode="numeric" value={storeRuc} onChange={e => setStoreRuc(e.target.value.replace(/\D/g, '').slice(0, 11))} />
+          </label>
+          <label className={label}>Dirección
+            <input className={field} value={storeAddress} onChange={e => setStoreAddress(e.target.value)} maxLength={100} />
+          </label>
+        </div>
+      </>)}
+      {block('pink', <HandCoins className="h-5 w-5" />, 'Fiado y descuentos', 'El servidor los valida en cada venta.', <>
+        <div className="grid grid-cols-2 gap-3">
+          <label className={label}>Límite de fiado (S/)
+            <input className={field} inputMode="decimal" value={creditLimit} onChange={e => setCreditLimit(e.target.value)} />
+          </label>
+          <label className={label}>Descuento máximo (%)
+            <input className={field} inputMode="decimal" value={maxDiscount} onChange={e => setMaxDiscount(e.target.value)} />
+          </label>
+        </div>
+        <p className="text-sm text-ink-soft">El límite de fiado aplica a los clientes que no tienen uno propio.</p>
+      </>)}
+      {block('mint', <ShieldCheck className="h-5 w-5" />, 'Seguridad', 'Cuánto dura una sesión abierta en el celular.', <>
+        <label className={label}>Duración de la sesión (horas)
           <input className={field} inputMode="numeric" value={sessionHours} onChange={e => setSessionHours(e.target.value)} />
         </label>
-      </div>
-      <p className="text-xs text-ink-soft">
-        El límite de fiado aplica a clientes sin límite propio y lo valida el servidor en cada venta a crédito y en cada fiado en caja.
-      </p>
-      {message && <p className={`text-sm ${message.error ? 'text-red-600' : 'text-brand-700'}`}>{message.text}</p>}
-      <button type="submit" disabled={saving} className="w-full py-3 bg-brand-600 text-white font-black rounded-xl disabled:opacity-50">
+      </>)}
+      {message && <p className={`text-[15px] font-bold ${message.error ? 'text-fresa' : 'text-brand-700'}`}>{message.text}</p>}
+      <button type="submit" disabled={saving} className="squish h-14 w-full rounded-full bg-ink text-base font-bold text-white disabled:opacity-50">
         {saving ? 'Guardando…' : 'Guardar configuración'}
       </button>
     </form>

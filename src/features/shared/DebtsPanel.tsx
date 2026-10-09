@@ -4,6 +4,7 @@ import { formatPhone } from '../../domain/customer';
 import { formatSoles, parseAmount, round2 } from '../../domain/money';
 import { usePos } from '../../state/PosContext';
 import { OrderReceiptModal } from './OrderReceiptModal';
+import { Card, EmptyState, IconBubble, Pills, SearchField, StatusPill } from '../../app/ui';
 import {
   PAYMENT_METHODS, type CustomerStatement, type DebtorSummary, type Order, type PaidFiado, type PaymentMethod,
 } from '../../types/pos';
@@ -137,67 +138,95 @@ export const DebtsPanel: React.FC = () => {
   if (statement) {
     const c = statement.customer;
     return (
-      <div className="space-y-4 animate-in fade-in">
+      <div className="mx-auto max-w-3xl space-y-4 text-ink">
         <button type="button" onClick={() => { setStatement(null); setMessage(null); }}
-          className="text-xs font-bold text-ink-soft flex items-center gap-1"><ArrowLeft className="w-4 h-4" /> Volver a deudores</button>
+          className="-ml-1 inline-flex h-10 items-center gap-1.5 rounded-full px-2 text-[15px] font-bold text-ink-soft hover:text-ink">
+          <ArrowLeft className="h-5 w-5" /> Volver
+        </button>
 
-        <div className="bg-white rounded-2xl border border-ink/10 p-4 flex flex-wrap justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-black text-ink">{c.name}</h3>
-            <div className="text-xs text-ink-soft">
-              {c.docType !== 'NINGUNO' ? `${c.docType} ${c.docNumber}` : 'Sin documento'}{c.route ? ` · ${c.route}` : ''}
-            </div>
-            <div className="text-sm mt-1">
-              <PhoneLink phone={c.phone} />
+        {/* Cliente y su deuda */}
+        <div className="rounded-3xl bg-pink/45 p-5">
+          <div className="flex items-start gap-3">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/80 font-display text-xl font-bold">
+              {c.name.trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('')}
+            </span>
+            <div className="min-w-0">
+              <h3 className="font-display text-2xl font-bold leading-tight">{c.name}</h3>
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[15px] text-ink/75">
+                <PhoneLink phone={c.phone} />
+                {c.docType !== 'NINGUNO' && <span>{c.docType} {c.docNumber}</span>}
+                {c.route && <span>{c.route}</span>}
+              </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-xs  font-bold text-ink-soft">Deuda fiada</div>
-            <div className="text-2xl font-black text-red-600 font-display">{formatSoles(totalDebt)}</div>
-            <div className="text-xs text-ink-soft">Límite: {formatSoles(c.creditLimit)}</div>
+          <div className="mt-4 flex items-end justify-between gap-3">
+            <div>
+              <div className="text-[15px] font-bold text-ink/75">Debe</div>
+              <div className="font-display text-[40px] font-bold leading-none">{formatSoles(totalDebt)}</div>
+            </div>
+            <div className="text-right text-sm text-ink/75">Límite<br /><strong className="font-display text-base text-ink">{formatSoles(c.creditLimit)}</strong></div>
           </div>
         </div>
 
         {message && (
-          <div className={`text-xs font-bold px-3 py-2 rounded-lg border ${message.error ? 'bg-red-50 border-red-200 text-red-700' : 'bg-brand-50 border-brand-200 text-brand-800'}`}>
+          <div className={`rounded-2xl px-4 py-3 text-[15px] font-bold ${message.error ? 'bg-fresa/10 text-fresa' : 'bg-mint/50 text-ink'}`}>
             {message.text}
           </div>
         )}
 
         {totalDebt > 0 && (
-          <form ref={abonoFormRef} onSubmit={submitAbono} className="bg-brand-50 border border-brand-200 rounded-2xl p-4 space-y-3">
-            <h4 className="font-black text-sm  text-brand-900 flex items-center gap-2"><HandCoins className="w-4 h-4" /> Registrar abono</h4>
-            <p className="text-xs text-brand-800">
-              Puede abonar una parte o el total. Deuda {targetOrderId ? `de la boleta ${openOrders.find(o => o.id === targetOrderId)?.code ?? ''}` : 'total'}:{' '}
-              <strong className="font-display">{formatSoles(maxForTarget)}</strong>
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              <input ref={amountInputRef} type="text" inputMode="decimal" placeholder="Monto S/" value={amount} onChange={e => setAmount(e.target.value)} required
-                className="bg-white border border-ink/15 rounded-xl px-3 py-2 font-display font-black" />
-              <select value={method} onChange={e => setMethod(e.target.value as PaymentMethod)} className="bg-white border border-ink/15 rounded-xl px-2 py-2 text-sm">
-                {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={targetOrderId} onChange={e => setTargetOrderId(e.target.value)} className="bg-white border border-ink/15 rounded-xl px-2 py-2 text-sm col-span-2">
-                <option value="">Aplicar a la deuda más antigua primero</option>
-                {openOrders.map(o => <option key={o.id} value={o.id}>Solo {o.code} (debe {formatSoles(o.debtAmount)})</option>)}
-              </select>
+          <form ref={abonoFormRef} onSubmit={submitAbono} className="space-y-4 rounded-3xl bg-white p-5">
+            <div className="flex items-center gap-3">
+              <IconBubble tone="mint" size="sm"><HandCoins className="h-5 w-5" /></IconBubble>
+              <div>
+                <h4 className="font-display text-xl font-bold leading-tight">Registrar abono</h4>
+                <p className="text-sm text-ink-soft">
+                  Una parte o el total. Debe {targetOrderId ? `en ${openOrders.find(o => o.id === targetOrderId)?.code ?? ''}` : 'en total'}{' '}
+                  <strong className="font-display text-ink">{formatSoles(maxForTarget)}</strong>
+                </p>
+              </div>
             </div>
             <div className="flex gap-2">
-              <input type="text" placeholder="Nota (opcional)" value={notes} onChange={e => setNotes(e.target.value)}
-                className="flex-1 bg-white border border-ink/15 rounded-xl px-3 py-2 text-sm" />
-              <button type="button" onClick={() => setAmount(maxForTarget.toFixed(2))} className="px-3 py-2 bg-white border border-brand-300 rounded-xl text-xs font-bold">
-                Total
-              </button>
-              <button type="submit" disabled={saving} className="px-4 py-2 bg-brand-600 text-white rounded-xl font-black text-xs  disabled:opacity-50">
-                {saving ? '…' : 'Abonar'}
+              <div className="relative flex-1">
+                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 font-display font-bold text-ink-soft">S/</span>
+                <input ref={amountInputRef} type="text" inputMode="decimal" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} required
+                  aria-label="Monto del abono"
+                  className="h-14 w-full rounded-2xl border-2 border-ink/10 bg-white pl-11 pr-3 font-display text-2xl font-bold outline-none focus:border-brand-600" />
+              </div>
+              <button type="button" onClick={() => setAmount(maxForTarget.toFixed(2))} className="squish h-14 shrink-0 rounded-2xl bg-cream px-4 text-[15px] font-bold">
+                Todo
               </button>
             </div>
+            <div>
+              <span className="mb-1.5 block text-sm font-bold">Cómo paga</span>
+              <div className="flex flex-wrap gap-2">
+                {PAYMENT_METHODS.map(m => (
+                  <button key={m} type="button" onClick={() => setMethod(m)} aria-pressed={method === m}
+                    className={`squish h-10 rounded-full px-4 text-[15px] font-bold transition ${method === m ? 'bg-ink text-white' : 'border border-ink/15 bg-white'}`}>
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-bold">Aplicar a</span>
+              <select value={targetOrderId} onChange={e => setTargetOrderId(e.target.value)}
+                className="h-12 w-full rounded-2xl border-2 border-ink/10 bg-white px-3 text-[15px] outline-none focus:border-brand-600">
+                <option value="">La deuda más antigua primero</option>
+                {openOrders.map(o => <option key={o.id} value={o.id}>Solo {o.code} (debe {formatSoles(o.debtAmount)})</option>)}
+              </select>
+            </label>
+            <input type="text" placeholder="Nota (opcional)" value={notes} onChange={e => setNotes(e.target.value)}
+              className="h-12 w-full rounded-2xl border-2 border-ink/10 bg-white px-3 text-[15px] outline-none focus:border-brand-600" />
+            <button type="submit" disabled={saving} className="squish h-14 w-full rounded-full bg-ink text-base font-bold text-white disabled:opacity-50">
+              {saving ? 'Guardando…' : 'Registrar abono'}
+            </button>
           </form>
         )}
 
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl border border-ink/10 p-4">
-            <h4 className="font-black text-sm  mb-2">Boletas a crédito</h4>
+          <div className="rounded-3xl bg-white p-5">
+            <h4 className="mb-3 font-display text-xl font-bold">Boletas</h4>
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {statement.orders.length === 0 && <p className="text-xs text-ink/45">Sin boletas a crédito.</p>}
               {statement.orders.map(o => {
@@ -238,8 +267,8 @@ export const DebtsPanel: React.FC = () => {
               })}
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-ink/10 p-4">
-            <h4 className="font-black text-sm  mb-2">Historial de pagos</h4>
+          <div className="rounded-3xl bg-white p-5">
+            <h4 className="mb-3 font-display text-xl font-bold">Pagos y abonos</h4>
             <div className="space-y-1.5 max-h-80 overflow-y-auto text-xs">
               {statement.payments.length === 0 && <p className="text-ink/45">Sin pagos registrados.</p>}
               {statement.payments.map(p => (
@@ -275,114 +304,105 @@ export const DebtsPanel: React.FC = () => {
   const paidTotal = filteredPaid.reduce((acc, o) => acc + o.totalAmount, 0);
   const isLoading = tab === 'pendientes' ? loading : paidLoading;
 
+  const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('') || '?';
+
   return (
-    <div className="space-y-4 animate-in fade-in">
-      <div className="flex flex-wrap justify-between items-end gap-3">
-        <div>
-          <h3 className="font-display text-2xl font-bold text-ink">Cuentas por cobrar</h3>
-          {tab === 'pendientes' ? (
-            <p className="text-xs text-ink-soft">Total por cobrar: <strong className="text-red-600">{formatSoles(grandTotal)}</strong> · {debtors.length} clientes</p>
-          ) : (
-            <p className="text-xs text-ink-soft">Fiados pagados: <strong className="text-brand-700">{formatSoles(paidTotal)}</strong> · {filteredPaid.length} boletas</p>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <input type="text" placeholder="Buscar cliente, DNI/RUC, celular o boleta" value={search} onChange={e => setSearch(e.target.value)}
-            className="bg-white border border-ink/15 rounded-xl px-3 py-2 text-sm" />
-          <button type="button" onClick={() => void (tab === 'pendientes' ? loadDebtors() : loadPaid())}
-            className="p-2 bg-white border border-ink/15 rounded-xl" title="Actualizar">
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+    <div className="mx-auto max-w-3xl space-y-4 text-ink">
+      {/* Cifra protagonista: lo que falta cobrar */}
+      <div className="rounded-3xl bg-pink/45 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[15px] font-bold text-ink/75">{tab === 'pendientes' ? 'Por cobrar' : 'Fiados ya pagados'}</p>
+            <p className="font-display text-[44px] font-bold leading-none">{formatSoles(tab === 'pendientes' ? grandTotal : paidTotal)}</p>
+            <p className="mt-1.5 text-[15px] text-ink/75">
+              {tab === 'pendientes'
+                ? (debtors.length === 1 ? '1 cliente debe' : `${debtors.length} clientes deben`)
+                : (filteredPaid.length === 1 ? '1 boleta pagada' : `${filteredPaid.length} boletas pagadas`)}
+            </p>
+          </div>
+          <button type="button" onClick={() => void (tab === 'pendientes' ? loadDebtors() : loadPaid())} aria-label="Actualizar"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/70 text-ink">
+            <RefreshCw className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
-      <div className="flex bg-cream rounded-xl p-1 w-fit">
-        {([
-          ['pendientes', 'Pendientes', <HandCoins key="i" className="w-4 h-4" />],
-          ['pagados', 'Pagados (historial)', <History key="i" className="w-4 h-4" />],
-        ] as const).map(([key, label, icon]) => (
-          <button key={key} type="button" onClick={() => { setTab(key); setMessage(null); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-black  flex items-center gap-1.5 transition ${
-              tab === key ? 'bg-white shadow text-ink' : 'text-ink-soft hover:text-ink'}`}>
-            {icon}{label}
-          </button>
-        ))}
-      </div>
+      <Pills<'pendientes' | 'pagados'>
+        value={tab}
+        onChange={key => { setTab(key); setMessage(null); }}
+        options={[
+          { value: 'pendientes', label: <><HandCoins className="h-4 w-4" /> Pendientes</> },
+          { value: 'pagados', label: <><History className="h-4 w-4" /> Pagados</> },
+        ]}
+      />
+      <SearchField value={search} onChange={setSearch} placeholder="Cliente, celular, DNI/RUC o boleta" />
 
-      {message?.error && <p className="text-sm text-red-600">{message.text}</p>}
+      {message?.error && <p className="text-[15px] font-bold text-fresa">{message.text}</p>}
 
       {tab === 'pendientes' ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-ink/10 overflow-hidden">
-          {!loading && filtered.length === 0 ? (
-            <div className="p-8 text-center text-ink/45">
-              <CheckCircle2 className="w-12 h-12 mx-auto text-brand-300 mb-2" />
-              <p className="font-bold text-sm">No hay cuentas por cobrar</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-ink/5">
-              {filtered.map(d => (
-                <div key={d.id} role="button" tabIndex={0} onClick={() => void openStatement(d.id)}
-                  onKeyDown={e => { if (e.key === 'Enter') void openStatement(d.id); }}
-                  className="w-full p-4 flex justify-between items-center gap-3 hover:bg-cream/60 text-left cursor-pointer">
-                  <div className="min-w-0">
-                    <div className="font-bold text-ink">{d.name}</div>
-                    <div className="text-xs text-ink-soft flex flex-wrap gap-x-1.5">
-                      <PhoneLink phone={d.phone} />
-                      <span>· {d.docNumber ?? 'Sin documento'}{d.route ? ` · ${d.route}` : ''} · desde {formatDate(d.oldestDebtAt)}</span>
+        !loading && filtered.length === 0 ? (
+          <EmptyState icon={<CheckCircle2 className="h-6 w-6" />} tone="mint" title="Nadie debe nada" hint="Cuando alguien compre al fiado, aparecerá aquí." />
+        ) : (
+          <ul className="space-y-2.5">
+            {filtered.map(d => (
+              <li key={d.id}>
+                <button type="button" onClick={() => void openStatement(d.id)} className="squish w-full text-left">
+                  <Card className="flex items-start gap-3">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-pink font-display text-lg font-bold">{initials(d.name)}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-display text-[17px] font-bold leading-tight">{d.name}</div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-soft">
+                        <PhoneLink phone={d.phone} />
+                        <span>Desde el {formatDate(d.oldestDebtAt)}</span>
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {(d.orderCodes ?? []).slice(0, 4).map(code => <StatusPill key={code} tone="cream">{code}</StatusPill>)}
+                        {(d.orderCodes ?? []).length > 4 && <StatusPill tone="muted">+{(d.orderCodes ?? []).length - 4}</StatusPill>}
+                      </div>
                     </div>
-                    <div className="text-xs text-ink-soft mt-0.5">
-                      {d.openOrders} boleta(s):{' '}
-                      <span className="font-display font-bold">{(d.orderCodes ?? []).join(', ') || '—'}</span>
+                    <div className="shrink-0 text-right">
+                      <div className="font-display text-lg font-bold text-fresa">{formatSoles(d.fiadoDebt)}</div>
+                      <div className="text-sm font-bold text-brand-700">Abonar ›</div>
                     </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="font-display font-black text-red-600">{formatSoles(d.fiadoDebt)}</div>
-                    <div className="text-xs text-brand-700 font-bold">Ver / Abonar ➔</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl shadow-sm border border-ink/10 overflow-hidden">
-          {!paidLoading && filteredPaid.length === 0 ? (
-            <div className="p-8 text-center text-ink/45">
-              <History className="w-12 h-12 mx-auto text-ink/45 mb-2" />
-              <p className="font-bold text-sm">Aún no hay fiados pagados en su totalidad</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-ink/5">
-              {filteredPaid.map(o => (
-                <button key={o.id} type="button" onClick={() => setViewOrder(o)}
-                  className="w-full p-4 flex justify-between items-center gap-3 hover:bg-cream/60 text-left">
-                  <div className="min-w-0">
-                    <div className="font-bold text-ink">
-                      Boleta <span className="font-display">{o.code}</span>
-                      <span className="ml-1.5 px-1.5 rounded text-xs bg-brand-100 text-brand-800">Pagado</span>
-                    </div>
-                    <div className="text-xs text-ink-soft flex flex-wrap gap-x-1.5">
-                      <span className="font-bold">{o.customerName ?? 'Cliente'}</span>
-                      <span>·</span>
-                      <PhoneLink phone={o.customerPhone} />
-                      {o.customerDoc && <span>· {o.customerDoc}</span>}
-                    </div>
-                    <div className="text-xs text-ink-soft mt-0.5">
-                      Fiado el {formatDate(o.createdAt)} · pagado el {formatDate(o.lastAbonoAt)} · {o.abonosCount} abono(s)
-                    </div>
-                    <div className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-brand-700">
-                      <Receipt className="w-3.5 h-3.5" /> Ver boleta ›
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="font-display font-black text-brand-700">{formatSoles(o.totalAmount)}</div>
-                    <Receipt className="w-3.5 h-3.5 text-ink/45 ml-auto" />
-                  </div>
+                  </Card>
                 </button>
-              ))}
-            </div>
-          )}
-        </div>
+              </li>
+            ))}
+          </ul>
+        )
+      ) : (
+        !paidLoading && filteredPaid.length === 0 ? (
+          <EmptyState icon={<History className="h-6 w-6" />} tone="lilac" title="Aún no hay fiados pagados" hint="Cuando un cliente termine de pagar una boleta, quedará en este historial." />
+        ) : (
+          <ul className="space-y-2.5">
+            {filteredPaid.map(o => (
+              <li key={o.id}>
+                <button type="button" onClick={() => setViewOrder(o)} className="squish w-full text-left">
+                  <Card className="flex items-start gap-3">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-mint"><CheckCircle2 className="h-6 w-6" /></span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-display text-[17px] font-bold">{o.code}</span>
+                        <StatusPill tone="mint">Pagado</StatusPill>
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-sm text-ink-soft">
+                        <span className="font-bold text-ink">{o.customerName ?? 'Cliente'}</span>
+                        <PhoneLink phone={o.customerPhone} />
+                      </div>
+                      <div className="text-sm text-ink-soft">
+                        Fiado el {formatDate(o.createdAt)}, pagado el {formatDate(o.lastAbonoAt)} en {o.abonosCount === 1 ? '1 abono' : `${o.abonosCount} abonos`}
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="font-display text-lg font-bold">{formatSoles(o.totalAmount)}</div>
+                      <div className="text-sm font-bold text-brand-700">Ver boleta ›</div>
+                    </div>
+                  </Card>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )
       )}
 
       {viewOrder && <OrderReceiptModal order={viewOrder} onClose={() => setViewOrder(null)} />}

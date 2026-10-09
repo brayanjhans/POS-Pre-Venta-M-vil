@@ -2,6 +2,7 @@ import React from 'react';
 import { KeyRound, LifeBuoy, Lock, Pencil, Plus, RotateCcw, ShieldCheck, Unlock, UserX, X } from 'lucide-react';
 import { usePos } from '../../state/PosContext';
 import { useDialog } from '../../app/DialogProvider';
+import { PageTitle, PillButton } from '../../app/ui';
 import { ROLE_LABELS, type User, type UserRole } from '../../types/pos';
 
 interface FormState {
@@ -134,23 +135,15 @@ export const UsersTab: React.FC = () => {
     }
   };
 
-  const field = 'w-full bg-white border border-ink/15 rounded-xl p-2.5 text-sm focus:outline-hidden focus:border-brand-600';
+  const field = 'h-12 w-full rounded-2xl border-2 border-ink/10 bg-white px-3 text-[15px] text-ink outline-none focus:border-brand-600 disabled:bg-cream disabled:text-ink-soft';
 
   return (
-    <div className="space-y-4 animate-in fade-in">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-black text-ink ">Usuarios y Accesos</h3>
-          <p className="text-xs text-ink-soft">
-            Cree cuentas para vendedores y cajeros. Cada persona entra con su usuario y el PIN que usted le asigne.
-            Si alguien olvida su PIN, use <strong>Restablecer PIN</strong>: conserva su cuenta y su historial.
-          </p>
-        </div>
-        <button type="button" onClick={openNew}
-          className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-black text-xs  rounded-xl flex items-center gap-1.5">
-          <Plus className="w-4 h-4" /> Nuevo usuario
-        </button>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-4 text-ink">
+      <PageTitle
+        title="Su equipo"
+        subtitle="Cada persona entra con su usuario y el PIN que usted le asigne. Si alguien lo olvida, use «Restablecer PIN»."
+        action={<PillButton onClick={openNew}><Plus className="h-5 w-5" /> Nuevo</PillButton>}
+      />
 
       {error && !editing && <p className="text-sm text-red-600">{error}</p>}
 
@@ -167,9 +160,9 @@ export const UsersTab: React.FC = () => {
           const isMe = u.id === session?.user.id;
           // La cuenta de soporte solo la puede tocar soporte.
           const isProtected = u.isSupport === true && !amSupport;
-          const action = 'inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition active:scale-95';
+          const action = 'squish inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-bold transition';
           return (
-            <div key={u.id} className={`rounded-2xl border border-ink/10 bg-white p-4 shadow-sm ${u.isActive ? '' : 'opacity-60'}`}>
+            <div key={u.id} className={`rounded-3xl bg-white p-4 ${u.isActive ? '' : 'opacity-60'}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="font-black text-ink">
@@ -177,7 +170,7 @@ export const UsersTab: React.FC = () => {
                   </div>
                   <div className="mt-0.5 font-display text-sm text-ink-soft">@{u.username}{u.sellerCode ? ` · ${u.sellerCode}` : ''}</div>
                 </div>
-                <span className={`shrink-0 text-xs font-black px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-ink text-white' : u.role === 'cajero' ? 'bg-blue-100 text-blue-800' : 'bg-brand-100 text-brand-800'}`}>
+                <span className={`shrink-0 text-xs font-bold px-2.5 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-ink text-white' : u.role === 'cajero' ? 'bg-sun text-ink' : 'bg-mint text-ink'}`}>
                   {ROLE_LABELS[u.role]}
                 </span>
               </div>
@@ -187,7 +180,7 @@ export const UsersTab: React.FC = () => {
                 {u.lockedUntil && <span className="text-xs font-bold bg-red-100 text-red-700 px-1.5 rounded">Bloqueado</span>}
                 {u.mustChangePin && u.isActive && <span className="text-xs font-bold bg-amber-100 text-amber-800 px-1.5 rounded">PIN temporal</span>}
                 {u.isSupport && (
-                  <span className="inline-flex items-center gap-0.5 text-xs font-bold bg-indigo-100 text-indigo-800 px-1.5 rounded">
+                  <span className="inline-flex items-center gap-0.5 text-xs font-bold bg-lilac text-ink px-2 rounded-full">
                     <LifeBuoy className="w-3 h-3" /> Soporte técnico (protegido)
                   </span>
                 )}
@@ -200,27 +193,27 @@ export const UsersTab: React.FC = () => {
                 <div className="mt-3 flex items-center gap-1 text-xs text-ink/45"><Lock className="w-3.5 h-3.5" /> Protegido: solo lo administra soporte.</div>
               ) : (
                 <div className="mt-3 flex flex-wrap gap-2 border-t border-ink/5 pt-3">
-                  <button type="button" onClick={() => openEdit(u)} className={`${action} bg-cream text-ink hover:bg-ink/10`}>
+                  <button type="button" onClick={() => openEdit(u)} className={`${action} bg-cream text-ink`}>
                     <Pencil className="w-4 h-4" /> Editar
                   </button>
                   {!isMe && (
-                    <button type="button" onClick={() => openReset(u)} className={`${action} bg-indigo-50 text-indigo-700 hover:bg-indigo-100`}>
+                    <button type="button" onClick={() => openReset(u)} className={`${action} bg-lilac/60 text-ink`}>
                       <RotateCcw className="w-4 h-4" /> Restablecer PIN
                     </button>
                   )}
                   {u.lockedUntil && (
-                    <button type="button" onClick={() => void quickUpdate(u, { unlock: true })} className={`${action} bg-amber-50 text-amber-700 hover:bg-amber-100`}>
+                    <button type="button" onClick={() => void quickUpdate(u, { unlock: true })} className={`${action} bg-sun/60 text-ink`}>
                       <Unlock className="w-4 h-4" /> Desbloquear
                     </button>
                   )}
                   {!isMe && (u.isActive ? (
                     <button type="button"
                       onClick={() => void quickUpdate(u, { isActive: false }, `¿Desactivar a ${u.fullName}? No podrá ingresar y se cerrarán sus sesiones abiertas.`)}
-                      className={`${action} bg-red-50 text-red-600 hover:bg-red-100`}>
+                      className={`${action} bg-fresa/10 text-fresa`}>
                       <UserX className="w-4 h-4" /> Desactivar
                     </button>
                   ) : (
-                    <button type="button" onClick={() => void quickUpdate(u, { isActive: true })} className={`${action} bg-brand-50 text-brand-700 hover:bg-brand-100`}>
+                    <button type="button" onClick={() => void quickUpdate(u, { isActive: true })} className={`${action} bg-mint/60 text-ink`}>
                       <ShieldCheck className="w-4 h-4" /> Reactivar
                     </button>
                   ))}
@@ -232,10 +225,10 @@ export const UsersTab: React.FC = () => {
       </div>
 
       {editing && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setEditing(null)}>
-          <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-sm bg-white rounded-3xl p-6 space-y-3">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4" onClick={() => setEditing(null)}>
+          <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-md space-y-3 rounded-t-3xl bg-paper p-5 text-ink sm:rounded-3xl">
             <div className="flex items-center justify-between">
-              <h3 className="font-black  text-sm">{editing === 'new' ? 'Nuevo usuario' : `Editar: ${editing.fullName}`}</h3>
+              <h3 className="font-display text-[22px] font-bold">{editing === 'new' ? 'Nuevo usuario' : `Editar: ${editing.fullName}`}</h3>
               <button type="button" onClick={() => setEditing(null)} aria-label="Cerrar"><X className="w-5 h-5 text-ink/45" /></button>
             </div>
             <input className={field} placeholder="Nombre completo *" value={form.fullName} required minLength={2}
@@ -275,7 +268,7 @@ export const UsersTab: React.FC = () => {
               </div>
             )}
             {error && <p className="text-xs text-red-600">{error}</p>}
-            <button type="submit" disabled={saving} className="w-full py-3 bg-brand-600 text-white font-black rounded-xl disabled:opacity-50">
+            <button type="submit" disabled={saving} className="squish h-14 w-full rounded-full bg-ink text-base font-bold text-white disabled:opacity-50">
               {saving ? 'Guardando…' : 'Guardar'}
             </button>
           </form>
@@ -283,10 +276,10 @@ export const UsersTab: React.FC = () => {
       )}
 
       {resetting && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setResetting(null)}>
-          <form onSubmit={submitReset} onClick={e => e.stopPropagation()} className="w-full max-w-sm bg-white rounded-3xl p-6 space-y-3">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4" onClick={() => setResetting(null)}>
+          <form onSubmit={submitReset} onClick={e => e.stopPropagation()} className="w-full max-w-md space-y-3 rounded-t-3xl bg-paper p-5 text-ink sm:rounded-3xl">
             <div className="flex items-center justify-between">
-              <h3 className="font-black  text-sm flex items-center gap-1.5"><RotateCcw className="w-4 h-4" /> Restablecer PIN</h3>
+              <h3 className="flex items-center gap-2 font-display text-[22px] font-bold"><RotateCcw className="h-5 w-5" /> Restablecer PIN</h3>
               <button type="button" onClick={() => setResetting(null)} aria-label="Cerrar"><X className="w-5 h-5 text-ink/45" /></button>
             </div>
             <p className="text-xs text-ink-soft">
@@ -300,7 +293,7 @@ export const UsersTab: React.FC = () => {
               placeholder="Repita el nuevo PIN" value={newPin2} required
               onChange={e => setNewPin2(e.target.value.replace(/\D/g, '').slice(0, 6))} />
             {resetError && <p className="text-xs text-red-600">{resetError}</p>}
-            <button type="submit" disabled={saving} className="w-full py-3 bg-indigo-600 text-white font-black rounded-xl disabled:opacity-50">
+            <button type="submit" disabled={saving} className="squish h-14 w-full rounded-full bg-lilac-strong text-base font-bold text-white disabled:opacity-50">
               {saving ? 'Guardando…' : 'Restablecer PIN'}
             </button>
           </form>

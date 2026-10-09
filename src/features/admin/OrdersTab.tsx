@@ -1,23 +1,27 @@
 import React from 'react';
-import { Ban, Receipt, RefreshCw } from 'lucide-react';
+import { Ban, ChevronRight, ReceiptText, RefreshCw } from 'lucide-react';
 import { formatSoles } from '../../domain/money';
 import { usePos } from '../../state/PosContext';
 import { useDialog } from '../../app/DialogProvider';
+import { Card, EmptyState, PageTitle, PillButton, Pills, SearchField, StatusPill } from '../../app/ui';
+import type { Tone } from '../../app/tones';
 import { OrderReceiptModal } from '../shared/OrderReceiptModal';
 import type { Order, OrderStatus } from '../../types/pos';
 
-const STATUS_STYLE: Record<OrderStatus, string> = {
-  PAGADO: 'bg-brand-100 text-brand-800',
-  FIADO: 'bg-orange-100 text-orange-800',
-  PENDIENTE_PAGO: 'bg-amber-100 text-amber-800',
-  CANCELADO: 'bg-ink/10 text-ink-soft',
+const STATUS: Record<OrderStatus, { label: string; tone: Tone | 'fresa' | 'muted' }> = {
+  PAGADO: { label: 'Pagado', tone: 'mint' },
+  FIADO: { label: 'Fiado', tone: 'pink' },
+  PENDIENTE_PAGO: { label: 'Por cobrar', tone: 'sun' },
+  CANCELADO: { label: 'Anulado', tone: 'muted' },
 };
 
-/** Historial de boletas/pedidos (últimos 7 días) con filtros y anulación. */
+type Filter = OrderStatus | 'TODOS';
+
+/** Boletas de los últimos 7 días: filtros por estado, búsqueda, detalle y anulación. */
 export const OrdersTab: React.FC = () => {
   const { api, orders, refreshOrders, refreshCatalog, upsertOrder, handleError } = usePos();
   const dialog = useDialog();
-  const [status, setStatus] = React.useState<OrderStatus | 'TODOS'>('TODOS');
+  const [status, setStatus] = React.useState<Filter>('TODOS');
   const [search, setSearch] = React.useState('');
   const [viewOrder, setViewOrder] = React.useState<Order | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -29,10 +33,10 @@ export const OrdersTab: React.FC = () => {
   };
 
   const q = search.toLowerCase().trim();
-  const list = orders
-    .filter(o => status === 'TODOS' || o.status === status)
-    .filter(o => !q || o.code.toLowerCase().includes(q) || (o.customerName ?? '').toLowerCase().includes(q) || o.sellerName.toLowerCase().includes(q));
+  const bySearch = orders.filter(o => !q || o.code.toLowerCase().includes(q) || (o.customerName ?? '').toLowerCase().includes(q) || o.sellerName.toLowerCase().includes(q));
+  const list = bySearch.filter(o => status === 'TODOS' || o.status === status);
   const total = list.filter(o => o.status !== 'CANCELADO').reduce((acc, o) => acc + o.totalAmount, 0);
+  const count = (s: OrderStatus) => bySearch.filter(o => o.status === s).length;
 
   const cancel = async (order: Order) => {
     if (!api) return;
@@ -51,62 +55,68 @@ export const OrdersTab: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 animate-in fade-in">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h3 className="font-display text-xl font-bold text-ink">Últimos 7 días</h3>
-          <p className="text-xs text-ink-soft">{list.length} pedidos · {formatSoles(total)} sin contar anulados</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <select value={status} onChange={e => setStatus(e.target.value as OrderStatus | 'TODOS')} className="bg-white border border-ink/15 rounded-xl px-2 py-2 text-xs font-bold">
-            <option value="TODOS">Todos</option>
-            <option value="PENDIENTE_PAGO">Pendientes</option>
-            <option value="PAGADO">Pagados</option>
-            <option value="FIADO">Fiados</option>
-            <option value="CANCELADO">Anulados</option>
-          </select>
-          <input type="text" placeholder="Código, cliente o vendedor" value={search} onChange={e => setSearch(e.target.value)}
-            className="bg-white border border-ink/15 rounded-xl px-3 py-2 text-xs" />
-          <button type="button" onClick={() => void reload()} className="p-2 bg-white border border-ink/15 rounded-xl" title="Actualizar">
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-4 text-ink">
+      <PageTitle
+        title="Últimos 7 días"
+        subtitle={<>{list.length === 1 ? '1 boleta' : `${list.length} boletas`}, <strong className="text-ink">{formatSoles(total)}</strong> sin contar anuladas</>}
+        action={
+          <PillButton variant="soft" onClick={() => void reload()} aria-label="Actualizar">
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </PillButton>
+        }
+      />
+      <SearchField value={search} onChange={setSearch} placeholder="Código, cliente o vendedor" />
+      <Pills<Filter>
+        value={status}
+        onChange={setStatus}
+        options={[
+          { value: 'TODOS', label: 'Todas', count: bySearch.length },
+          { value: 'PENDIENTE_PAGO', label: 'Por cobrar', count: count('PENDIENTE_PAGO') },
+          { value: 'PAGADO', label: 'Pagadas', count: count('PAGADO') },
+          { value: 'FIADO', label: 'Fiadas', count: count('FIADO') },
+          { value: 'CANCELADO', label: 'Anuladas', count: count('CANCELADO') },
+        ]}
+      />
 
       {list.length === 0 ? (
-        <div className="py-12 text-center text-ink/45">No hay pedidos con ese filtro.</div>
+        <EmptyState icon={<ReceiptText className="h-6 w-6" />} tone="lilac" title="No hay boletas con este filtro" hint="Pruebe con otro estado o busque por código." />
       ) : (
-        <div className="space-y-2">
-          {list.map(ord => (
-            <button key={ord.id} type="button" onClick={() => setViewOrder(ord)}
-              className="w-full p-3.5 bg-white rounded-2xl border border-ink/10 hover:border-brand-400 flex items-center justify-between gap-3 text-xs text-left">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <strong className="text-sm font-display text-ink">{ord.code}</strong>
-                  <span className={`px-2 py-0.5 rounded-full font-black text-xs ${STATUS_STYLE[ord.status]}`}>{ord.status}</span>
-                  <span className="text-xs text-ink/45">{ord.paymentTerm}</span>
-                </div>
-                <div className="text-xs text-ink-soft mt-1 truncate">
-                  {new Date(ord.createdAt).toLocaleString('es-PE')} · {ord.sellerName} · {ord.customerName || 'Cliente genérico'} · {ord.items.length} productos
-                </div>
-              </div>
-              <div className="text-right shrink-0">
-                <div className="text-base font-black font-display text-brand-800">{formatSoles(ord.totalAmount)}</div>
-                {!!ord.debtAmount && <div className="text-xs font-bold text-red-600">Debe {formatSoles(ord.debtAmount)}</div>}
-                <Receipt className="w-3.5 h-3.5 text-ink/45 ml-auto" />
-              </div>
-            </button>
-          ))}
-        </div>
+        <ul className="space-y-2.5">
+          {list.map(ord => {
+            const st = STATUS[ord.status];
+            return (
+              <li key={ord.id}>
+                <button type="button" onClick={() => setViewOrder(ord)} className="squish w-full text-left">
+                  <Card className={`flex items-center gap-3 ${ord.status === 'CANCELADO' ? 'opacity-60' : ''}`}>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-display text-[17px] font-bold">{ord.code}</span>
+                        <StatusPill tone={st.tone}>{st.label}</StatusPill>
+                      </div>
+                      <div className="mt-0.5 truncate text-[15px] text-ink">{ord.customerName || 'Cliente sin registrar'}</div>
+                      <div className="truncate text-sm text-ink-soft">
+                        {new Date(ord.createdAt).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' })}, {ord.sellerName}
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="font-display text-lg font-bold">{formatSoles(ord.totalAmount)}</div>
+                      {!!ord.debtAmount && <div className="text-sm font-bold text-fresa">Debe {formatSoles(ord.debtAmount)}</div>}
+                    </div>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-ink/30" />
+                  </Card>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       )}
 
       {viewOrder && (
         <OrderReceiptModal order={viewOrder} onClose={() => setViewOrder(null)}>
           {viewOrder.status !== 'CANCELADO' && (
-            <button type="button" onClick={() => void cancel(viewOrder)}
-              className="w-full py-2 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-black  flex items-center justify-center gap-1.5">
-              <Ban className="w-4 h-4" /> Anular boleta
-            </button>
+            <PillButton variant="danger" className="w-full" onClick={() => void cancel(viewOrder)}>
+              <Ban className="h-4 w-4" /> Anular boleta
+            </PillButton>
           )}
         </OrderReceiptModal>
       )}
