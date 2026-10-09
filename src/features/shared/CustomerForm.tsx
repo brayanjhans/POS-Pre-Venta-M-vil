@@ -73,7 +73,7 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
     }
   };
 
-  const field = 'w-full bg-white border border-slate-300 rounded-lg p-2 text-sm text-ink focus:outline-hidden focus:border-brand-600';
+  const field = 'w-full bg-white border border-ink/15 rounded-lg p-2 text-sm text-ink focus:outline-hidden focus:border-brand-600';
 
   return (
     <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4" onClick={onClose}>
@@ -81,7 +81,7 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
         className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-ink max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h3 className="font-black  text-sm">{customer ? 'Editar cliente' : 'Nuevo cliente'}</h3>
-          <button type="button" onClick={onClose} aria-label="Cerrar"><X className="w-5 h-5 text-slate-400" /></button>
+          <button type="button" onClick={onClose} aria-label="Cerrar"><X className="w-5 h-5 text-ink/45" /></button>
         </div>
         <input className={field} placeholder="Nombre o razón social *" value={name} onChange={e => setName(e.target.value)} required minLength={2} autoFocus />
         <p className="text-xs text-ink-soft">Solo el nombre es obligatorio. Los demás datos puede completarlos después.</p>

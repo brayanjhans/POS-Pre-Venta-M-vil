@@ -1,4 +1,5 @@
 import React from 'react';
+import { TONE, type Tone } from './tones';
 
 interface Props {
   icon: React.ReactNode;
@@ -7,18 +8,20 @@ interface Props {
   /** Botón a la izquierda del título (ej. abrir el menú en el celular). */
   leading?: React.ReactNode;
   actions?: React.ReactNode;
+  /** Color de la sección (burbuja del ícono). */
+  tone?: Tone;
 }
 
 /** Cabecera común de las pantallas (Caja, Admin): sobre papel, título en Bricolage, sin adornos. */
-export const ScreenHeader: React.FC<Props> = ({ icon, title, subtitle, leading, actions }) => (
+export const ScreenHeader: React.FC<Props> = ({ icon, title, subtitle, leading, actions, tone = 'mint' }) => (
   <header className="relative z-20 flex items-center justify-between gap-3 border-b border-ink/10 bg-paper px-4 py-3 text-ink md:px-6 md:py-4">
     <div className="flex min-w-0 items-center gap-3">
       {leading}
-      <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white sm:flex">
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-ink ${TONE[tone].bg}`}>
         {icon}
       </div>
       <div className="min-w-0">
-        <h1 className="truncate font-display text-[22px] font-bold leading-tight tracking-tight">{title}</h1>
+        <h1 className="truncate font-display text-[24px] font-bold leading-tight">{title}</h1>
         {subtitle && <p className="truncate text-sm text-ink-soft">{subtitle}</p>}
       </div>
     </div>

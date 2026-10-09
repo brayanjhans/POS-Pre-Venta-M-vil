@@ -29,8 +29,8 @@ export const ShiftOpener: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-full bg-slate-100 text-ink p-6">
-      <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-xl border border-slate-200">
+    <div className="flex flex-col items-center justify-center min-h-full bg-cream text-ink p-6">
+      <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-xl border border-ink/10">
         <div className="flex justify-center mb-6">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
             <Play className="w-8 h-8 text-blue-600 ml-1" />
@@ -43,18 +43,18 @@ export const ShiftOpener: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-xs font-bold text-ink-soft   mb-2">Fondo de Caja (Opcional)</label>
-            <p className="text-xs text-slate-400 mb-3 leading-tight">Si empiezas tu turno con sencillo para dar vueltos, anótalo aquí. Si no, déjalo en blanco.</p>
+            <p className="text-xs text-ink/45 mb-3 leading-tight">Si empiezas tu turno con sencillo para dar vueltos, anótalo aquí. Si no, déjalo en blanco.</p>
 
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <span className="text-slate-400 font-bold">S/</span>
+                <span className="text-ink/45 font-bold">S/</span>
               </div>
               <input
                 type="text"
                 inputMode="decimal"
                 value={initialCash}
                 onChange={(e) => setInitialCash(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-4 text-2xl font-black text-ink focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                className="w-full bg-cream/60 border border-ink/15 rounded-xl pl-10 pr-4 py-4 text-2xl font-black text-ink focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                 placeholder="0.00"
               />
             </div>
@@ -74,7 +74,7 @@ export const ShiftOpener: React.FC = () => {
 
         <button
           onClick={() => void logout()}
-          className="w-full mt-4 py-3 text-sm font-bold text-slate-400 hover:text-ink-soft transition-colors"
+          className="w-full mt-4 py-3 text-sm font-bold text-ink/45 hover:text-ink-soft transition-colors"
         >
           Cerrar sesión
         </button>

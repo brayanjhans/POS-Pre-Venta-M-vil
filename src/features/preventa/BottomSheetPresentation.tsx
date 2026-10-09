@@ -102,7 +102,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
               <span className="font-bold text-brand-600  bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
                 {product.category}
               </span>
-              <span className="text-slate-400 font-display text-xs">
+              <span className="text-ink/45 font-display text-xs">
                 {product.barcode}
               </span>
             </div>
@@ -122,7 +122,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
           <button 
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 transition shrink-0"
+            className="p-1.5 rounded-full text-ink/45 hover:text-ink bg-cream hover:bg-ink/10 transition shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -131,7 +131,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         {/* Selector de Presentación: 3 Opciones Táctiles (Unidad, Medio, Paquete) */}
         <div className="space-y-2 mb-4">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-700  ">
+            <label className="text-xs font-bold text-ink  ">
               ¿Cómo lo vende?
             </label>
           </div>
@@ -152,14 +152,14 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                   className={`relative flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all ${
                     isSelected 
                       ? 'border-brand-600 bg-brand-50/80 ring-2 ring-brand-600/30 shadow-md' 
-                      : 'border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300'
+                      : 'border-ink/10 bg-white hover:bg-cream/60 hover:border-ink/15'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`shrink-0 p-2.5 rounded-xl border ${
                       isSelected 
                         ? 'bg-brand-600 text-white border-brand-600 [&_svg]:!text-white' 
-                        : 'bg-slate-100 border-slate-200 text-ink-soft'
+                        : 'bg-cream border-ink/10 text-ink-soft'
                     }`}>
                       {icon}
                     </div>
@@ -195,9 +195,9 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         </div>
 
         {/* Selector de Cantidad (Con soporte para fracciones) */}
-        <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-4">
+        <div className="bg-cream/60 rounded-2xl p-4 border border-ink/10 mb-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-700  ">
+            <span className="text-xs font-bold text-ink  ">
               Cantidad de {currentPresentation.shortLabel}
             </span>
             <span className="text-xs font-display text-brand-700 font-bold">
@@ -209,12 +209,12 @@ export const BottomSheetPresentation: React.FC<Props> = ({
             <button
               type="button"
               onClick={() => setQty(Math.max(1, qty - 1))}
-              className="w-12 h-12 rounded-xl bg-white hover:bg-slate-100 text-ink font-bold text-2xl flex items-center justify-center active:scale-95 transition border border-slate-300 shadow-xs"
+              className="w-12 h-12 rounded-xl bg-white hover:bg-cream text-ink font-bold text-2xl flex items-center justify-center active:scale-95 transition border border-ink/15 shadow-xs"
             >
               -
             </button>
 
-            <div className="flex-1 text-center bg-white border border-slate-300 rounded-xl px-2 shadow-xs relative overflow-hidden flex items-center justify-center">
+            <div className="flex-1 text-center bg-white border border-ink/15 rounded-xl px-2 shadow-xs relative overflow-hidden flex items-center justify-center">
               <input 
                 type="number"
                 min="1"
@@ -246,7 +246,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                 className={`py-1.5 text-xs font-bold rounded-lg border transition ${
                   qty === val 
                     ? 'bg-brand-600 border-brand-600 text-white shadow-[0_4px_10px_rgba(5,150,105,0.3)]' 
-                    : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100 hover:border-slate-400'
+                    : 'bg-white border-ink/15 text-ink hover:bg-cream hover:border-slate-400'
                 }`}
               >
                 {val}
@@ -265,17 +265,17 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         </div>
 
         {/* Precio de venta editable */}
-        <div className={`rounded-2xl p-4 border mb-4 ${isPriceEdited ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200'}`}>
+        <div className={`rounded-2xl p-4 border mb-4 ${isPriceEdited ? 'bg-amber-50 border-amber-300' : 'bg-cream/60 border-ink/10'}`}>
           <div className="flex items-center justify-between mb-2">
-            <label htmlFor="sheet-unit-price" className="text-xs font-bold text-slate-700   flex items-center gap-1">
+            <label htmlFor="sheet-unit-price" className="text-xs font-bold text-ink   flex items-center gap-1">
               <Pencil className="w-3.5 h-3.5" /> Precio por {currentPresentation.shortLabel}
             </label>
             <span className="text-xs text-ink-soft">
-              Lista: <strong className="font-display text-slate-700">S/ {listPrice.toFixed(2)}</strong>
+              Lista: <strong className="font-display text-ink">S/ {listPrice.toFixed(2)}</strong>
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex-1 flex items-center bg-white border border-slate-300 rounded-xl px-3 shadow-xs focus-within:border-brand-500">
+            <div className="flex-1 flex items-center bg-white border border-ink/15 rounded-xl px-3 shadow-xs focus-within:border-brand-500">
               <span className="text-ink-soft font-bold mr-1">S/</span>
               <input
                 id="sheet-unit-price"
@@ -292,7 +292,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={() => setPriceText(listPrice.toFixed(2))}
-                className="h-12 px-3 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-bold flex items-center gap-1 hover:bg-slate-100"
+                className="h-12 px-3 rounded-xl bg-white border border-ink/15 text-ink text-xs font-bold flex items-center gap-1 hover:bg-cream"
                 title="Volver al precio de lista"
               >
                 <RotateCcw className="w-4 h-4" /> Lista
@@ -310,7 +310,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         </div>
 
         {/* Resumen del Subtotal y Botón de Aplicar */}
-        <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-4">
+        <div className="pt-2 border-t border-ink/10 flex items-center justify-between gap-4">
           <div>
             <div className="text-xs text-ink-soft font-medium">Subtotal</div>
             <div className="text-2xl font-black text-ink font-display">

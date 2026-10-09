@@ -219,10 +219,11 @@ export const CajaScreen: React.FC = () => {
 
   return (
     <div className="w-full h-full overflow-y-auto bg-paper md:p-6 animate-in fade-in text-ink flex justify-center">
-      <div className="w-full h-max max-w-5xl bg-white md:rounded-3xl border-0 md:border border-slate-200 md:shadow-2xl overflow-hidden flex flex-col">
+      <div className="w-full h-max max-w-5xl bg-white md:rounded-3xl border-0 md:border border-ink/10 md:shadow-2xl overflow-hidden flex flex-col">
       {/* Cabecera */}
       <ScreenHeader
         icon={<QrCode className="w-5 h-5" />}
+        tone="sun"
         title="Caja"
         leading={<MenuButton onClick={() => setMenuOpen(true)} className="border border-ink/10 bg-white text-ink" />}
         subtitle={online ? `Cobro de pre-ventas · ${session?.user.fullName ?? ''}` : 'Sin internet: el cobro requiere conexión'}
@@ -262,7 +263,7 @@ export const CajaScreen: React.FC = () => {
 
       {showDebts && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3" onClick={() => setShowDebts(false)}>
-          <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-slate-50 rounded-3xl p-4 md:p-6 relative" onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-cream/60 rounded-3xl p-4 md:p-6 relative" onClick={e => e.stopPropagation()}>
             <button type="button" onClick={() => setShowDebts(false)} className="absolute top-3 right-3 p-1.5 bg-white rounded-full shadow" aria-label="Cerrar">
               <X className="w-5 h-5" />
             </button>
@@ -271,9 +272,9 @@ export const CajaScreen: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-ink/10">
         {/* Columna Izquierda: Escaneo y Lista de Pre-Ventas Pendientes */}
-        <div className="lg:col-span-5 p-5 space-y-4 bg-slate-50">
+        <div className="lg:col-span-5 p-5 space-y-4 bg-cream/60">
           {/* Lector de QR de Mostrador */}
           <div className="bg-white p-4 rounded-2xl border-2 border-brand-500 shadow-sm space-y-2">
             <label className="text-xs font-black text-ink   flex items-center gap-1.5">
@@ -286,7 +287,7 @@ export const CajaScreen: React.FC = () => {
                 placeholder="Código del ticket, ej. V01-7K3QM"
                 value={scannedCode}
                 onChange={(e) => setScannedCode(e.target.value)}
-                className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-display font-bold text-ink focus:outline-hidden focus:border-brand-600"
+                className="flex-1 bg-cream/60 border border-ink/15 rounded-xl px-3 py-2 text-xs font-display font-bold text-ink focus:outline-hidden focus:border-brand-600"
               />
               <button
                 type="submit"
@@ -315,12 +316,12 @@ export const CajaScreen: React.FC = () => {
 
           {/* Lista de Pre-Ventas y Pestañas */}
           <div className="space-y-2">
-            <div className="flex bg-slate-200 p-1 rounded-xl mb-3">
+            <div className="flex bg-ink/10 p-1 rounded-xl mb-3">
               <button
                 type="button"
                 onClick={() => setQueueTab('PENDIENTE')}
                 className={`flex-1 py-1.5 text-xs font-black  rounded-lg transition ${
-                  queueTab === 'PENDIENTE' ? 'bg-white text-brand-700 shadow-xs' : 'text-ink-soft hover:text-slate-700'
+                  queueTab === 'PENDIENTE' ? 'bg-white text-brand-700 shadow-xs' : 'text-ink-soft hover:text-ink'
                 }`}
               >
                 Por cobrar ({pendingOrders.length})
@@ -329,7 +330,7 @@ export const CajaScreen: React.FC = () => {
                 type="button"
                 onClick={() => setQueueTab('PAGADO')}
                 className={`flex-1 py-1.5 text-xs font-black  rounded-lg transition ${
-                  queueTab === 'PAGADO' ? 'bg-white text-brand-700 shadow-xs' : 'text-ink-soft hover:text-slate-700'
+                  queueTab === 'PAGADO' ? 'bg-white text-brand-700 shadow-xs' : 'text-ink-soft hover:text-ink'
                 }`}
               >
                 Historial ({paidOrders.length})
@@ -337,7 +338,7 @@ export const CajaScreen: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between text-xs mb-2">
-              <span className="font-black text-slate-700 ">
+              <span className="font-black text-ink ">
                 {queueTab === 'PENDIENTE' ? 'Pedidos en cola' : 'Tickets Completados'} ({filteredList.length})
               </span>
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${queueTab === 'PENDIENTE' ? 'text-amber-700 bg-amber-100' : 'text-brand-700 bg-brand-100'}`}>
@@ -347,19 +348,19 @@ export const CajaScreen: React.FC = () => {
             
             {/* Buscador de Clientes / Pedidos */}
             <div className="relative mb-3">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-ink/45 absolute left-3 top-2.5" />
               <input 
                 type="text"
                 placeholder="Buscar por cliente o código de pedido..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs focus:border-brand-600 focus:outline-hidden"
+                className="w-full pl-9 pr-3 py-2 bg-white border border-ink/15 rounded-xl text-xs focus:border-brand-600 focus:outline-hidden"
               />
             </div>
 
             {filteredList.length === 0 ? (
-              <div className="p-6 bg-white rounded-2xl border border-slate-200 text-center text-slate-400 space-y-2">
-                <Clock className="w-8 h-8 mx-auto text-slate-300" />
+              <div className="p-6 bg-white rounded-2xl border border-ink/10 text-center text-ink/45 space-y-2">
+                <Clock className="w-8 h-8 mx-auto text-ink/45" />
                 <p className="font-bold text-xs">No hay tickets {queueTab === 'PENDIENTE' ? 'pendientes' : 'pagados'}</p>
               </div>
             ) : (
@@ -371,7 +372,7 @@ export const CajaScreen: React.FC = () => {
                     className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between gap-3 ${
                       selectedOrder?.id === ord.id
                         ? 'bg-brand-50 border-brand-500 ring-2 ring-brand-500/30 shadow-md'
-                        : 'bg-white border-slate-200 hover:border-slate-300'
+                        : 'bg-white border-ink/10 hover:border-ink/15'
                     }`}
                   >
                     <div>
@@ -381,9 +382,9 @@ export const CajaScreen: React.FC = () => {
                           {ord.status}
                         </span>
                       </div>
-                      <div className="text-xs font-bold text-slate-700 mt-1 flex items-center justify-between gap-2">
+                      <div className="text-xs font-bold text-ink mt-1 flex items-center justify-between gap-2">
                         <span className="truncate">{ord.customerName || 'Cliente Genérico'}</span>
-                        <span className="text-xs font-display font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
+                        <span className="text-xs font-display font-normal text-ink/45 bg-cream px-1.5 py-0.5 rounded shrink-0">
                           {new Date(ord.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </span>
                       </div>
@@ -412,16 +413,16 @@ export const CajaScreen: React.FC = () => {
           {selectedOrder ? (
             <div className="space-y-5">
               {/* Resumen del Pedido Cargado */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+              <div className="bg-cream/60 p-4 rounded-2xl border border-ink/10 space-y-3">
+                <div className="flex items-center justify-between border-b border-ink/10 pb-2">
                   <div>
-                    <span className="text-xs text-slate-400  font-bold">Cuenta Cargada:</span>
+                    <span className="text-xs text-ink/45  font-bold">Cuenta Cargada:</span>
                     <h3 className="text-lg font-black text-ink font-display">
                       {selectedOrder.code}
                     </h3>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs text-slate-400  font-bold">Total Cuenta:</span>
+                    <span className="text-xs text-ink/45  font-bold">Total Cuenta:</span>
                     <div className="text-2xl font-black text-brand-600 font-display">
                       S/ {selectedOrder.totalAmount.toFixed(2)}
                     </div>
@@ -431,7 +432,7 @@ export const CajaScreen: React.FC = () => {
                 {/* Ítems */}
                 <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1 text-xs">
                   {selectedOrder.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center py-1 border-b border-slate-100">
+                    <div key={idx} className="flex justify-between items-center py-1 border-b border-ink/5">
                       <div>
                         <strong className="text-ink">
                           {item.quantity}x [{item.presentationType.toUpperCase()}] {item.productName}
@@ -479,7 +480,7 @@ export const CajaScreen: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setSelectedOrderId(null)}
-                      className="px-4 py-2 bg-slate-200 text-slate-700 font-bold text-xs  rounded-xl"
+                      className="px-4 py-2 bg-ink/10 text-ink font-bold text-xs  rounded-xl"
                     >
                       Siguiente Cobro
                     </button>
@@ -490,7 +491,7 @@ export const CajaScreen: React.FC = () => {
                 <div className="space-y-4">
                   {/* Selector de Métodos de Pago */}
                   <div>
-                    <label className="text-xs font-black text-slate-700   block mb-2">
+                    <label className="text-xs font-black text-ink   block mb-2">
                       Seleccionar Medio de Pago
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -511,7 +512,7 @@ export const CajaScreen: React.FC = () => {
                           className={`p-3 rounded-xl border text-xs font-black flex items-center justify-center gap-2 transition ${
                             paymentMethod === m.id
                               ? 'bg-brand-600 text-white border-brand-600 shadow-md'
-                              : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                              : 'bg-cream/60 border-ink/10 text-ink hover:bg-cream'
                           }`}
                         >
                           {m.icon}
@@ -523,7 +524,7 @@ export const CajaScreen: React.FC = () => {
 
                   {/* Cálculo de Efectivo y Vuelto */}
                   {paymentMethod !== 'Mixto' && (
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <div className="p-4 bg-cream/60 rounded-2xl border border-ink/10 space-y-3">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-xs font-bold text-ink-soft  block mb-1">
@@ -534,7 +535,7 @@ export const CajaScreen: React.FC = () => {
                             inputMode="decimal"
                             value={amountGiven}
                             onChange={(e) => setAmountGiven(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-base font-black font-display text-ink focus:outline-hidden focus:border-brand-600"
+                            className="w-full bg-white border border-ink/15 rounded-xl px-3 py-2 text-base font-black font-display text-ink focus:outline-hidden focus:border-brand-600"
                           />
                         </div>
                         <div>
@@ -565,7 +566,7 @@ export const CajaScreen: React.FC = () => {
                             key={bill}
                             type="button"
                             onClick={() => setAmountGiven(String(bill))}
-                            className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold font-display"
+                            className="px-2.5 py-1 bg-white hover:bg-cream text-ink border border-ink/10 rounded-lg text-xs font-bold font-display"
                           >
                             S/ {bill}
                           </button>
@@ -576,23 +577,23 @@ export const CajaScreen: React.FC = () => {
 
                   {/* Cálculo Pago Mixto */}
                   {paymentMethod === 'Mixto' && (
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <div className="p-4 bg-cream/60 rounded-2xl border border-ink/10 space-y-3">
                       <div className="grid grid-cols-3 gap-3">
                         <div>
                           <label className="text-xs font-bold text-ink-soft  block mb-1">Efectivo S/</label>
-                          <input type="text" inputMode="decimal" value={mixedAmounts.efectivo} onChange={(e) => setMixedAmounts({...mixedAmounts, efectivo: e.target.value})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-display focus:border-brand-600 focus:outline-hidden" />
+                          <input type="text" inputMode="decimal" value={mixedAmounts.efectivo} onChange={(e) => setMixedAmounts({...mixedAmounts, efectivo: e.target.value})} className="w-full border border-ink/15 rounded-lg px-2 py-1.5 text-sm font-display focus:border-brand-600 focus:outline-hidden" />
                         </div>
                         <div>
                           <label className="text-xs font-bold text-ink-soft  block mb-1">Yape S/</label>
-                          <input type="text" inputMode="decimal" value={mixedAmounts.yape} onChange={(e) => setMixedAmounts({...mixedAmounts, yape: e.target.value})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-display focus:border-brand-600 focus:outline-hidden" />
+                          <input type="text" inputMode="decimal" value={mixedAmounts.yape} onChange={(e) => setMixedAmounts({...mixedAmounts, yape: e.target.value})} className="w-full border border-ink/15 rounded-lg px-2 py-1.5 text-sm font-display focus:border-brand-600 focus:outline-hidden" />
                         </div>
                         <div>
                           <label className="text-xs font-bold text-ink-soft  block mb-1">Tarjeta S/</label>
-                          <input type="text" inputMode="decimal" value={mixedAmounts.tarjeta} onChange={(e) => setMixedAmounts({...mixedAmounts, tarjeta: e.target.value})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-display focus:border-brand-600 focus:outline-hidden" />
+                          <input type="text" inputMode="decimal" value={mixedAmounts.tarjeta} onChange={(e) => setMixedAmounts({...mixedAmounts, tarjeta: e.target.value})} className="w-full border border-ink/15 rounded-lg px-2 py-1.5 text-sm font-display focus:border-brand-600 focus:outline-hidden" />
                         </div>
                       </div>
                       
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+                      <div className="flex items-center justify-between pt-2 border-t border-ink/10">
                         <span className="text-xs font-bold text-ink-soft ">Suma Ingresada: S/ {received.toFixed(2)}</span>
                         <div className={`text-sm font-black font-display py-1 px-3 rounded-lg border ${
                           isCashSufficient
@@ -645,9 +646,9 @@ export const CajaScreen: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="py-20 text-center text-slate-400 space-y-3">
-              <QrCode className="w-16 h-16 mx-auto text-slate-300 stroke-[1.5]" />
-              <h3 className="text-base font-black text-slate-700">Escanee un ticket para cobrar</h3>
+            <div className="py-20 text-center text-ink/45 space-y-3">
+              <QrCode className="w-16 h-16 mx-auto text-ink/45 stroke-[1.5]" />
+              <h3 className="text-base font-black text-ink">Escanee un ticket para cobrar</h3>
               <p className="text-xs text-ink-soft max-w-sm mx-auto">
                 Elija un pedido de la lista o escanee el QR del ticket con la cámara o la pistola lectora.
               </p>

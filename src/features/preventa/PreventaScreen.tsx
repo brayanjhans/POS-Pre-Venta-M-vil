@@ -17,6 +17,8 @@ import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
 import { plural } from '../../lib/text';
 import { stockStatus } from '../../domain/stock';
+import { ROTATION, TONE, categoryTone } from '../../app/tones';
+import { Starburst } from '../../app/Starburst';
 import { CameraScanner } from '../shared/CameraScanner';
 import { MenuButton, ProfileSection } from '../../app/ProfileMenu';
 import { useDialog } from '../../app/DialogProvider';
@@ -50,7 +52,7 @@ const STATUS_BADGE: Record<Order['status'], { label: string; className: string }
   PAGADO: { label: '✓ PAGADO', className: 'bg-brand-100 text-brand-800' },
   FIADO: { label: 'FIADO', className: 'bg-orange-100 text-orange-800' },
   PENDIENTE_PAGO: { label: 'PENDIENTE', className: 'bg-amber-100 text-amber-800' },
-  CANCELADO: { label: 'ANULADO', className: 'bg-slate-200 text-ink-soft line-through' },
+  CANCELADO: { label: 'ANULADO', className: 'bg-ink/10 text-ink-soft line-through' },
 };
 
 const categoryEmoji = (category: string) =>
@@ -419,7 +421,7 @@ export const PreventaScreen: React.FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <div>
-                <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                <div className="flex items-center justify-between border-b border-ink/10 pb-3 mb-4">
                   <div className="flex items-center gap-2">
                     <div>
                       <h3 className="font-display text-lg font-bold text-ink leading-tight">{catalog?.settings.store_name || 'Pre-Venta'}</h3>
@@ -429,7 +431,7 @@ export const PreventaScreen: React.FC = () => {
                   <button 
                     type="button"
                     onClick={() => setIsDrawerOpen(false)}
-                    className="p-1 text-slate-400 hover:text-slate-700"
+                    className="p-1 text-ink/45 hover:text-ink"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -448,7 +450,7 @@ export const PreventaScreen: React.FC = () => {
                       <Package className="w-4 h-4 text-brand-600" />
                       <span>Catálogo</span>
                     </span>
-                    <span className="text-xs font-display text-slate-400">{products.length}</span>
+                    <span className="text-xs font-display text-ink/45">{products.length}</span>
                   </button>
 
                   <button
@@ -496,7 +498,7 @@ export const PreventaScreen: React.FC = () => {
                     <span className="text-xs bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded font-black">{todaysOrders.length}</span>
                   </button>
 
-                  <div className="my-2 border-t border-slate-200" />
+                  <div className="my-2 border-t border-ink/10" />
 
                   <button
                     type="button"
@@ -504,7 +506,7 @@ export const PreventaScreen: React.FC = () => {
                     className="w-full flex h-12 items-center justify-between px-3 rounded-xl hover:bg-ink/5 text-ink transition"
                   >
                     <span className="flex items-center gap-3">
-                      {soundEnabled ? <Volume2 className="w-4 h-4 text-brand-600" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
+                      {soundEnabled ? <Volume2 className="w-4 h-4 text-brand-600" /> : <VolumeX className="w-4 h-4 text-ink/45" />}
                       <span>Sonido del escáner</span>
                     </span>
                     <span className="text-sm text-ink-soft">{soundEnabled ? 'Activado' : 'Apagado'}</span>
@@ -592,8 +594,8 @@ export const PreventaScreen: React.FC = () => {
           {/* SECCIÓN DE PROMOCIONES DINÁMICAS (CARRUSEL O LISTA COMPLETA) */}
           {!searchQuery && promos.length > 0 && (activeScreenTab === 'ofertas' || selectedCategory === 'Todos') && (
             <div ref={carouselRef} className={activeScreenTab === 'ofertas' ? "flex flex-col gap-4" : "flex overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-none pb-2 transition-all"}>
-              {promos.map((promo) => (
-                <div key={promo.id} className={`relative overflow-hidden rounded-2xl bg-tag text-ink shadow-[0_1px_0_rgba(31,42,48,0.08),0_12px_24px_-18px_rgba(31,42,48,0.6)] ${activeScreenTab === 'ofertas' ? 'w-full' : 'w-[85%] max-w-[340px] sm:w-[320px] snap-center shrink-0'}`}>
+              {promos.map((promo, promoIdx) => (
+                <div key={promo.id} className={`relative overflow-hidden rounded-3xl text-ink ${TONE[ROTATION[promoIdx % ROTATION.length]].bg} shadow-[0_1px_0_rgba(31,42,48,0.08),0_12px_24px_-18px_rgba(31,42,48,0.6)] ${activeScreenTab === 'ofertas' ? 'w-full' : 'w-[85%] max-w-[340px] sm:w-[320px] snap-center shrink-0'}`}>
                   {/* Perforación de la etiqueta de precio */}
                   <span className="absolute right-4 top-4 h-3.5 w-3.5 rounded-full bg-paper ring-2 ring-ink/10" />
                   <div className="flex h-full flex-col justify-between p-4 pr-10">
@@ -649,14 +651,13 @@ export const PreventaScreen: React.FC = () => {
                 const pack = product.presentations.pack ?? product.presentations.half;
                 return (
                   <article key={product.id} onClick={() => handleProductCardClick(product)} className="cursor-pointer">
-                    <div
-                      className="relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl transition active:scale-[0.98]"
-                      style={{ background: `radial-gradient(circle at 50% 40%, #ffffff 0%, ${product.accentColor}1f 70%, ${product.accentColor}33 100%)` }}
-                    >
-                      <span className="text-[64px] drop-shadow-[0_10px_14px_rgba(31,42,48,0.18)]" aria-hidden>
+                    <div className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl transition active:scale-[0.98] ${TONE[categoryTone(product.category)].soft}`}>
+                      {/* círculo claro detrás del producto, como el "spot" de las fotos de catálogo */}
+                      <span className="absolute h-[62%] w-[62%] rounded-full bg-white/55" aria-hidden />
+                      <span className="relative text-[64px] drop-shadow-[0_10px_14px_rgba(20,67,61,0.22)]" aria-hidden>
                         {categoryEmoji(product.category)}
                       </span>
-                      {product.isPromo && <span className="absolute left-2.5 top-2.5 rounded-full bg-tag px-2.5 py-1 text-xs font-bold text-ink">Oferta</span>}
+                      {product.isPromo && <Starburst className="absolute left-2 top-2 rotate-[-12deg]" size={54} spin>Oferta</Starburst>}
                       {status !== 'ok' && (
                         <span className={`absolute right-2.5 top-2.5 rounded-full px-2.5 py-1 text-xs font-bold ${status === 'out' ? 'bg-fresa text-white' : 'bg-white text-[#9a6a00]'}`}>
                           {status === 'out' ? 'Agotado' : `Quedan ${product.stockInBaseUnits}`}
@@ -667,7 +668,7 @@ export const PreventaScreen: React.FC = () => {
                         onClick={(e) => handleQuickAddUnit(e, product)}
                         aria-label={`Agregar 1 ${product.name}`}
                         title="Añadir 1 Unidad al Carrito"
-                        className="absolute bottom-2.5 right-2.5 flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white shadow-[0_8px_18px_-8px_rgba(31,42,48,0.8)] transition active:scale-90"
+                        className="squish absolute bottom-2.5 right-2.5 flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white shadow-[0_8px_18px_-8px_rgba(20,67,61,0.8)]"
                       >
                         <Plus className="h-5 w-5" strokeWidth={2.6} />
                       </button>
@@ -694,8 +695,7 @@ export const PreventaScreen: React.FC = () => {
                 return (
                   <li key={product.id} onClick={() => handleProductCardClick(product)}
                     className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-2.5 pr-3 transition active:scale-[0.99]">
-                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-3xl"
-                      style={{ background: `${product.accentColor}1f` }} aria-hidden>
+                    <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-3xl ${TONE[categoryTone(product.category)].soft}`} aria-hidden>
                       {categoryEmoji(product.category)}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -760,7 +760,7 @@ export const PreventaScreen: React.FC = () => {
               <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-2" />
 
               {/* Header del carrito */}
-              <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-3">
+              <div className="flex items-center justify-between border-b border-ink/10 pb-3 mb-3">
                 <div className="flex items-center gap-2">
                   <div className="p-2 bg-brand-100 text-brand-600 rounded-xl">
                     <ShoppingCart className="w-5 h-5 stroke-[2.5]" />
@@ -790,7 +790,7 @@ export const PreventaScreen: React.FC = () => {
                     type="button"
                     onClick={() => setIsCartDrawerOpen(false)}
                     aria-label="Cerrar"
-                    className="h-10 w-10 flex items-center justify-center rounded-full text-ink-soft hover:text-ink bg-slate-100"
+                    className="h-10 w-10 flex items-center justify-center rounded-full text-ink-soft hover:text-ink bg-cream"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -812,7 +812,7 @@ export const PreventaScreen: React.FC = () => {
                             <span className="text-xs font-black  px-2 py-0.5 rounded bg-brand-100 text-brand-800">
                               {pres.shortLabel}
                             </span>
-                            <span className="text-xs text-slate-400 font-display">
+                            <span className="text-xs text-ink/45 font-display">
                               {item.product.barcode}
                             </span>
                           </div>
@@ -841,7 +841,7 @@ export const PreventaScreen: React.FC = () => {
                               handleRemoveItem(item.cartItemId);
                             }}
                             aria-label="Quitar del pedido"
-                            className="mt-1 h-9 w-9 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
+                            className="mt-1 h-9 w-9 inline-flex items-center justify-center rounded-lg text-ink/45 hover:text-red-600 hover:bg-red-50"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -1013,7 +1013,7 @@ export const PreventaScreen: React.FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div className="flex items-center justify-between border-b border-ink/10 pb-3">
                 <div className="flex items-center gap-2">
                   <div className="p-2 bg-amber-100 text-amber-800 rounded-xl">
                     <Receipt className="w-5 h-5 stroke-[2.5]" />
@@ -1028,7 +1028,7 @@ export const PreventaScreen: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsOrderHistoryOpen(false)}
-                  className="p-1 rounded-full text-slate-400 hover:text-slate-700 bg-slate-100"
+                  className="p-1 rounded-full text-ink/45 hover:text-ink bg-cream"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1053,8 +1053,8 @@ export const PreventaScreen: React.FC = () => {
               {/* Lista de Pedidos */}
               <div className="flex-1 overflow-y-auto space-y-2 max-h-[50vh] pr-1">
                 {todaysOrders.length === 0 ? (
-                  <div className="p-6 text-center text-slate-400 space-y-2">
-                    <Clock className="w-8 h-8 mx-auto text-slate-300" />
+                  <div className="p-6 text-center text-ink/45 space-y-2">
+                    <Clock className="w-8 h-8 mx-auto text-ink/45" />
                     <p className="font-bold text-xs">No hay pedidos emitidos hoy</p>
                     <p className="text-xs">Añade productos y emite una pre-venta para verla aquí.</p>
                   </div>
@@ -1067,7 +1067,7 @@ export const PreventaScreen: React.FC = () => {
                         setIsTicketModalOpen(true);
                         setIsOrderHistoryOpen(false);
                       }}
-                      className="p-3 bg-slate-50 rounded-2xl border border-slate-200 hover:border-brand-600 transition cursor-pointer flex items-center justify-between gap-2"
+                      className="p-3 bg-cream/60 rounded-2xl border border-ink/10 hover:border-brand-600 transition cursor-pointer flex items-center justify-between gap-2"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
@@ -1085,7 +1085,7 @@ export const PreventaScreen: React.FC = () => {
                         <div className="text-xs text-ink-soft font-semibold truncate mt-0.5">
                           {ord.customerName || 'Cliente General'}
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-ink/45">
                           {ord.items.length} productos · {new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>

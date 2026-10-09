@@ -53,8 +53,8 @@ export const InventoryTab: React.FC<Props> = ({ products, onRestock }) => {
       {/* Resumen con los dos estados como selector */}
       <div className="grid grid-cols-2 gap-3">
         {([
-          ['out', 'Agotados', out.length, PackageX, 'bg-fresa text-white', 'bg-white text-ink'],
-          ['low', 'Por agotarse', low.length, PackageMinus, 'bg-tag text-ink', 'bg-white text-ink'],
+          ['out', 'Agotados', out.length, PackageX, 'bg-peach text-ink ring-2 ring-peach-strong/30', 'bg-peach/35 text-ink'],
+          ['low', 'Por agotarse', low.length, PackageMinus, 'bg-sun text-ink ring-2 ring-sun-strong/30', 'bg-sun/35 text-ink'],
         ] as const).map(([key, label, count, Icon, on, offCls]) => (
           <button key={key} type="button" onClick={() => setView(key)} aria-pressed={view === key}
             className={`rounded-3xl p-4 text-left transition active:scale-[0.98] ${view === key ? on : offCls}`}>

@@ -50,7 +50,7 @@ export const OrderReceiptModal: React.FC<Props> = ({ order, onClose, payments, c
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/60 animate-in fade-in" onClick={onClose}>
       <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md shadow-2xl flex flex-col max-h-[92vh]" onClick={e => e.stopPropagation()}>
         {/* Cabecera */}
-        <div className="p-4 border-b border-slate-100 flex items-start justify-between gap-3">
+        <div className="p-4 border-b border-ink/5 flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><Receipt className="w-5 h-5" /></div>
             <div className="min-w-0">
@@ -59,7 +59,7 @@ export const OrderReceiptModal: React.FC<Props> = ({ order, onClose, payments, c
               <span className={`mt-1 inline-block rounded-md px-1.5 py-0.5 text-xs font-bold ${STATUS_STYLE[order.status]}`}>{STATUS_LABEL[order.status]}</span>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-ink-soft hover:text-ink" aria-label="Cerrar">
+          <button type="button" onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-full bg-cream text-ink-soft hover:text-ink" aria-label="Cerrar">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -80,7 +80,7 @@ export const OrderReceiptModal: React.FC<Props> = ({ order, onClose, payments, c
               <span>Lo que se llevó</span>
               <span className="normal-case font-bold">{order.items.length} producto(s) · {units} und.</span>
             </div>
-            <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200">
+            <div className="divide-y divide-ink/5 rounded-2xl border border-ink/10">
               {order.items.map((item, i) => (
                 <div key={i} className="flex items-start justify-between gap-3 p-3">
                   <div className="min-w-0">
@@ -96,7 +96,7 @@ export const OrderReceiptModal: React.FC<Props> = ({ order, onClose, payments, c
           </div>
 
           {/* Totales */}
-          <div className="space-y-1 rounded-2xl bg-slate-50 p-3 text-xs">
+          <div className="space-y-1 rounded-2xl bg-cream/60 p-3 text-xs">
             {!!order.discountAmount && (
               <div className="flex justify-between text-ink-soft"><span>Descuento{order.discountPercent ? ` (${order.discountPercent}%)` : ''}</span><span className="font-display">- {formatSoles(order.discountAmount)}</span></div>
             )}
@@ -114,7 +114,7 @@ export const OrderReceiptModal: React.FC<Props> = ({ order, onClose, payments, c
               <div className="mb-1.5 text-xs font-black   text-ink-soft">Pagos y abonos</div>
               <div className="space-y-1.5">
                 {payments.map(p => (
-                  <div key={p.id} className="flex items-center justify-between gap-2 rounded-xl border border-slate-100 px-3 py-2 text-xs">
+                  <div key={p.id} className="flex items-center justify-between gap-2 rounded-xl border border-ink/5 px-3 py-2 text-xs">
                     <div>
                       <div className="font-bold">{KIND_LABEL[p.kind]} · {p.method}</div>
                       <div className="text-ink-soft">{new Date(p.createdAt).toLocaleString('es-PE')} · {p.receivedBy}</div>
@@ -127,7 +127,7 @@ export const OrderReceiptModal: React.FC<Props> = ({ order, onClose, payments, c
           )}
         </div>
 
-        <div className="space-y-2 border-t border-slate-100 p-4">
+        <div className="space-y-2 border-t border-ink/5 p-4">
           <button type="button" onClick={() => void share()} disabled={sharing}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] text-sm font-black text-white shadow-sm transition hover:bg-[#20bd5a] active:scale-[0.98] disabled:opacity-60">
             {sharing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Share2 className="w-5 h-5" />}

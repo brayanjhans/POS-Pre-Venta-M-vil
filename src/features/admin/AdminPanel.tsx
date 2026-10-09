@@ -8,6 +8,7 @@ import { useDialog } from '../../app/DialogProvider';
 import { parseAmount } from '../../domain/money';
 import { DashboardTab } from './DashboardTab';
 import { CatalogTab } from './CatalogTab';
+import { SECTION_TONE, TONE } from '../../app/tones';
 import { SalesTab } from './SalesTab';
 import { InventoryTab } from './InventoryTab';
 import { stockAlerts } from '../../domain/stock';
@@ -45,6 +46,22 @@ import {
   Users,
   Receipt
 } from 'lucide-react';
+
+/** Ícono de cada sección en la cabecera (el mismo del menú). */
+const SECTION_ICON: Record<string, React.ReactNode> = {
+  dashboard: <LayoutDashboard className="w-5 h-5" />,
+  sales: <ChartColumnBig className="w-5 h-5" />,
+  inventory: <Warehouse className="w-5 h-5" />,
+  products: <Package className="w-5 h-5" />,
+  new_product: <Plus className="w-5 h-5" />,
+  promos: <Star className="w-5 h-5" />,
+  new_promo: <Star className="w-5 h-5" />,
+  orders: <ShoppingBag className="w-5 h-5" />,
+  customers: <Users className="w-5 h-5" />,
+  deudores: <Receipt className="w-5 h-5" />,
+  users: <ShieldCheck className="w-5 h-5" />,
+  settings: <Lock className="w-5 h-5" />,
+};
 
 const ADMIN_SECTION_LABELS = {
   dashboard: 'Resumen',
@@ -187,10 +204,11 @@ export const AdminPanel: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full max-w-5xl mx-auto bg-white md:rounded-3xl md:shadow-2xl md:border md:border-slate-200 flex flex-col overflow-hidden text-ink animate-in fade-in relative">
+    <div className="w-full h-full max-w-5xl mx-auto bg-white md:rounded-3xl md:shadow-2xl md:border md:border-ink/10 flex flex-col overflow-hidden text-ink animate-in fade-in relative">
       {/* Cabecera: muestra la sección actual */}
       <ScreenHeader
-        icon={<ShieldCheck className="w-5 h-5" />}
+        tone={SECTION_TONE[adminTab] ?? 'mint'}
+        icon={SECTION_ICON[adminTab] ?? <ShieldCheck className="w-5 h-5" />}
         title={ADMIN_SECTION_LABELS[adminTab]}
         subtitle={`Administración · ${products.filter(p => p.isActive !== false).length} productos activos`}
         leading={
@@ -215,29 +233,29 @@ export const AdminPanel: React.FC = () => {
         >
           <div className="p-4 border-b border-white/10 flex items-center justify-between lg:hidden">
             <span className="font-display text-lg font-bold text-white">Administración</span>
-            <button onClick={() => setIsMenuOpen(false)} className="p-1 rounded-lg hover:bg-slate-800 text-slate-400">
+            <button onClick={() => setIsMenuOpen(false)} className="p-1 rounded-lg hover:bg-ink text-ink/45">
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <nav className="p-4 space-y-2 text-sm font-bold">
+          <nav className="p-3 space-y-1 text-sm font-bold">
             <button
               onClick={() => { setAdminTab('dashboard'); setIsMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'dashboard' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-2xl text-[15px] transition ${adminTab === 'dashboard' ? 'bg-white/12 text-white ring-1 ring-white/15' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <LayoutDashboard className="w-5 h-5" /> Resumen
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-ink ${TONE[SECTION_TONE.dashboard].bg}`}><LayoutDashboard className="w-5 h-5" /></span> Resumen
             </button>
             <button
               onClick={() => { setAdminTab('sales'); setIsMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'sales' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-2xl text-[15px] transition ${adminTab === 'sales' ? 'bg-white/12 text-white ring-1 ring-white/15' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <ChartColumnBig className="w-5 h-5" /> Ventas y reportes
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-ink ${TONE[SECTION_TONE.sales].bg}`}><ChartColumnBig className="w-5 h-5" /></span> Ventas y reportes
             </button>
             <button
               onClick={() => { setAdminTab('inventory'); setIsMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'inventory' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-2xl text-[15px] transition ${adminTab === 'inventory' ? 'bg-white/12 text-white ring-1 ring-white/15' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <Warehouse className="w-5 h-5" /> Inventario
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-ink ${TONE[SECTION_TONE.inventory].bg}`}><Warehouse className="w-5 h-5" /></span> Inventario
               {stockCount > 0 && (
                 <span className="ml-auto min-w-6 rounded-full bg-fresa px-1.5 py-0.5 text-center text-xs font-bold text-white" aria-label={`${stockCount} por reponer`}>
                   {stockCount}
@@ -246,51 +264,51 @@ export const AdminPanel: React.FC = () => {
             </button>
             <button
               onClick={() => { setAdminTab('products'); setIsMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'products' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-2xl text-[15px] transition ${adminTab === 'products' ? 'bg-white/12 text-white ring-1 ring-white/15' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <Package className="w-5 h-5" /> Catálogo ({products.length})
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-ink ${TONE[SECTION_TONE.products].bg}`}><Package className="w-5 h-5" /></span> Catálogo ({products.length})
             </button>
             <button
               onClick={() => { setAdminTab('promos'); setIsMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'promos' || adminTab === 'new_promo' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-2xl text-[15px] transition ${adminTab === 'promos' || adminTab === 'new_promo' ? 'bg-white/12 text-white ring-1 ring-white/15' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <Star className="w-5 h-5" /> Combos y promociones
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-ink ${TONE[SECTION_TONE.promos].bg}`}><Star className="w-5 h-5" /></span> Combos y promociones
             </button>
             <button
               onClick={() => { setAdminTab('new_product'); setIsMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'new_product' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-2xl text-[15px] transition ${adminTab === 'new_product' ? 'bg-white/12 text-white ring-1 ring-white/15' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <Plus className="w-5 h-5 stroke-[3]" /> Nuevo producto
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-ink ${TONE[SECTION_TONE.new_product].bg}`}><Plus className="w-5 h-5 stroke-[3]" /></span> Nuevo producto
             </button>
             <button
               onClick={() => { setAdminTab('orders'); setIsMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'orders' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-2xl text-[15px] transition ${adminTab === 'orders' ? 'bg-white/12 text-white ring-1 ring-white/15' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <ShoppingBag className="w-5 h-5" /> Boletas ({orders.length})
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-ink ${TONE[SECTION_TONE.orders].bg}`}><ShoppingBag className="w-5 h-5" /></span> Boletas ({orders.length})
             </button>
             <button
               onClick={() => { setAdminTab('customers'); setIsMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'customers' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-2xl text-[15px] transition ${adminTab === 'customers' ? 'bg-white/12 text-white ring-1 ring-white/15' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <Users className="w-5 h-5" /> Clientes
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-ink ${TONE[SECTION_TONE.customers].bg}`}><Users className="w-5 h-5" /></span> Clientes
             </button>
             <button
               onClick={() => { setAdminTab('deudores'); setIsMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'deudores' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-2xl text-[15px] transition ${adminTab === 'deudores' ? 'bg-white/12 text-white ring-1 ring-white/15' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <Receipt className="w-5 h-5" /> Libreta de fiados
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-ink ${TONE[SECTION_TONE.deudores].bg}`}><Receipt className="w-5 h-5" /></span> Libreta de fiados
             </button>
             <button
               onClick={() => { setAdminTab('users'); setIsMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'users' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-2xl text-[15px] transition ${adminTab === 'users' ? 'bg-white/12 text-white ring-1 ring-white/15' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <ShieldCheck className="w-5 h-5" /> Usuarios
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-ink ${TONE[SECTION_TONE.users].bg}`}><ShieldCheck className="w-5 h-5" /></span> Usuarios
             </button>
             <button
               onClick={() => { setAdminTab('settings'); setIsMenuOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'settings' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-2xl text-[15px] transition ${adminTab === 'settings' ? 'bg-white/12 text-white ring-1 ring-white/15' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <Lock className="w-5 h-5" /> Configuración
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-ink ${TONE[SECTION_TONE.settings].bg}`}><Lock className="w-5 h-5" /></span> Configuración
             </button>
           </nav>
           <div className="mt-auto p-4">
@@ -361,13 +379,13 @@ export const AdminPanel: React.FC = () => {
             </div>
 
             {promos.length === 0 ? (
-              <div className="py-12 text-center text-slate-400">
+              <div className="py-12 text-center text-ink/45">
                 No hay promociones configuradas actualmente.
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
                 {promos.map((promo) => (
-                  <div key={promo.id} className="relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-white p-4 flex flex-col justify-between">
+                  <div key={promo.id} className="relative rounded-2xl overflow-hidden shadow-sm border border-ink/10 bg-white p-4 flex flex-col justify-between">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-black  bg-brand-500 text-white px-2 py-0.5 rounded">
@@ -385,14 +403,14 @@ export const AdminPanel: React.FC = () => {
                       <p className="text-xs text-ink-soft line-clamp-2">
                         {promo.subtitle}
                       </p>
-                      <div className="pt-2 text-xs text-slate-400 font-display">
+                      <div className="pt-2 text-xs text-ink/45 font-display">
                         Códigos de barra incluidos: {promo.associatedBarcodes.join(', ')}
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div className="mt-4 pt-3 border-t border-ink/5 flex items-center justify-between">
                       <div className="flex flex-col">
-                        <span className="text-xs text-slate-400 line-through">S/ {promo.originalPrice.toFixed(2)}</span>
+                        <span className="text-xs text-ink/45 line-through">S/ {promo.originalPrice.toFixed(2)}</span>
                         <span className="text-lg font-black text-amber-600 font-display leading-none">
                           S/ {promo.offerPrice.toFixed(2)}
                         </span>
@@ -420,68 +438,68 @@ export const AdminPanel: React.FC = () => {
         {/* TAB 6: CREAR NUEVA PROMOCIÓN */}
         {adminTab === 'new_promo' && (
           <form onSubmit={handleCreatePromo} className="space-y-4 max-w-2xl mx-auto">
-            <h3 className="text-sm font-black text-ink  border-b border-slate-200 pb-2">
+            <h3 className="text-sm font-black text-ink  border-b border-ink/10 pb-2">
               Crear Nueva Promoción / Combo
             </h3>
 
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Título Principal (*):</label>
+                <label className="text-xs font-bold text-ink">Título Principal (*):</label>
                 <input
                   required
                   type="text"
                   placeholder="Ej: COMBO INKA KOLA + SUBLIME"
                   value={promoFormData.title}
                   onChange={(e) => setPromoFormData({...promoFormData, title: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-ink font-semibold"
+                  className="w-full bg-cream/60 border border-ink/10 rounded-lg px-3 py-2 text-xs text-ink font-semibold"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Subtítulo / Descripción:</label>
+                <label className="text-xs font-bold text-ink">Subtítulo / Descripción:</label>
                 <input
                   type="text"
                   placeholder="Ej: Gaseosa helada + display completo..."
                   value={promoFormData.subtitle}
                   onChange={(e) => setPromoFormData({...promoFormData, subtitle: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-ink"
+                  className="w-full bg-cream/60 border border-ink/10 rounded-lg px-3 py-2 text-xs text-ink"
                 />
               </div>
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Etiqueta Principal:</label>
+                <label className="text-xs font-bold text-ink">Etiqueta Principal:</label>
                 <input
                   type="text"
                   value={promoFormData.badgeText}
                   onChange={(e) => setPromoFormData({...promoFormData, badgeText: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-ink"
+                  className="w-full bg-cream/60 border border-ink/10 rounded-lg px-3 py-2 text-xs text-ink"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Tag Secundario:</label>
+                <label className="text-xs font-bold text-ink">Tag Secundario:</label>
                 <input
                   type="text"
                   value={promoFormData.tag}
                   onChange={(e) => setPromoFormData({...promoFormData, tag: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-ink"
+                  className="w-full bg-cream/60 border border-ink/10 rounded-lg px-3 py-2 text-xs text-ink"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Etiqueta Descuento (Roja):</label>
+                <label className="text-xs font-bold text-ink">Etiqueta Descuento (Roja):</label>
                 <input
                   type="text"
                   placeholder="Ej: -20% OFF"
                   value={promoFormData.discountBadge}
                   onChange={(e) => setPromoFormData({...promoFormData, discountBadge: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-ink"
+                  className="w-full bg-cream/60 border border-ink/10 rounded-lg px-3 py-2 text-xs text-ink"
                 />
               </div>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <div className="p-3 bg-cream/60 rounded-xl border border-ink/10 space-y-2">
                 <h4 className="text-xs font-black  text-ink-soft">Precios</h4>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -492,7 +510,7 @@ export const AdminPanel: React.FC = () => {
                       min="0"
                       value={promoFormData.originalPrice}
                       onChange={(e) => setPromoFormData({...promoFormData, originalPrice: parseFloat(e.target.value) || 0})}
-                      className="w-full border border-slate-300 rounded px-2 py-1 text-xs font-display font-bold"
+                      className="w-full border border-ink/15 rounded px-2 py-1 text-xs font-display font-bold"
                     />
                   </div>
                   <div>
@@ -514,12 +532,12 @@ export const AdminPanel: React.FC = () => {
                     type="text"
                     value={promoFormData.savingText}
                     onChange={(e) => setPromoFormData({...promoFormData, savingText: e.target.value})}
-                    className="w-full border border-slate-300 rounded px-2 py-1 text-xs"
+                    className="w-full border border-ink/15 rounded px-2 py-1 text-xs"
                   />
                 </div>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <div className="p-3 bg-cream/60 rounded-xl border border-ink/10 space-y-2">
                 <h4 className="text-xs font-black  text-ink-soft">Productos del Combo</h4>
                 <div>
                   <label className="text-xs text-ink-soft block mb-1">
@@ -531,9 +549,9 @@ export const AdminPanel: React.FC = () => {
                     placeholder="Ej: 7750182001011, 7750885002012"
                     value={promoFormData.associatedBarcodes}
                     onChange={(e) => setPromoFormData({...promoFormData, associatedBarcodes: e.target.value})}
-                    className="w-full border border-slate-300 rounded px-2 py-1.5 text-xs font-display resize-none"
+                    className="w-full border border-ink/15 rounded px-2 py-1.5 text-xs font-display resize-none"
                   />
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-ink/45 mt-1">
                     Al tocar "Añadir Combo", estos códigos se escanearán y añadirán al carrito de forma automática.
                   </p>
                 </div>

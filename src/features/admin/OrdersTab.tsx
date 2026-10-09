@@ -10,7 +10,7 @@ const STATUS_STYLE: Record<OrderStatus, string> = {
   PAGADO: 'bg-brand-100 text-brand-800',
   FIADO: 'bg-orange-100 text-orange-800',
   PENDIENTE_PAGO: 'bg-amber-100 text-amber-800',
-  CANCELADO: 'bg-slate-200 text-ink-soft',
+  CANCELADO: 'bg-ink/10 text-ink-soft',
 };
 
 /** Historial de boletas/pedidos (últimos 7 días) con filtros y anulación. */
@@ -54,11 +54,11 @@ export const OrdersTab: React.FC = () => {
     <div className="space-y-4 animate-in fade-in">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h3 className="text-sm font-black text-ink ">Historial de Boletas (últimos 7 días)</h3>
+          <h3 className="font-display text-xl font-bold text-ink">Últimos 7 días</h3>
           <p className="text-xs text-ink-soft">{list.length} pedidos · {formatSoles(total)} sin contar anulados</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <select value={status} onChange={e => setStatus(e.target.value as OrderStatus | 'TODOS')} className="bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-bold">
+          <select value={status} onChange={e => setStatus(e.target.value as OrderStatus | 'TODOS')} className="bg-white border border-ink/15 rounded-xl px-2 py-2 text-xs font-bold">
             <option value="TODOS">Todos</option>
             <option value="PENDIENTE_PAGO">Pendientes</option>
             <option value="PAGADO">Pagados</option>
@@ -66,25 +66,25 @@ export const OrdersTab: React.FC = () => {
             <option value="CANCELADO">Anulados</option>
           </select>
           <input type="text" placeholder="Código, cliente o vendedor" value={search} onChange={e => setSearch(e.target.value)}
-            className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs" />
-          <button type="button" onClick={() => void reload()} className="p-2 bg-white border border-slate-300 rounded-xl" title="Actualizar">
+            className="bg-white border border-ink/15 rounded-xl px-3 py-2 text-xs" />
+          <button type="button" onClick={() => void reload()} className="p-2 bg-white border border-ink/15 rounded-xl" title="Actualizar">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
       {list.length === 0 ? (
-        <div className="py-12 text-center text-slate-400">No hay pedidos con ese filtro.</div>
+        <div className="py-12 text-center text-ink/45">No hay pedidos con ese filtro.</div>
       ) : (
         <div className="space-y-2">
           {list.map(ord => (
             <button key={ord.id} type="button" onClick={() => setViewOrder(ord)}
-              className="w-full p-3.5 bg-white rounded-2xl border border-slate-200 hover:border-brand-400 flex items-center justify-between gap-3 text-xs text-left">
+              className="w-full p-3.5 bg-white rounded-2xl border border-ink/10 hover:border-brand-400 flex items-center justify-between gap-3 text-xs text-left">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <strong className="text-sm font-display text-ink">{ord.code}</strong>
                   <span className={`px-2 py-0.5 rounded-full font-black text-xs ${STATUS_STYLE[ord.status]}`}>{ord.status}</span>
-                  <span className="text-xs text-slate-400">{ord.paymentTerm}</span>
+                  <span className="text-xs text-ink/45">{ord.paymentTerm}</span>
                 </div>
                 <div className="text-xs text-ink-soft mt-1 truncate">
                   {new Date(ord.createdAt).toLocaleString('es-PE')} · {ord.sellerName} · {ord.customerName || 'Cliente genérico'} · {ord.items.length} productos
@@ -93,7 +93,7 @@ export const OrdersTab: React.FC = () => {
               <div className="text-right shrink-0">
                 <div className="text-base font-black font-display text-brand-800">{formatSoles(ord.totalAmount)}</div>
                 {!!ord.debtAmount && <div className="text-xs font-bold text-red-600">Debe {formatSoles(ord.debtAmount)}</div>}
-                <Receipt className="w-3.5 h-3.5 text-slate-400 ml-auto" />
+                <Receipt className="w-3.5 h-3.5 text-ink/45 ml-auto" />
               </div>
             </button>
           ))}

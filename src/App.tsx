@@ -12,9 +12,9 @@ import { setScreenTheme } from './lib/screenTheme';
 import { DialogProvider } from './app/DialogProvider';
 
 const FullScreenMessage: React.FC<{ title: string; children?: React.ReactNode }> = ({ title, children }) => (
-  <div className="min-h-full flex flex-col items-center justify-center bg-slate-900 text-white p-6 text-center gap-3">
+  <div className="min-h-full flex flex-col items-center justify-center bg-ink text-white p-6 text-center gap-3">
     <h1 className="text-xl font-black">{title}</h1>
-    {children && <div className="text-sm text-slate-300 max-w-sm">{children}</div>}
+    {children && <div className="text-sm text-ink/45 max-w-sm">{children}</div>}
   </div>
 );
 

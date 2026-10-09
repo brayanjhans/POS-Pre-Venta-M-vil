@@ -53,7 +53,7 @@ export const useDialog = (): DialogApi => {
 };
 
 const TONE: Record<DialogTone, { icon: React.ReactNode; ring: string; button: string }> = {
-  info: { icon: <Info className="h-6 w-6 text-sky-600" />, ring: 'bg-sky-50 ring-sky-100', button: 'bg-slate-900 hover:bg-slate-800' },
+  info: { icon: <Info className="h-6 w-6 text-sky-600" />, ring: 'bg-sky-50 ring-sky-100', button: 'bg-ink hover:bg-ink' },
   success: { icon: <CheckCircle2 className="h-6 w-6 text-brand-600" />, ring: 'bg-brand-50 ring-brand-100', button: 'bg-brand-600 hover:bg-brand-500' },
   warning: { icon: <AlertTriangle className="h-6 w-6 text-amber-600" />, ring: 'bg-amber-50 ring-amber-100', button: 'bg-amber-500 hover:bg-amber-400' },
   danger: { icon: <XCircle className="h-6 w-6 text-red-600" />, ring: 'bg-red-50 ring-red-100', button: 'bg-red-600 hover:bg-red-500' },
@@ -165,7 +165,7 @@ const DialogView: React.FC<{ request: Request; onDone: () => void }> = ({ reques
               inputMode={request.options.inputMode}
               placeholder={request.options.placeholder}
               onChange={e => { setValue(e.target.value); setError(''); }}
-              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-3 text-base text-ink outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20"
+              className="w-full rounded-xl border border-ink/15 bg-cream/60 px-3 py-3 text-base text-ink outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20"
             />
             {error && <p className="mt-1.5 text-sm font-medium text-red-600">{error}</p>}
           </div>
@@ -174,7 +174,7 @@ const DialogView: React.FC<{ request: Request; onDone: () => void }> = ({ reques
         <div className="mt-5 flex gap-2">
           {cancelText && (
             <button type="button" onClick={cancel}
-              className="h-12 flex-1 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98]">
+              className="h-12 flex-1 rounded-xl border border-ink/10 bg-white text-sm font-bold text-ink transition hover:bg-cream/60 active:scale-[0.98]">
               {cancelText}
             </button>
           )}

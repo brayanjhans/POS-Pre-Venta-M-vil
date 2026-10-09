@@ -7,6 +7,7 @@ import { shareFile } from '../../lib/shareFile';
 import { usePos } from '../../state/PosContext';
 import type { SalesReport } from '../../types/pos';
 import { BarList, CATEGORY_COLOR, ColumnChart, StackedShare } from './charts';
+import { TONE } from '../../app/tones';
 
 /*
  * Ventas por período (día, semana o mes): una cifra protagonista, indicadores, la serie en el
@@ -14,12 +15,12 @@ import { BarList, CATEGORY_COLOR, ColumnChart, StackedShare } from './charts';
  */
 
 const TILES = [
-  { key: 'orders', label: 'Pedidos', icon: Receipt, chip: 'bg-[#e3eefb] text-[#1d5fae]' },
-  { key: 'avgTicket', label: 'Ticket promedio', icon: TrendingUp, chip: 'bg-[#fff3d6] text-[#8a5a00]' },
-  { key: 'collected', label: 'Cobrado', icon: Wallet, chip: 'bg-brand-50 text-brand-800' },
-  { key: 'fiado', label: 'Fiado y crédito', icon: HandCoins, chip: 'bg-[#fde8ec] text-[#b42642]' },
-  { key: 'profit', label: 'Ganancia', icon: CircleDollarSign, chip: 'bg-[#ece9fb] text-[#4a3aa7]' },
-  { key: 'units', label: 'Unidades', icon: Package, chip: 'bg-[#fdeee6] text-[#b4461a]' },
+  { key: 'orders', label: 'Pedidos', icon: Receipt, tone: 'sky' },
+  { key: 'avgTicket', label: 'Ticket promedio', icon: TrendingUp, tone: 'sun' },
+  { key: 'collected', label: 'Cobrado', icon: Wallet, tone: 'mint' },
+  { key: 'fiado', label: 'Fiado y crédito', icon: HandCoins, tone: 'pink' },
+  { key: 'profit', label: 'Ganancia', icon: CircleDollarSign, tone: 'lilac' },
+  { key: 'units', label: 'Unidades', icon: Package, tone: 'peach' },
 ] as const;
 
 const Panel: React.FC<{ title: string; action?: React.ReactNode; children: React.ReactNode }> = ({ title, action, children }) => (
@@ -100,7 +101,7 @@ export const SalesTab: React.FC = () => {
       <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
         {PERIODS.map(p => (
           <button key={p.key} type="button" onClick={() => setPeriod(p.key)} aria-pressed={period === p.key}
-            className={`h-11 shrink-0 rounded-full px-4 text-[15px] font-bold transition ${period === p.key ? 'bg-ink text-white' : 'border border-ink/15 bg-white text-ink'}`}>
+            className={`squish h-11 shrink-0 rounded-full px-4 text-[15px] font-bold transition ${period === p.key ? 'bg-ink text-white' : 'border border-ink/15 bg-white text-ink'}`}>
             {p.label}
           </button>
         ))}
@@ -130,10 +131,10 @@ export const SalesTab: React.FC = () => {
 
       {/* Indicadores */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {TILES.map(({ key, label: l, icon: Icon, chip }) => (
-          <div key={key} className="rounded-2xl bg-white p-4">
-            <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${chip}`}><Icon className="h-5 w-5" /></span>
-            <div className="mt-3 text-sm text-ink-soft">{l}</div>
+        {TILES.map(({ key, label: l, icon: Icon, tone }) => (
+          <div key={key} className={`rounded-3xl p-4 ${TONE[tone].soft}`}>
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-ink"><Icon className="h-5 w-5" /></span>
+            <div className="mt-3 text-sm font-semibold text-ink/75">{l}</div>
             <div className="font-display text-xl font-bold leading-tight">{tileValue(key)}</div>
             {key === 'profit' && t?.profit === null && <div className="text-xs text-ink-soft">Cargue costos en el catálogo</div>}
           </div>

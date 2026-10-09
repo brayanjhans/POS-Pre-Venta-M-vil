@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- papel, el fondo claro de la app (la app lo cambia según la pantalla) -->
-    <color name="appBackground">#F2F4EF</color>
+    <color name="appBackground">#FFF7EC</color>
 </resources>

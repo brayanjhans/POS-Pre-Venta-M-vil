@@ -3,7 +3,7 @@ import { Capacitor, SystemBars, SystemBarsStyle, registerPlugin } from '@capacit
 /** Plugin nativo propio (android/.../ScreenColorPlugin.java). */
 const ScreenColor = registerPlugin<{ setColor: (opts: { color: string }) => Promise<void> }>('ScreenColor');
 
-const COLORS = { paper: '#F2F4EF', brand: '#0B7A63', ink: '#1F2A30' } as const;
+const COLORS = { paper: '#FFF7EC', brand: '#008168', ink: '#14433D' } as const;
 
 /**
  * Color de la zona del sistema (hora, batería) según la pantalla actual:

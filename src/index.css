@@ -1,38 +1,58 @@
 @import "tailwindcss";
 
-@import "@fontsource-variable/bricolage-grotesque/standard.css";
-@import "@fontsource-variable/atkinson-hyperlegible-next";
+@import "@fontsource-variable/fraunces/full.css";
+@import "@fontsource-variable/nunito";
 
 /*
- * Sistema de diseño "Distribuidora": papel claro para leer al sol, tinta pizarra, menta para
- * actuar, amarillo etiqueta para lo que hay que ver, fresa para deudas y errores.
- *   - Bricolage Grotesque (font-display): nombres, títulos y montos.
- *   - Atkinson Hyperlegible Next (font-sans, por defecto): todo lo demás; pensada para legibilidad.
- * Use bg-brand-700, text-ink, bg-paper, bg-tag, text-fresa… en lugar de colores hex sueltos.
+ * Sistema de diseño "Dulce" (referencia: drinkolipop.com, Falabella, Tottus, Nike):
+ * fondo crema cálido, textos y botones en verde bosque, y un color pastel por categoría y por
+ * sección para que la app sea alegre sin cansar (los colores fuertes solo como acento).
+ *   - Fraunces "suave" (font-display): títulos, nombres y montos.
+ *   - Nunito (font-sans, por defecto): todo lo demás.
+ * Use text-ink, bg-paper, bg-brand-600, bg-sun, bg-mint, bg-pink, bg-peach, bg-sky, bg-lilac,
+ * text-fresa… en lugar de colores hex sueltos.
  */
 @theme {
-  --font-sans: "Atkinson Hyperlegible Next Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Bricolage Grotesque Variable", "Atkinson Hyperlegible Next Variable", system-ui, sans-serif;
+  --font-sans: "Nunito Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Fraunces Variable", Georgia, serif;
 
-  --color-ink: #1f2a30;
-  --color-ink-soft: #4a5a62;
-  --color-paper: #f2f4ef;
-  --color-tag: #ffd43b;
-  --color-fresa: #d93a55;
+  --color-ink: #14433d;        /* verde bosque: textos y botones principales */
+  --color-ink-soft: #4f6b66;
+  --color-paper: #fff7ec;      /* crema */
+  --color-cream: #fdf0dc;
+  --color-tag: #fdda79;        /* amarillo: ofertas y "lo que hay que ver" */
+  --color-fresa: #e5484d;      /* rojo: deudas, agotado, errores */
 
-  /* Menta: el verde de la marca (#0b7a63 = brand-600). */
-  --color-brand-50: #ecf7f3;
-  --color-brand-100: #d2ede4;
-  --color-brand-200: #a6dbca;
-  --color-brand-300: #6fc2a9;
-  --color-brand-400: #3aa386;
-  --color-brand-500: #168a6e;
-  --color-brand-600: #0b7a63;
-  --color-brand-700: #096552;
-  --color-brand-800: #0a5143;
-  --color-brand-900: #0b4338;
-  --color-brand-950: #04261f;
+  /* Pasteles (fondos) y sus tonos fuertes (íconos, bordes, texto sobre crema). */
+  --color-sun: #fdda79;
+  --color-sun-strong: #a86b00;
+  --color-mint: #98e1c3;
+  --color-mint-strong: #00775f;
+  --color-pink: #ff9ec8;
+  --color-pink-strong: #c2186f;
+  --color-peach: #ffb8b3;
+  --color-peach-strong: #c0392b;
+  --color-sky: #a9d8ff;
+  --color-sky-strong: #1f63b8;
+  --color-lilac: #d4c2ff;
+  --color-lilac-strong: #5b3fc4;
+
+  /* Verde de marca (#008168 = brand-600). */
+  --color-brand-50: #e6f5f0;
+  --color-brand-100: #c8eadf;
+  --color-brand-200: #98e1c3;
+  --color-brand-300: #5fc7a2;
+  --color-brand-400: #23a582;
+  --color-brand-500: #009172;
+  --color-brand-600: #008168;
+  --color-brand-700: #006b57;
+  --color-brand-800: #035646;
+  --color-brand-900: #034638;
+  --color-brand-950: #022a22;
 }
+
+/* Títulos con el eje "suave" de Fraunces: gruesos y redondeados. */
+.font-display { font-variation-settings: "SOFT" 100, "WONK" 0; letter-spacing: -0.01em; }
 
 /*
  * Android dibuja la app de borde a borde (viewport-fit=cover): el fondo oscuro cubre la zona
@@ -57,7 +77,7 @@ html[data-screen="brand"] #root {
 }
 
 /* Montos: cifras de igual ancho para que las columnas de precios queden alineadas. */
-.font-display { font-feature-settings: "tnum" 1; }
+.font-display { font-feature-settings: "tnum" 1, "lnum" 1; }
 
 body {
   padding-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
@@ -90,3 +110,21 @@ body {
 /* Listas horizontales deslizables (categorías) sin barra visible. */
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ---------- Movimiento suave (estilo Olipop): sellos que giran y golosinas que flotan ---------- */
+@keyframes starburst-spin { to { transform: rotate(360deg); } }
+.starburst-spin { animation: starburst-spin 24s linear infinite; transform-origin: 50% 50%; }
+
+@keyframes float-bob {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-10px) rotate(calc(var(--r, 0deg) + 4deg)); }
+}
+.float-bob { animation: float-bob 5s ease-in-out infinite; }
+
+/* Botones que "rebotan" al tocarlos. */
+@keyframes squish { 0% { transform: scale(1); } 40% { transform: scale(0.92); } 100% { transform: scale(1); } }
+.squish:active { animation: squish 0.28s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .starburst-spin, .float-bob, .squish:active { animation: none; }
+}

@@ -64,7 +64,7 @@ export const ShiftCloseModal: React.FC<Props> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
       <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden">
-        <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
+        <div className="bg-ink text-white p-4 flex items-center justify-between">
           <h3 className="font-black  text-sm flex items-center gap-2"><Lock className="w-4 h-4" /> Cierre de Turno</h3>
           {!closed && <button onClick={onClose} aria-label="Cerrar"><X className="w-5 h-5" /></button>}
         </div>
@@ -77,13 +77,13 @@ export const ShiftCloseModal: React.FC<Props> = ({ onClose }) => {
           )}
 
           {!shown ? (
-            <p className="text-center text-slate-400 py-6">{error || 'Calculando resumen…'}</p>
+            <p className="text-center text-ink/45 py-6">{error || 'Calculando resumen…'}</p>
           ) : (
-            <div className="space-y-1.5 bg-slate-50 rounded-2xl p-3 border border-slate-200">
+            <div className="space-y-1.5 bg-cream/60 rounded-2xl p-3 border border-ink/10">
               {row('Fondo inicial', shown.openingCash)}
               {Object.entries(shown.byMethod).map(([method, total]) => row(`Cobrado ${method}`, total))}
               {shown.byKind.DEVOLUCION ? row('Devoluciones (anulaciones)', shown.byKind.DEVOLUCION) : null}
-              <div className="border-t border-slate-200 my-1" />
+              <div className="border-t border-ink/10 my-1" />
               {row('Efectivo esperado en caja', shown.expectedCash ?? shown.expectedCashNow, true)}
               {closed && row('Efectivo contado', closed.countedCash, true)}
               {closed && (
@@ -92,12 +92,12 @@ export const ShiftCloseModal: React.FC<Props> = ({ onClose }) => {
                   <span className="font-display">{formatSoles(Math.abs(closed.difference ?? 0))}</span>
                 </div>
               )}
-              <div className="text-xs text-slate-400 pt-1">Pedidos emitidos en el turno: {shown.ordersCreated}</div>
+              <div className="text-xs text-ink/45 pt-1">Pedidos emitidos en el turno: {shown.ordersCreated}</div>
             </div>
           )}
 
           {closed ? (
-            <button onClick={() => void logout()} className="w-full py-3.5 bg-slate-900 text-white font-black rounded-xl">
+            <button onClick={() => void logout()} className="w-full py-3.5 bg-ink text-white font-black rounded-xl">
               TURNO CERRADO · SALIR
             </button>
           ) : (
@@ -110,7 +110,7 @@ export const ShiftCloseModal: React.FC<Props> = ({ onClose }) => {
                   value={counted}
                   onChange={e => setCounted(e.target.value)}
                   placeholder="0.00"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-xl font-black focus:outline-none focus:border-brand-500"
+                  className="w-full bg-cream/60 border border-ink/15 rounded-xl px-4 py-3 text-xl font-black focus:outline-none focus:border-brand-500"
                   required
                 />
               </label>
@@ -119,7 +119,7 @@ export const ShiftCloseModal: React.FC<Props> = ({ onClose }) => {
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
                 placeholder="Observaciones (opcional)"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm"
+                className="w-full bg-cream/60 border border-ink/15 rounded-xl px-3 py-2 text-sm"
               />
               {error && <p className="text-red-600 text-xs text-center">{error}</p>}
               <button type="submit" disabled={loading || !summary}

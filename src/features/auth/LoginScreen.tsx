@@ -5,6 +5,7 @@ import { errorMessage, isNetworkError } from '../../services/rpc';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
 import { setScreenTheme } from '../../lib/screenTheme';
+import { Starburst } from '../../app/Starburst';
 import type { Catalog } from '../../types/pos';
 
 /*
@@ -12,6 +13,15 @@ import type { Catalog } from '../../types/pos';
  * No se lista a las personas: cada quien escribe sus datos y entra a su pantalla según su rol.
  * El PIN usa solo el teclado numérico del celular (no hay teclado propio en pantalla).
  */
+
+/** Golosinas decorativas del recuadro (posiciones y ritmos distintos para que no se vean en fila). */
+const FLOATERS = [
+  { emoji: '🍬', x: '8%', y: '14%', size: 40, delay: '0s', rot: '-14deg' },
+  { emoji: '🥤', x: '30%', y: '6%', size: 46, delay: '-1.2s', rot: '8deg' },
+  { emoji: '🍫', x: '52%', y: '16%', size: 38, delay: '-2.4s', rot: '-6deg' },
+  { emoji: '🍭', x: '16%', y: '42%', size: 30, delay: '-3.1s', rot: '12deg' },
+  { emoji: '🍪', x: '70%', y: '40%', size: 34, delay: '-0.6s', rot: '-10deg' },
+];
 
 export const LoginScreen: React.FC = () => {
   const { login } = usePos();
@@ -57,27 +67,35 @@ export const LoginScreen: React.FC = () => {
     }
   };
 
-  const field = 'h-12 w-full rounded-xl border border-ink/15 bg-white text-[15px] text-ink shadow-[0_1px_2px_rgba(31,42,48,0.04)] outline-none transition placeholder:text-ink/35 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20';
+  const field = 'h-13 w-full rounded-2xl border-2 border-ink/10 bg-white text-[15px] text-ink shadow-[0_1px_2px_rgba(31,42,48,0.04)] outline-none transition placeholder:text-ink/35 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20';
 
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-paper text-ink">
       {/* Cabecera mínima con la marca */}
       <header className="sticky top-0 z-10 border-b border-ink/5 bg-paper/90 backdrop-blur">
         <div className="flex h-16 items-center justify-center gap-2 px-4">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white shadow-sm">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-white shadow-sm">
             <Store className="h-[18px] w-[18px]" />
           </span>
-          <span className="truncate font-display text-base font-bold tracking-tight">{storeName}</span>
+          <span className="truncate font-display text-lg font-bold">{storeName}</span>
         </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-8">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-100 bg-brand-50 text-brand-600 shadow-sm">
+        {/* Recuadro de color con golosinas que flotan (estilo Olipop) */}
+        <div className="relative mb-7 overflow-hidden rounded-[32px] bg-mint px-6 pb-7 pt-24 text-center">
+          {FLOATERS.map(f => (
+            <span key={f.emoji} aria-hidden className="float-bob absolute select-none drop-shadow-[0_8px_10px_rgba(20,67,61,0.25)]"
+              style={{ left: f.x, top: f.y, fontSize: f.size, animationDelay: f.delay, ['--r' as string]: f.rot } as React.CSSProperties}>
+              {f.emoji}
+            </span>
+          ))}
+          <Starburst className="absolute right-4 top-4 rotate-12" color="#fdda79" size={64} spin>¡Hola!</Starburst>
+          <div className="relative mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white text-ink shadow-sm">
             <LockOpen className="h-7 w-7" />
           </div>
-          <h1 className="mb-1.5 font-display text-2xl font-bold tracking-tight">Iniciar sesión</h1>
-          <p className="text-sm text-ink-soft">Ingrese su usuario y PIN para entrar a su cuenta</p>
+          <h1 className="relative font-display text-[34px] font-bold leading-none">Iniciar sesión</h1>
+          <p className="relative mt-2 text-[15px] font-semibold text-ink/75">Ingrese su usuario y PIN para entrar a su cuenta</p>
         </div>
 
         <form className="space-y-4" onSubmit={e => void submit(e)} noValidate>
@@ -129,7 +147,7 @@ export const LoginScreen: React.FC = () => {
           <p className="min-h-5 text-sm font-semibold text-fresa" role="alert">{error}</p>
 
           <button type="submit" disabled={loading}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-base font-semibold text-white shadow-md shadow-brand-600/20 transition hover:bg-brand-700 active:scale-[0.99] disabled:opacity-70">
+            className="squish flex h-14 w-full items-center justify-center gap-2 rounded-full bg-ink text-base font-bold text-white shadow-[0_12px_24px_-12px_rgba(20,67,61,0.7)] transition disabled:opacity-70">
             {loading ? <><Loader2 className="h-5 w-5 animate-spin" /> Ingresando…</> : <><LogIn className="h-5 w-5" /> Iniciar sesión</>}
           </button>
 

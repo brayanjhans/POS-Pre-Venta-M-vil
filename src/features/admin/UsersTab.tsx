@@ -134,7 +134,7 @@ export const UsersTab: React.FC = () => {
     }
   };
 
-  const field = 'w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm focus:outline-hidden focus:border-brand-600';
+  const field = 'w-full bg-white border border-ink/15 rounded-xl p-2.5 text-sm focus:outline-hidden focus:border-brand-600';
 
   return (
     <div className="space-y-4 animate-in fade-in">
@@ -161,7 +161,7 @@ export const UsersTab: React.FC = () => {
         </div>
       )}
 
-      {loading && <p className="p-6 text-center text-slate-400">Cargando…</p>}
+      {loading && <p className="p-6 text-center text-ink/45">Cargando…</p>}
       <div className="grid gap-3 md:grid-cols-2">
         {!loading && users.map(u => {
           const isMe = u.id === session?.user.id;
@@ -169,7 +169,7 @@ export const UsersTab: React.FC = () => {
           const isProtected = u.isSupport === true && !amSupport;
           const action = 'inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition active:scale-95';
           return (
-            <div key={u.id} className={`rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ${u.isActive ? '' : 'opacity-60'}`}>
+            <div key={u.id} className={`rounded-2xl border border-ink/10 bg-white p-4 shadow-sm ${u.isActive ? '' : 'opacity-60'}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="font-black text-ink">
@@ -177,13 +177,13 @@ export const UsersTab: React.FC = () => {
                   </div>
                   <div className="mt-0.5 font-display text-sm text-ink-soft">@{u.username}{u.sellerCode ? ` · ${u.sellerCode}` : ''}</div>
                 </div>
-                <span className={`shrink-0 text-xs font-black px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-slate-900 text-white' : u.role === 'cajero' ? 'bg-blue-100 text-blue-800' : 'bg-brand-100 text-brand-800'}`}>
+                <span className={`shrink-0 text-xs font-black px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-ink text-white' : u.role === 'cajero' ? 'bg-blue-100 text-blue-800' : 'bg-brand-100 text-brand-800'}`}>
                   {ROLE_LABELS[u.role]}
                 </span>
               </div>
 
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {!u.isActive && <span className="text-xs font-bold bg-slate-200 px-1.5 rounded">Inactivo</span>}
+                {!u.isActive && <span className="text-xs font-bold bg-ink/10 px-1.5 rounded">Inactivo</span>}
                 {u.lockedUntil && <span className="text-xs font-bold bg-red-100 text-red-700 px-1.5 rounded">Bloqueado</span>}
                 {u.mustChangePin && u.isActive && <span className="text-xs font-bold bg-amber-100 text-amber-800 px-1.5 rounded">PIN temporal</span>}
                 {u.isSupport && (
@@ -197,10 +197,10 @@ export const UsersTab: React.FC = () => {
               </div>
 
               {isProtected ? (
-                <div className="mt-3 flex items-center gap-1 text-xs text-slate-400"><Lock className="w-3.5 h-3.5" /> Protegido: solo lo administra soporte.</div>
+                <div className="mt-3 flex items-center gap-1 text-xs text-ink/45"><Lock className="w-3.5 h-3.5" /> Protegido: solo lo administra soporte.</div>
               ) : (
-                <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-                  <button type="button" onClick={() => openEdit(u)} className={`${action} bg-slate-100 text-ink hover:bg-slate-200`}>
+                <div className="mt-3 flex flex-wrap gap-2 border-t border-ink/5 pt-3">
+                  <button type="button" onClick={() => openEdit(u)} className={`${action} bg-cream text-ink hover:bg-ink/10`}>
                     <Pencil className="w-4 h-4" /> Editar
                   </button>
                   {!isMe && (
@@ -236,7 +236,7 @@ export const UsersTab: React.FC = () => {
           <form onSubmit={submit} onClick={e => e.stopPropagation()} className="w-full max-w-sm bg-white rounded-3xl p-6 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-black  text-sm">{editing === 'new' ? 'Nuevo usuario' : `Editar: ${editing.fullName}`}</h3>
-              <button type="button" onClick={() => setEditing(null)} aria-label="Cerrar"><X className="w-5 h-5 text-slate-400" /></button>
+              <button type="button" onClick={() => setEditing(null)} aria-label="Cerrar"><X className="w-5 h-5 text-ink/45" /></button>
             </div>
             <input className={field} placeholder="Nombre completo *" value={form.fullName} required minLength={2}
               onChange={e => setForm({ ...form, fullName: e.target.value })} />
@@ -266,7 +266,7 @@ export const UsersTab: React.FC = () => {
             ) : (
               <div className="text-xs font-bold text-ink-soft">
                 <span className="flex items-center gap-1"><KeyRound className="w-3.5 h-3.5" /> PIN de acceso</span>
-                <div className="mt-1 flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-100 p-2 text-ink-soft"
+                <div className="mt-1 flex items-center justify-between gap-2 rounded-lg border border-ink/10 bg-cream p-2 text-ink-soft"
                   aria-readonly="true">
                   <span className="font-display tracking-[0.3em]">••••</span>
                   <span className="flex items-center gap-1 text-xs"><Lock className="w-3 h-3" /> Bloqueado</span>
@@ -287,7 +287,7 @@ export const UsersTab: React.FC = () => {
           <form onSubmit={submitReset} onClick={e => e.stopPropagation()} className="w-full max-w-sm bg-white rounded-3xl p-6 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-black  text-sm flex items-center gap-1.5"><RotateCcw className="w-4 h-4" /> Restablecer PIN</h3>
-              <button type="button" onClick={() => setResetting(null)} aria-label="Cerrar"><X className="w-5 h-5 text-slate-400" /></button>
+              <button type="button" onClick={() => setResetting(null)} aria-label="Cerrar"><X className="w-5 h-5 text-ink/45" /></button>
             </div>
             <p className="text-xs text-ink-soft">
               Nuevo PIN para <strong>{resetting.fullName}</strong> (@{resetting.username}). Conserva su cuenta y su historial;

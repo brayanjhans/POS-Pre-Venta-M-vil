@@ -44,11 +44,11 @@ export const SettingsTab: React.FC = () => {
     }
   };
 
-  const field = 'w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm mt-1';
+  const field = 'w-full bg-white border border-ink/15 rounded-xl p-2.5 text-sm mt-1';
   const label = 'block text-xs font-bold text-ink-soft ';
 
   return (
-    <form onSubmit={submit} className="space-y-4 max-w-xl mx-auto bg-white p-6 rounded-3xl border border-slate-200 animate-in fade-in">
+    <form onSubmit={submit} className="space-y-4 max-w-xl mx-auto bg-white p-6 rounded-3xl border border-ink/10 animate-in fade-in">
       <h3 className="text-lg font-black ">Configuración</h3>
       <label className={label}>Nombre de la tienda (sale en el ticket)
         <input className={field} value={storeName} onChange={e => setStoreName(e.target.value)} maxLength={60} />

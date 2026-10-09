@@ -38,7 +38,7 @@ export const ChangePinScreen: React.FC = () => {
         autoComplete="off"
         value={value}
         onChange={e => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
-        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-center text-2xl font-black tracking-[0.4em] focus:outline-none focus:border-brand-500"
+        className="w-full bg-cream/60 border border-ink/15 rounded-xl px-4 py-3 text-center text-2xl font-black tracking-[0.4em] focus:outline-none focus:border-brand-500"
         required
         minLength={4}
       />
@@ -46,8 +46,8 @@ export const ChangePinScreen: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-full bg-slate-100 p-6">
-      <form onSubmit={submit} className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-xl border border-slate-200 space-y-4">
+    <div className="flex flex-col items-center justify-center min-h-full bg-cream p-6">
+      <form onSubmit={submit} className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-xl border border-ink/10 space-y-4">
         <div className="flex justify-center">
           <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center">
             <KeyRound className="w-7 h-7 text-amber-600" />
@@ -66,7 +66,7 @@ export const ChangePinScreen: React.FC = () => {
           className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl">
           {loading ? 'Guardando…' : 'Guardar PIN'}
         </button>
-        <button type="button" onClick={() => void logout()} className="w-full py-2 text-sm font-bold text-slate-400">
+        <button type="button" onClick={() => void logout()} className="w-full py-2 text-sm font-bold text-ink/45">
           Cerrar sesión
         </button>
       </form>

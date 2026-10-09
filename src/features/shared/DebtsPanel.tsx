@@ -141,7 +141,7 @@ export const DebtsPanel: React.FC = () => {
         <button type="button" onClick={() => { setStatement(null); setMessage(null); }}
           className="text-xs font-bold text-ink-soft flex items-center gap-1"><ArrowLeft className="w-4 h-4" /> Volver a deudores</button>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap justify-between gap-3">
+        <div className="bg-white rounded-2xl border border-ink/10 p-4 flex flex-wrap justify-between gap-3">
           <div>
             <h3 className="text-lg font-black text-ink">{c.name}</h3>
             <div className="text-xs text-ink-soft">
@@ -173,18 +173,18 @@ export const DebtsPanel: React.FC = () => {
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <input ref={amountInputRef} type="text" inputMode="decimal" placeholder="Monto S/" value={amount} onChange={e => setAmount(e.target.value)} required
-                className="bg-white border border-slate-300 rounded-xl px-3 py-2 font-display font-black" />
-              <select value={method} onChange={e => setMethod(e.target.value as PaymentMethod)} className="bg-white border border-slate-300 rounded-xl px-2 py-2 text-sm">
+                className="bg-white border border-ink/15 rounded-xl px-3 py-2 font-display font-black" />
+              <select value={method} onChange={e => setMethod(e.target.value as PaymentMethod)} className="bg-white border border-ink/15 rounded-xl px-2 py-2 text-sm">
                 {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
-              <select value={targetOrderId} onChange={e => setTargetOrderId(e.target.value)} className="bg-white border border-slate-300 rounded-xl px-2 py-2 text-sm col-span-2">
+              <select value={targetOrderId} onChange={e => setTargetOrderId(e.target.value)} className="bg-white border border-ink/15 rounded-xl px-2 py-2 text-sm col-span-2">
                 <option value="">Aplicar a la deuda más antigua primero</option>
                 {openOrders.map(o => <option key={o.id} value={o.id}>Solo {o.code} (debe {formatSoles(o.debtAmount)})</option>)}
               </select>
             </div>
             <div className="flex gap-2">
               <input type="text" placeholder="Nota (opcional)" value={notes} onChange={e => setNotes(e.target.value)}
-                className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm" />
+                className="flex-1 bg-white border border-ink/15 rounded-xl px-3 py-2 text-sm" />
               <button type="button" onClick={() => setAmount(maxForTarget.toFixed(2))} className="px-3 py-2 bg-white border border-brand-300 rounded-xl text-xs font-bold">
                 Total
               </button>
@@ -196,17 +196,17 @@ export const DebtsPanel: React.FC = () => {
         )}
 
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl border border-slate-200 p-4">
+          <div className="bg-white rounded-2xl border border-ink/10 p-4">
             <h4 className="font-black text-sm  mb-2">Boletas a crédito</h4>
             <div className="space-y-2 max-h-80 overflow-y-auto">
-              {statement.orders.length === 0 && <p className="text-xs text-slate-400">Sin boletas a crédito.</p>}
+              {statement.orders.length === 0 && <p className="text-xs text-ink/45">Sin boletas a crédito.</p>}
               {statement.orders.map(o => {
                 const canAbonar = o.status === 'FIADO' && (o.debtAmount ?? 0) > 0;
                 const abonado = round2(o.totalAmount - (o.debtAmount ?? 0));
                 return (
-                  <div key={o.id} className={`flex items-stretch gap-2 rounded-xl border text-xs ${targetOrderId === o.id ? 'border-brand-500 bg-brand-50/50' : 'border-slate-100'}`}>
+                  <div key={o.id} className={`flex items-stretch gap-2 rounded-xl border text-xs ${targetOrderId === o.id ? 'border-brand-500 bg-brand-50/50' : 'border-ink/5'}`}>
                     <button type="button" onClick={() => setViewOrder(o)}
-                      className="flex-1 flex justify-between items-center p-2.5 rounded-xl hover:bg-slate-50 text-left min-w-0">
+                      className="flex-1 flex justify-between items-center p-2.5 rounded-xl hover:bg-cream/60 text-left min-w-0">
                       <div className="min-w-0">
                         <div className="font-bold">
                           Boleta <span className="font-display">{o.code}</span>
@@ -238,12 +238,12 @@ export const DebtsPanel: React.FC = () => {
               })}
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-200 p-4">
+          <div className="bg-white rounded-2xl border border-ink/10 p-4">
             <h4 className="font-black text-sm  mb-2">Historial de pagos</h4>
             <div className="space-y-1.5 max-h-80 overflow-y-auto text-xs">
-              {statement.payments.length === 0 && <p className="text-slate-400">Sin pagos registrados.</p>}
+              {statement.payments.length === 0 && <p className="text-ink/45">Sin pagos registrados.</p>}
               {statement.payments.map(p => (
-                <div key={p.id} className="flex justify-between border-b border-slate-100 py-1.5">
+                <div key={p.id} className="flex justify-between border-b border-ink/5 py-1.5">
                   <div>
                     <div className="font-bold">{KIND_LABEL[p.kind]} · {p.method}</div>
                     <div className="text-xs text-ink-soft">
@@ -279,7 +279,7 @@ export const DebtsPanel: React.FC = () => {
     <div className="space-y-4 animate-in fade-in">
       <div className="flex flex-wrap justify-between items-end gap-3">
         <div>
-          <h3 className="text-xl font-black text-ink ">Libreta de Fiados (Cuentas por Cobrar)</h3>
+          <h3 className="font-display text-2xl font-bold text-ink">Cuentas por cobrar</h3>
           {tab === 'pendientes' ? (
             <p className="text-xs text-ink-soft">Total por cobrar: <strong className="text-red-600">{formatSoles(grandTotal)}</strong> · {debtors.length} clientes</p>
           ) : (
@@ -288,15 +288,15 @@ export const DebtsPanel: React.FC = () => {
         </div>
         <div className="flex gap-2">
           <input type="text" placeholder="Buscar cliente, DNI/RUC, celular o boleta" value={search} onChange={e => setSearch(e.target.value)}
-            className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm" />
+            className="bg-white border border-ink/15 rounded-xl px-3 py-2 text-sm" />
           <button type="button" onClick={() => void (tab === 'pendientes' ? loadDebtors() : loadPaid())}
-            className="p-2 bg-white border border-slate-300 rounded-xl" title="Actualizar">
+            className="p-2 bg-white border border-ink/15 rounded-xl" title="Actualizar">
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
-      <div className="flex bg-slate-100 rounded-xl p-1 w-fit">
+      <div className="flex bg-cream rounded-xl p-1 w-fit">
         {([
           ['pendientes', 'Pendientes', <HandCoins key="i" className="w-4 h-4" />],
           ['pagados', 'Pagados (historial)', <History key="i" className="w-4 h-4" />],
@@ -312,18 +312,18 @@ export const DebtsPanel: React.FC = () => {
       {message?.error && <p className="text-sm text-red-600">{message.text}</p>}
 
       {tab === 'pendientes' ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-ink/10 overflow-hidden">
           {!loading && filtered.length === 0 ? (
-            <div className="p-8 text-center text-slate-400">
+            <div className="p-8 text-center text-ink/45">
               <CheckCircle2 className="w-12 h-12 mx-auto text-brand-300 mb-2" />
               <p className="font-bold text-sm">No hay cuentas por cobrar</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-ink/5">
               {filtered.map(d => (
                 <div key={d.id} role="button" tabIndex={0} onClick={() => void openStatement(d.id)}
                   onKeyDown={e => { if (e.key === 'Enter') void openStatement(d.id); }}
-                  className="w-full p-4 flex justify-between items-center gap-3 hover:bg-slate-50 text-left cursor-pointer">
+                  className="w-full p-4 flex justify-between items-center gap-3 hover:bg-cream/60 text-left cursor-pointer">
                   <div className="min-w-0">
                     <div className="font-bold text-ink">{d.name}</div>
                     <div className="text-xs text-ink-soft flex flex-wrap gap-x-1.5">
@@ -345,17 +345,17 @@ export const DebtsPanel: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-ink/10 overflow-hidden">
           {!paidLoading && filteredPaid.length === 0 ? (
-            <div className="p-8 text-center text-slate-400">
-              <History className="w-12 h-12 mx-auto text-slate-300 mb-2" />
+            <div className="p-8 text-center text-ink/45">
+              <History className="w-12 h-12 mx-auto text-ink/45 mb-2" />
               <p className="font-bold text-sm">Aún no hay fiados pagados en su totalidad</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-ink/5">
               {filteredPaid.map(o => (
                 <button key={o.id} type="button" onClick={() => setViewOrder(o)}
-                  className="w-full p-4 flex justify-between items-center gap-3 hover:bg-slate-50 text-left">
+                  className="w-full p-4 flex justify-between items-center gap-3 hover:bg-cream/60 text-left">
                   <div className="min-w-0">
                     <div className="font-bold text-ink">
                       Boleta <span className="font-display">{o.code}</span>
@@ -376,7 +376,7 @@ export const DebtsPanel: React.FC = () => {
                   </div>
                   <div className="text-right shrink-0">
                     <div className="font-display font-black text-brand-700">{formatSoles(o.totalAmount)}</div>
-                    <Receipt className="w-3.5 h-3.5 text-slate-400 ml-auto" />
+                    <Receipt className="w-3.5 h-3.5 text-ink/45 ml-auto" />
                   </div>
                 </button>
               ))}

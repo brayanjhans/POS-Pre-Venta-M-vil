@@ -7,9 +7,9 @@ import { formatSoles } from '../../domain/money';
  * texto siempre en tinta (nunca del color de la serie) y leyenda cuando hay más de una serie.
  */
 
-const ACCENT = '#0b7a63';        // menta de marca: la barra que importa
-const DEEMPH = '#c5d3cd';        // resto en gris verdoso (énfasis)
-const GRID = '#e3e7e1';
+const ACCENT = '#008168';        // menta de marca: la barra que importa
+const DEEMPH = '#cfe3da';        // resto en gris verdoso (énfasis)
+const GRID = '#f1e7d6';
 
 /** Paleta categórica validada (orden fijo; el color sigue a la categoría, nunca a su posición). */
 export const CATEGORY_COLOR: Record<string, string> = {
