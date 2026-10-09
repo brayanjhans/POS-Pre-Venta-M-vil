@@ -76,7 +76,7 @@ export const SettingsTab: React.FC = () => {
         El límite de fiado aplica a clientes sin límite propio y lo valida el servidor en cada venta a crédito y en cada fiado en caja.
       </p>
       {message && <p className={`text-sm ${message.error ? 'text-red-600' : 'text-emerald-700'}`}>{message.text}</p>}
-      <button type="submit" disabled={saving} className="w-full py-3 bg-[#16a34a] text-white font-black rounded-xl disabled:opacity-50">
+      <button type="submit" disabled={saving} className="w-full py-3 bg-brand-600 text-white font-black rounded-xl disabled:opacity-50">
         {saving ? 'Guardando…' : 'GUARDAR CONFIGURACIÓN'}
       </button>
     </form>

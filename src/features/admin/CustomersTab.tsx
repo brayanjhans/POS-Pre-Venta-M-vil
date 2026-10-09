@@ -28,7 +28,7 @@ export const CustomersTab: React.FC = () => {
           <input type="text" placeholder="Nombre, DNI/RUC o ruta" value={search} onChange={e => setSearch(e.target.value)}
             className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm" />
           <button type="button" onClick={() => setEditing('new')}
-            className="px-4 py-2 bg-[#16a34a] text-white font-black text-xs uppercase rounded-xl flex items-center gap-1.5">
+            className="px-4 py-2 bg-brand-600 text-white font-black text-xs uppercase rounded-xl flex items-center gap-1.5">
             <Plus className="w-4 h-4" /> Nuevo
           </button>
         </div>

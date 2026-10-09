@@ -25,7 +25,7 @@ const MainShell: React.FC = () => {
   const view: MainView = role === 'admin' ? adminView : role === 'cajero' ? 'caja' : 'preventa';
 
   return (
-    <div className="h-full w-full overflow-hidden bg-slate-900 text-slate-900 flex flex-col font-sans selection:bg-[#16a34a] selection:text-white">
+    <div className="h-full w-full overflow-hidden bg-slate-900 text-slate-900 flex flex-col font-sans selection:bg-brand-600 selection:text-white">
       <StatusBar view={view} onChangeView={role === 'admin' ? setAdminView : undefined} />
       <div className="flex-1 overflow-hidden">
         {view === 'preventa' && <PreventaScreen />}

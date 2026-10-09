@@ -15,6 +15,7 @@ import { buildCartItem, computeCartTotals, editedPrice, refreshCartWithCatalog }
 import { checkCredit, requiresCustomer } from '../../domain/credit';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
+import { plural } from '../../lib/text';
 import { useDialog } from '../../app/DialogProvider';
 import {
   Barcode,
@@ -381,7 +382,7 @@ export const PreventaScreen: React.FC = () => {
       <div className="w-full h-full flex flex-col overflow-hidden select-none bg-white relative">
 
         {/* HEADER LIMPIO: Botón ☰, CATÁLOGO, OFERTAS, CÁMARA, MIS PEDIDOS y ADMIN */}
-        <div className="bg-[#059669] text-white px-3 md:px-4 py-2 flex items-center justify-between gap-2 shadow-md z-30">
+        <div className="bg-brand-600 text-white px-3 md:px-4 py-2 flex items-center justify-between gap-2 shadow-md z-30">
           <div className="flex items-center gap-2 min-w-0">
             <button 
               type="button"
@@ -435,7 +436,7 @@ export const PreventaScreen: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsOrderHistoryOpen(true)}
-              className="px-3 py-1 bg-[#064e3b] hover:bg-[#022c22] rounded-xl flex items-center gap-1.5 transition border border-[#047857]"
+              className="px-3 py-1 bg-brand-900 hover:bg-brand-950 rounded-xl flex items-center gap-1.5 transition border border-brand-700"
             >
               <div className="text-[11px] font-black uppercase leading-tight text-emerald-100 text-right whitespace-nowrap">MIS VENTAS<br/>
                 <span className="text-white text-xs">S/ {todaysTotal.toFixed(2)}</span>
@@ -479,7 +480,7 @@ export const PreventaScreen: React.FC = () => {
                     className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-emerald-50 text-slate-900 hover:text-emerald-800 transition"
                   >
                     <span className="flex items-center gap-2.5">
-                      <Package className="w-4 h-4 text-[#16a34a]" />
+                      <Package className="w-4 h-4 text-brand-600" />
                       <span>Catálogo de Productos</span>
                     </span>
                     <span className="text-xs font-mono text-slate-400">{products.length}</span>
@@ -671,7 +672,7 @@ export const PreventaScreen: React.FC = () => {
           {!searchQuery && promos.length > 0 && (activeScreenTab === 'ofertas' || selectedCategory === 'Todos') && (
             <div ref={carouselRef} className={activeScreenTab === 'ofertas' ? "flex flex-col gap-4" : "flex overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-none pb-2 transition-all"}>
               {promos.map((promo) => (
-                <div key={promo.id} className={`relative rounded-[20px] overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.12)] border border-slate-200/50 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-900 text-white ${activeScreenTab === 'ofertas' ? 'w-full' : 'min-w-[280px] sm:min-w-[320px] snap-center shrink-0'}`}>
+                <div key={promo.id} className={`relative rounded-[20px] overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.12)] border border-slate-200/50 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-900 text-white ${activeScreenTab === 'ofertas' ? 'w-full' : 'w-[85%] max-w-[340px] sm:w-[320px] snap-center shrink-0'}`}>
                   {/* Decoración de fondo */}
                   <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-emerald-500/20 blur-2xl"></div>
                   <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-amber-500/20 blur-xl"></div>
@@ -696,10 +697,10 @@ export const PreventaScreen: React.FC = () => {
                         )}
                       </div>
 
-                      <h3 className="text-base font-black leading-tight text-white uppercase tracking-tight w-10/12">
+                      <h3 className="text-base font-black leading-tight text-white uppercase tracking-tight break-words line-clamp-2">
                         {promo.title}
                       </h3>
-                      <p className="text-xs text-slate-300 leading-snug mt-1 w-11/12 line-clamp-2">
+                      <p className="text-xs text-slate-300 leading-snug mt-1 line-clamp-2">
                         {promo.subtitle}
                       </p>
                     </div>
@@ -739,9 +740,9 @@ export const PreventaScreen: React.FC = () => {
 
           {/* Indicador de Catálogo */}
           <div className="flex items-center justify-between text-xs text-slate-500 font-semibold px-1">
-            <span>{filteredProducts.length} productos en exhibición</span>
-            <span className="text-xs text-emerald-700 font-bold">
-              Escaneo HID activo en segundo plano
+            <span>{plural(filteredProducts.length, 'producto')}</span>
+            <span className="inline-flex items-center gap-1 text-xs text-brand-700 font-bold">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-500" /> Lector de códigos listo
             </span>
           </div>
 
@@ -755,10 +756,10 @@ export const PreventaScreen: React.FC = () => {
                   <div
                     key={product.id}
                     onClick={() => handleProductCardClick(product)}
-                    className="bg-white rounded-[20px] overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg hover:border-[#059669] transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98]"
+                    className="bg-white rounded-[20px] overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg hover:border-brand-600 transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98]"
                   >
                     {/* Cintillo de Categoría Verde */}
-                    <div className="bg-[#059669] text-white px-3 py-1.5 text-xs font-black uppercase tracking-wider flex items-center justify-between">
+                    <div className="bg-brand-600 text-white px-3 py-1.5 text-xs font-black uppercase tracking-wider flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <span className="w-1.5 h-1.5 bg-white rounded-full block" />
                         <span className="truncate">{product.category}</span>
@@ -773,7 +774,10 @@ export const PreventaScreen: React.FC = () => {
                     {/* Cuerpo de la tarjeta */}
                     <div className="p-3 space-y-3 flex-1 flex flex-col justify-between">
                       <div>
-                        <div className="h-28 w-full rounded-2xl bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 border border-slate-200 shadow-inner flex flex-col items-center justify-center p-2 relative group-hover:scale-105 group-hover:shadow-[0_10px_20px_rgba(0,0,0,0.1)] transition-all duration-300">
+                        <div
+                          className="h-28 w-full rounded-2xl border border-slate-200/70 shadow-inner flex flex-col items-center justify-center p-2 relative group-hover:scale-105 group-hover:shadow-[0_10px_20px_rgba(0,0,0,0.1)] transition-all duration-300"
+                          style={{ background: `radial-gradient(circle at 30% 25%, ${product.accentColor}33, ${product.accentColor}0d 60%, #f8fafc)` }}
+                        >
                           <div className="text-5xl filter drop-shadow-xl mb-1 transform group-hover:-translate-y-1 transition-transform duration-300">
                             {product.category === 'Bebidas' ? '🥤' :
                              product.category === 'Chocolates' ? '🍫' :
@@ -834,7 +838,7 @@ export const PreventaScreen: React.FC = () => {
                 <div
                   key={product.id}
                   onClick={() => handleProductCardClick(product)}
-                  className="bg-white rounded-xl p-2.5 border border-slate-200 shadow-2xs hover:border-[#16a34a] transition cursor-pointer flex items-center justify-between gap-2"
+                  className="bg-white rounded-xl p-2.5 border border-slate-200 shadow-2xs hover:border-brand-600 transition cursor-pointer flex items-center justify-between gap-2"
                 >
                   <div className="flex items-center gap-2.5 flex-1 min-w-0">
                     <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 font-bold flex items-center justify-center text-lg shrink-0">
@@ -856,7 +860,7 @@ export const PreventaScreen: React.FC = () => {
                     <span className="bg-[#ea580c] text-white px-2 py-0.5 rounded-md text-xs font-black block">
                       DESDE S/ {product.presentations.unit.price.toFixed(2)}
                     </span>
-                    <span className="text-xs text-[#16a34a] font-bold mt-0.5 block">
+                    <span className="text-xs text-brand-600 font-bold mt-0.5 block">
                       Elegir pres. ↗
                     </span>
                   </div>
@@ -886,12 +890,12 @@ export const PreventaScreen: React.FC = () => {
 
               <div className="flex flex-col">
                 <span className="text-sm font-black text-slate-800 leading-tight">
-                  {cart.length === 0 ? 'Carrito vacío' : `${cart.length} Productos`}
+                  {cart.length === 0 ? 'Carrito vacío' : plural(cart.length, 'producto')}
                 </span>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className={`w-1.5 h-1.5 rounded-full shadow-xs ${cart.length === 0 ? 'bg-slate-300' : 'bg-emerald-500 animate-pulse'}`} />
                   <span className="text-xs text-slate-500 font-bold">
-                    {cart.length === 0 ? 'Escanea para añadir' : `${totalBaseUnits} unid. en total`}
+                    {cart.length === 0 ? 'Toque o escanee para añadir' : plural(totalBaseUnits, 'unidad', 'unidades')}
                   </span>
                 </div>
               </div>
@@ -902,7 +906,7 @@ export const PreventaScreen: React.FC = () => {
                 <span className="text-xs font-black uppercase text-slate-400 tracking-widest">
                   TOTAL
                 </span>
-                <span className="text-lg font-black text-slate-900 font-mono leading-none tracking-tight">
+                <span className="text-lg font-black text-slate-900 font-mono leading-none tracking-tight whitespace-nowrap">
                   S/ {totalAmount.toFixed(2)}
                 </span>
               </div>
@@ -940,15 +944,15 @@ export const PreventaScreen: React.FC = () => {
               {/* Header del carrito */}
               <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-emerald-100 text-[#16a34a] rounded-xl">
+                  <div className="p-2 bg-emerald-100 text-brand-600 rounded-xl">
                     <ShoppingCart className="w-5 h-5 stroke-[2.5]" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-slate-900 uppercase">
-                      Detalle de Pre-Venta ({cart.length} líneas)
+                    <h3 className="text-base font-black text-slate-900">
+                      Pedido · {plural(cart.length, 'producto')}
                     </h3>
                     <p className="text-xs text-slate-500">
-                      Total de inventario a descontar: <strong className="text-emerald-700">{totalBaseUnits}</strong> unidades base
+                      Saldrán <strong className="text-brand-700">{plural(totalBaseUnits, 'unidad', 'unidades')}</strong> del almacén
                     </p>
                   </div>
                 </div>
@@ -956,15 +960,19 @@ export const PreventaScreen: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={handleClearCart}
-                    className="text-xs text-red-600 font-bold hover:underline flex items-center gap-1 p-1"
+                    onClick={async () => {
+                      if (cart.length === 0 || await dialog.confirm('Se quitarán todos los productos del pedido.',
+                        { title: '¿Vaciar el carrito?', tone: 'danger', confirmText: 'Vaciar' })) handleClearCart();
+                    }}
+                    className="h-10 px-2 text-xs text-red-600 font-bold hover:bg-red-50 rounded-xl flex items-center gap-1"
                   >
                     <RotateCcw className="w-3.5 h-3.5" /> Vaciar
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsCartDrawerOpen(false)}
-                    className="p-1 rounded-full text-slate-400 hover:text-slate-700 bg-slate-100"
+                    aria-label="Cerrar"
+                    className="h-10 w-10 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-800 bg-slate-100"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -982,7 +990,7 @@ export const PreventaScreen: React.FC = () => {
                         setSelectedCartItem(item);
                         setIsBottomSheetOpen(true);
                       }}
-                      className="bg-slate-50 rounded-2xl p-3 border border-slate-200 hover:border-[#16a34a] transition cursor-pointer"
+                      className="bg-slate-50 rounded-2xl p-3 border border-slate-200 hover:border-brand-600 transition cursor-pointer"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -1004,9 +1012,7 @@ export const PreventaScreen: React.FC = () => {
                                 editado (lista S/ {item.listPrice.toFixed(2)})
                               </span>
                             )}
-                            <span className="text-emerald-700 ml-1 font-semibold">
-                              (Descuenta {item.deductedBaseUnits} unds base)
-                            </span>
+
                           </div>
                         </div>
 
@@ -1020,16 +1026,17 @@ export const PreventaScreen: React.FC = () => {
                               e.stopPropagation();
                               handleRemoveItem(item.cartItemId);
                             }}
-                            className="mt-2 text-slate-400 hover:text-red-600 p-1"
+                            aria-label="Quitar del pedido"
+                            className="mt-1 h-9 w-9 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
 
                       <div className="mt-2 pt-1 border-t border-slate-200 text-xs text-emerald-700 font-bold flex justify-between">
-                        <span>Tocar para cambiar Unidad / Medio / Paquete</span>
-                        <span>Editar ↗</span>
+                        <span>Cambiar presentación, cantidad o precio</span>
+                        <span>Editar ›</span>
                       </div>
                     </div>
                   );
@@ -1042,7 +1049,7 @@ export const PreventaScreen: React.FC = () => {
                 <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5">
                   <div className="flex items-center justify-between text-xs font-bold text-slate-700">
                     <span className="flex items-center gap-1 text-slate-900">
-                      <UserCheck className="w-3.5 h-3.5 text-[#16a34a]" />
+                      <UserCheck className="w-3.5 h-3.5 text-brand-600" />
                       <span>Cliente / Bodega:</span>
                     </span>
                     {selectedCustomer?.route && (
@@ -1084,7 +1091,7 @@ export const PreventaScreen: React.FC = () => {
                             onClick={() => setDiscountPercent(pct)}
                             className={`flex-1 py-1 rounded text-xs font-black transition ${
                               discountPercent === pct 
-                                ? 'bg-[#16a34a] text-white shadow-2xs' 
+                                ? 'bg-brand-600 text-white shadow-2xs' 
                                 : 'bg-white text-slate-600 border border-slate-200'
                             }`}
                           >
@@ -1174,7 +1181,7 @@ export const PreventaScreen: React.FC = () => {
                   type="button"
                   onClick={() => void handleGeneratePreSale()}
                   disabled={isSubmitting}
-                  className="w-full disabled:opacity-60 py-3.5 px-4 bg-[#16a34a] hover:bg-[#15803d] text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-700/30 transition active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full disabled:opacity-60 py-3.5 px-4 bg-brand-600 hover:bg-brand-700 text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-700/30 transition active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Barcode className="w-4 h-4 stroke-[2.5]" />
                   <span>Emitir Pre-Venta & Ticket QR</span>
@@ -1277,7 +1284,7 @@ export const PreventaScreen: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  className="px-3 py-1.5 bg-[#16a34a] hover:bg-[#15803d] text-white font-black text-xs uppercase rounded-xl transition"
+                  className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase rounded-xl transition"
                 >
                   Disparar
                 </button>
@@ -1353,7 +1360,7 @@ export const PreventaScreen: React.FC = () => {
                         setIsTicketModalOpen(true);
                         setIsOrderHistoryOpen(false);
                       }}
-                      className="p-3 bg-slate-50 rounded-2xl border border-slate-200 hover:border-[#16a34a] transition cursor-pointer flex items-center justify-between gap-2"
+                      className="p-3 bg-slate-50 rounded-2xl border border-slate-200 hover:border-brand-600 transition cursor-pointer flex items-center justify-between gap-2"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">

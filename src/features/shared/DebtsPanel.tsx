@@ -188,7 +188,7 @@ export const DebtsPanel: React.FC = () => {
               <button type="button" onClick={() => setAmount(maxForTarget.toFixed(2))} className="px-3 py-2 bg-white border border-emerald-300 rounded-xl text-xs font-bold">
                 Total
               </button>
-              <button type="submit" disabled={saving} className="px-4 py-2 bg-[#16a34a] text-white rounded-xl font-black text-xs uppercase disabled:opacity-50">
+              <button type="submit" disabled={saving} className="px-4 py-2 bg-brand-600 text-white rounded-xl font-black text-xs uppercase disabled:opacity-50">
                 {saving ? '…' : 'Abonar'}
               </button>
             </div>
@@ -223,7 +223,7 @@ export const DebtsPanel: React.FC = () => {
                     </button>
                     {canAbonar && (
                       <button type="button" onClick={() => startAbonoFor(o)}
-                        className="px-3 my-1.5 mr-1.5 rounded-lg bg-[#16a34a] text-white font-black text-xs uppercase flex items-center gap-1 shrink-0">
+                        className="px-3 my-1.5 mr-1.5 rounded-lg bg-brand-600 text-white font-black text-xs uppercase flex items-center gap-1 shrink-0">
                         <HandCoins className="w-3.5 h-3.5" /> Abonar
                       </button>
                     )}

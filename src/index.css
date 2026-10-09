@@ -1,6 +1,24 @@
 @import "tailwindcss";
 
 /*
+ * Sistema de diseño: un solo verde de marca (esmeralda, el mismo del login) para toda la app.
+ * Use bg-brand-600, text-brand-700, ring-brand-500/30, etc. en lugar de colores hex sueltos.
+ */
+@theme {
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857;
+  --color-brand-800: #065f46;
+  --color-brand-900: #064e3b;
+  --color-brand-950: #022c22;
+}
+
+/*
  * Android dibuja la app de borde a borde (viewport-fit=cover): el fondo oscuro cubre la zona
  * de la barra de estado y de navegación, y el padding deja el contenido fuera de ellas.
  * --safe-area-inset-* los inyecta Capacitor en WebViews antiguos donde env() no funciona.

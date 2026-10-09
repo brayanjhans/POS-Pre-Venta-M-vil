@@ -208,7 +208,7 @@ export const CajaScreen: React.FC = () => {
     <div className="w-full h-full overflow-y-auto bg-slate-50 md:p-6 animate-in fade-in text-slate-800 flex justify-center">
       <div className="w-full h-max max-w-5xl bg-white md:rounded-3xl border-0 md:border border-slate-200 md:shadow-2xl overflow-hidden flex flex-col">
       {/* Header Caja Mostrador */}
-      <div className="bg-[#15803d] text-white p-5 md:p-6 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-brand-700 text-white p-5 md:p-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-white shadow-md">
             <QrCode className="w-7 h-7" />
@@ -263,7 +263,7 @@ export const CajaScreen: React.FC = () => {
           {/* Lector de QR de Mostrador */}
           <div className="bg-white p-4 rounded-2xl border-2 border-emerald-500 shadow-sm space-y-2">
             <label className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
-              <QrCode className="w-4 h-4 text-[#16a34a]" />
+              <QrCode className="w-4 h-4 text-brand-600" />
               <span>Escanear Código QR del Ticket Térmico</span>
             </label>
             <form onSubmit={e => void handleScanOrSubmit(e)} className="flex gap-2">
@@ -272,11 +272,11 @@ export const CajaScreen: React.FC = () => {
                 placeholder="Disparar lector o escribir V01-7K3QM..."
                 value={scannedCode}
                 onChange={(e) => setScannedCode(e.target.value)}
-                className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:border-[#16a34a]"
+                className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:border-brand-600"
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white font-black text-xs uppercase rounded-xl shadow-xs transition"
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase rounded-xl shadow-xs transition"
               >
                 Cargar
               </button>
@@ -326,7 +326,7 @@ export const CajaScreen: React.FC = () => {
                 placeholder="Buscar por cliente o código de pedido..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs focus:border-[#16a34a] focus:outline-hidden"
+                className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs focus:border-brand-600 focus:outline-hidden"
               />
             </div>
 
@@ -395,7 +395,7 @@ export const CajaScreen: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <span className="text-xs text-slate-400 uppercase font-bold">Total Cuenta:</span>
-                    <div className="text-2xl font-black text-[#16a34a] font-mono">
+                    <div className="text-2xl font-black text-brand-600 font-mono">
                       S/ {selectedOrder.totalAmount.toFixed(2)}
                     </div>
                   </div>
@@ -443,7 +443,7 @@ export const CajaScreen: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => printSaleNote(selectedOrder)}
-                        className="px-4 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white font-bold text-xs uppercase rounded-xl shadow-md flex items-center justify-center gap-2 transition"
+                        className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs uppercase rounded-xl shadow-md flex items-center justify-center gap-2 transition"
                       >
                         <Printer className="w-4 h-4" />
                         Imprimir Nota de Venta
@@ -483,7 +483,7 @@ export const CajaScreen: React.FC = () => {
                           }}
                           className={`p-3 rounded-xl border text-xs font-black flex items-center justify-center gap-2 transition ${
                             paymentMethod === m.id
-                              ? 'bg-[#16a34a] text-white border-[#16a34a] shadow-md'
+                              ? 'bg-brand-600 text-white border-brand-600 shadow-md'
                               : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                           }`}
                         >
@@ -507,7 +507,7 @@ export const CajaScreen: React.FC = () => {
                             inputMode="decimal"
                             value={amountGiven}
                             onChange={(e) => setAmountGiven(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-base font-black font-mono text-slate-900 focus:outline-hidden focus:border-[#16a34a]"
+                            className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-base font-black font-mono text-slate-900 focus:outline-hidden focus:border-brand-600"
                           />
                         </div>
                         <div>
@@ -529,7 +529,7 @@ export const CajaScreen: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setAmountGiven(String(selectedOrder.totalAmount))}
-                          className="px-2.5 py-1 bg-[#16a34a] text-white border border-[#16a34a] rounded-lg text-xs font-bold font-mono shadow-sm"
+                          className="px-2.5 py-1 bg-brand-600 text-white border border-brand-600 rounded-lg text-xs font-bold font-mono shadow-sm"
                         >
                           Exacto
                         </button>
@@ -553,15 +553,15 @@ export const CajaScreen: React.FC = () => {
                       <div className="grid grid-cols-3 gap-3">
                         <div>
                           <label className="text-xs font-bold text-slate-600 uppercase block mb-1">Efectivo S/</label>
-                          <input type="text" inputMode="decimal" value={mixedAmounts.efectivo} onChange={(e) => setMixedAmounts({...mixedAmounts, efectivo: e.target.value})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:border-[#16a34a] focus:outline-hidden" />
+                          <input type="text" inputMode="decimal" value={mixedAmounts.efectivo} onChange={(e) => setMixedAmounts({...mixedAmounts, efectivo: e.target.value})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:border-brand-600 focus:outline-hidden" />
                         </div>
                         <div>
                           <label className="text-xs font-bold text-slate-600 uppercase block mb-1">Yape S/</label>
-                          <input type="text" inputMode="decimal" value={mixedAmounts.yape} onChange={(e) => setMixedAmounts({...mixedAmounts, yape: e.target.value})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:border-[#16a34a] focus:outline-hidden" />
+                          <input type="text" inputMode="decimal" value={mixedAmounts.yape} onChange={(e) => setMixedAmounts({...mixedAmounts, yape: e.target.value})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:border-brand-600 focus:outline-hidden" />
                         </div>
                         <div>
                           <label className="text-xs font-bold text-slate-600 uppercase block mb-1">Tarjeta S/</label>
-                          <input type="text" inputMode="decimal" value={mixedAmounts.tarjeta} onChange={(e) => setMixedAmounts({...mixedAmounts, tarjeta: e.target.value})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:border-[#16a34a] focus:outline-hidden" />
+                          <input type="text" inputMode="decimal" value={mixedAmounts.tarjeta} onChange={(e) => setMixedAmounts({...mixedAmounts, tarjeta: e.target.value})} className="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:border-brand-600 focus:outline-hidden" />
                         </div>
                       </div>
                       
@@ -600,7 +600,7 @@ export const CajaScreen: React.FC = () => {
                     className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-98 ${
                       (!isCashSufficient && !isFiado) || invalidChange || isProcessing || !online
                         ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                        : 'bg-[#16a34a] hover:bg-[#15803d] text-white shadow-emerald-700/30 cursor-pointer'
+                        : 'bg-brand-600 hover:bg-brand-700 text-white shadow-emerald-700/30 cursor-pointer'
                     }`}
                   >
                     <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />

@@ -62,7 +62,7 @@ export const DashboardTab: React.FC<Props> = ({ products, onRegularize }) => {
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {card(<TrendingUp className="w-4 h-4 text-[#16a34a]" />, 'Ventas de hoy', data ? formatSoles(data.salesToday) : '…',
+        {card(<TrendingUp className="w-4 h-4 text-brand-600" />, 'Ventas de hoy', data ? formatSoles(data.salesToday) : '…',
           data && <>{data.ordersToday} pedidos{vsYesterday !== null && <> · <span className={vsYesterday >= 0 ? 'text-emerald-600' : 'text-red-600'}>{vsYesterday >= 0 ? '+' : ''}{vsYesterday.toFixed(1)}% vs ayer</span></>}</>)}
         {card(<Wallet className="w-4 h-4 text-blue-500" />, 'Cobrado hoy', data ? formatSoles(data.collectedToday) : '…', 'Ventas + abonos − devoluciones')}
         {card(<Calendar className="w-4 h-4 text-indigo-500" />, 'Ventas del mes', data ? formatSoles(data.salesMonth) : '…',

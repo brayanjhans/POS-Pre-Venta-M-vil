@@ -73,7 +73,7 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
     }
   };
 
-  const field = 'w-full bg-white border border-slate-300 rounded-lg p-2 text-sm text-slate-900 focus:outline-hidden focus:border-[#16a34a]';
+  const field = 'w-full bg-white border border-slate-300 rounded-lg p-2 text-sm text-slate-900 focus:outline-hidden focus:border-brand-600';
 
   return (
     <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-4" onClick={onClose}>
@@ -115,7 +115,7 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
           </>
         )}
         {error && <p className="text-red-600 text-xs">{error}</p>}
-        <button type="submit" disabled={saving} className="w-full py-3 bg-[#16a34a] text-white font-black rounded-xl disabled:opacity-50">
+        <button type="submit" disabled={saving} className="w-full py-3 bg-brand-600 text-white font-black rounded-xl disabled:opacity-50">
           {saving ? 'Guardando…' : 'GUARDAR CLIENTE'}
         </button>
       </form>

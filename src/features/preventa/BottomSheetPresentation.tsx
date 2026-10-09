@@ -89,7 +89,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in" onClick={onClose}>
       <div 
-        className="w-full max-w-md bg-white border-t-4 border-[#16a34a] rounded-t-3xl p-5 shadow-2xl flex flex-col max-h-[92vh] overflow-y-auto animate-in slide-in-from-bottom duration-200"
+        className="w-full max-w-md bg-white border-t-4 border-brand-600 rounded-t-3xl p-5 shadow-2xl flex flex-col max-h-[92vh] overflow-y-auto animate-in slide-in-from-bottom duration-200"
         onClick={e => e.stopPropagation()}
       >
         {/* Handle bar superior */}
@@ -99,7 +99,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
             <div className="flex items-center gap-2 text-xs">
-              <span className="font-bold text-[#16a34a] uppercase bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <span className="font-bold text-brand-600 uppercase bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                 {product.category}
               </span>
               <span className="text-slate-400 font-mono text-xs">
@@ -132,9 +132,8 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         <div className="space-y-2 mb-4">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-slate-700 tracking-wider uppercase">
-              Seleccionar Presentación de Venta
+              ¿Cómo lo vende?
             </label>
-            <span className="text-xs text-emerald-700 font-bold">Precios independientes</span>
           </div>
 
           <div className="grid grid-cols-1 gap-2.5">
@@ -152,52 +151,37 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                   onClick={() => selectPresentation(type)}
                   className={`relative flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all ${
                     isSelected 
-                      ? 'border-[#16a34a] bg-emerald-50/80 ring-2 ring-[#16a34a]/30 shadow-md' 
+                      ? 'border-brand-600 bg-emerald-50/80 ring-2 ring-brand-600/30 shadow-md' 
                       : 'border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-xl border ${
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`shrink-0 p-2.5 rounded-xl border ${
                       isSelected 
-                        ? 'bg-[#16a34a] text-white border-[#16a34a]' 
+                        ? 'bg-brand-600 text-white border-brand-600 [&_svg]:!text-white' 
                         : 'bg-slate-100 border-slate-200 text-slate-600'
                     }`}>
                       {icon}
                     </div>
 
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-slate-900">
-                          {pres.label}
-                        </span>
-                        {isSelected && (
-                          <span className="text-xs bg-[#16a34a] text-white font-black px-1.5 py-0.2 rounded-full uppercase">
-                            ACTIVO
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
-                        <span className="font-semibold text-emerald-800">
-                          Descuenta: <strong>x{pres.conversionFactor} {product.baseUnitName}s</strong>
-                        </span>
-                        <span>·</span>
-                        <span className="text-slate-600 font-mono">
-                          equiv. S/ {pricePerUnit.toFixed(2)}/u
-                        </span>
-                      </div>
-
+                    <div className="min-w-0">
+                      <div className="text-sm font-black leading-tight text-slate-900">{pres.label}</div>
+                      {pres.conversionFactor > 1 && (
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          S/ {pricePerUnit.toFixed(2)} c/{product.baseUnitName}
+                        </div>
+                      )}
                       {savingForThis > 0 && (
-                        <div className="flex items-center gap-1 text-xs text-emerald-700 font-bold mt-1">
-                          <TrendingDown className="w-3 h-3" />
-                          <span>Ahorro cliente: S/ {savingForThis.toFixed(2)} vs suelto</span>
+                        <div className="flex items-center gap-1 text-xs text-brand-700 font-bold mt-0.5">
+                          <TrendingDown className="w-3 h-3 shrink-0" />
+                          <span>Cliente ahorra S/ {savingForThis.toFixed(2)}</span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <div className="text-lg font-black text-slate-900 font-mono">
+                  <div className="text-right shrink-0 pl-2">
+                    <div className="text-lg font-black text-slate-900 font-mono whitespace-nowrap">
                       S/ {pres.price.toFixed(2)}
                     </div>
                     <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">
@@ -328,7 +312,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
         {/* Resumen del Subtotal y Botón de Aplicar */}
         <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-4">
           <div>
-            <div className="text-xs text-slate-500 font-medium">Subtotal a la fila:</div>
+            <div className="text-xs text-slate-500 font-medium">Subtotal</div>
             <div className="text-2xl font-black text-slate-900 font-mono">
               S/ {subtotal.toFixed(2)}
             </div>
@@ -340,12 +324,12 @@ export const BottomSheetPresentation: React.FC<Props> = ({
             disabled={!isPriceValid}
             className={`disabled:opacity-40 disabled:cursor-not-allowed flex-1 py-3.5 px-4 rounded-xl font-black flex items-center justify-center gap-2 text-sm uppercase tracking-wider transition-all shadow-md ${
               isStockSufficient
-                ? 'bg-[#16a34a] hover:bg-[#15803d] text-white active:scale-98 shadow-emerald-700/20 cursor-pointer'
+                ? 'bg-brand-600 hover:bg-brand-700 text-white active:scale-98 shadow-emerald-700/20 cursor-pointer'
                 : 'bg-amber-500 hover:bg-amber-600 text-white active:scale-98 shadow-amber-700/20 cursor-pointer'
             }`}
           >
             <Check className="w-5 h-5 stroke-[2.5]" />
-            Confirmar Presentación
+            Listo
           </button>
         </div>
       </div>

@@ -134,7 +134,7 @@ export const UsersTab: React.FC = () => {
     }
   };
 
-  const field = 'w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm focus:outline-hidden focus:border-[#16a34a]';
+  const field = 'w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm focus:outline-hidden focus:border-brand-600';
 
   return (
     <div className="space-y-4 animate-in fade-in">
@@ -147,7 +147,7 @@ export const UsersTab: React.FC = () => {
           </p>
         </div>
         <button type="button" onClick={openNew}
-          className="px-4 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white font-black text-xs uppercase rounded-xl flex items-center gap-1.5">
+          className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase rounded-xl flex items-center gap-1.5">
           <Plus className="w-4 h-4" /> Nuevo usuario
         </button>
       </div>
@@ -275,7 +275,7 @@ export const UsersTab: React.FC = () => {
               </div>
             )}
             {error && <p className="text-xs text-red-600">{error}</p>}
-            <button type="submit" disabled={saving} className="w-full py-3 bg-[#16a34a] text-white font-black rounded-xl disabled:opacity-50">
+            <button type="submit" disabled={saving} className="w-full py-3 bg-brand-600 text-white font-black rounded-xl disabled:opacity-50">
               {saving ? 'Guardando…' : 'GUARDAR'}
             </button>
           </form>

@@ -81,7 +81,7 @@ export const CustomerPicker: React.FC<Props> = ({ customers, selected, onSelect,
           value={query}
           onFocus={() => setOpen(true)}
           onChange={e => { setQuery(e.target.value); setOpen(true); }}
-          className="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-2 py-2 text-xs font-bold text-slate-900 focus:outline-hidden focus:border-[#16a34a]"
+          className="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-2 py-2 text-xs font-bold text-slate-900 focus:outline-hidden focus:border-brand-600"
         />
         {open && (
           <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -117,7 +117,7 @@ export const CustomerPicker: React.FC<Props> = ({ customers, selected, onSelect,
             placeholder="o nombre de cliente ocasional"
             value={walkInName}
             onChange={e => onWalkInNameChange(e.target.value)}
-            className="flex-1 bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900 focus:outline-hidden focus:border-[#16a34a]"
+            className="flex-1 bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900 focus:outline-hidden focus:border-brand-600"
           />
         )}
         <button type="button" onClick={() => setCreating(true)} disabled={!online}
