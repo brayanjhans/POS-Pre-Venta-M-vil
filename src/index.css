@@ -45,10 +45,15 @@ body,
   height: 100%;
   background-color: var(--color-ink);
 }
-html[data-screen="light"],
-html[data-screen="light"] body,
-html[data-screen="light"] #root {
+html[data-screen="paper"],
+html[data-screen="paper"] body,
+html[data-screen="paper"] #root {
   background-color: var(--color-paper);
+}
+html[data-screen="brand"],
+html[data-screen="brand"] body,
+html[data-screen="brand"] #root {
+  background-color: var(--color-brand-600);
 }
 
 /* Montos: cifras de igual ancho para que las columnas de precios queden alineadas. */
@@ -81,3 +86,7 @@ body {
   height: 9px;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9' viewBox='0 0 16 9'%3E%3Cpath d='M0 0h16L8 9z' fill='%23ffffff'/%3E%3C/svg%3E") repeat-x left top / 16px 9px;
 }
+
+/* Listas horizontales deslizables (categorías) sin barra visible. */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

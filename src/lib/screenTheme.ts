@@ -1,12 +1,14 @@
 import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
 
 /**
- * Tono de la pantalla actual: "light" (login, fondo papel) o "dark" (resto, barra tinta arriba).
- * Pinta el fondo de las zonas del sistema y pone la hora/batería en el color que se lea.
+ * Color de la zona del sistema (hora, batería) según la pantalla actual:
+ *   - "paper": fondo claro (login, Caja, Admin) con íconos oscuros.
+ *   - "brand": verde de marca (Pre-Venta) con íconos claros.
+ *   - "ink":   tinta (carga inicial) con íconos claros.
  */
-export function setScreenTheme(theme: 'light' | 'dark'): void {
+export function setScreenTheme(theme: 'paper' | 'brand' | 'ink'): void {
   document.documentElement.dataset.screen = theme;
   if (Capacitor.isNativePlatform()) {
-    void SystemBars.setStyle({ style: theme === 'light' ? SystemBarsStyle.Light : SystemBarsStyle.Dark }).catch(() => {});
+    void SystemBars.setStyle({ style: theme === 'paper' ? SystemBarsStyle.Light : SystemBarsStyle.Dark }).catch(() => {});
   }
 }

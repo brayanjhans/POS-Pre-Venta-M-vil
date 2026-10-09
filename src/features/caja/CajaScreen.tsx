@@ -7,6 +7,7 @@ import { usePos } from '../../state/PosContext';
 import { useDialog } from '../../app/DialogProvider';
 import { DebtsPanel } from '../shared/DebtsPanel';
 import { HeaderButton, ScreenHeader } from '../../app/ScreenHeader';
+import { MenuButton, ProfileSection } from '../../app/ProfileMenu';
 import { CameraScanner } from '../shared/CameraScanner';
 import {
   QrCode,
@@ -35,6 +36,7 @@ export const CajaScreen: React.FC = () => {
   const settings = catalog?.settings;
   const [scannedCode, setScannedCode] = React.useState<string>('');
   const [cameraOpen, setCameraOpen] = React.useState(false);
+  const [menuOpen, setMenuOpen] = React.useState(false);
   const checkoutRef = React.useRef<HTMLDivElement>(null);
   const [selectedOrderId, setSelectedOrderId] = React.useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = React.useState<CashierMethod>('Efectivo');
@@ -222,6 +224,7 @@ export const CajaScreen: React.FC = () => {
       <ScreenHeader
         icon={<QrCode className="w-5 h-5" />}
         title="Caja"
+        leading={<MenuButton onClick={() => setMenuOpen(true)} className="border border-ink/10 bg-white text-ink" />}
         subtitle={online ? `Cobro de pre-ventas · ${session?.user.fullName ?? ''}` : 'Sin internet: el cobro requiere conexión'}
         actions={
           <>
@@ -236,6 +239,26 @@ export const CajaScreen: React.FC = () => {
           </>
         }
       />
+
+      {menuOpen && (
+        <div className="fixed inset-0 z-50 flex bg-black/50" onClick={() => setMenuOpen(false)}>
+          <div className="flex h-full w-[19rem] max-w-[85%] flex-col gap-4 overflow-y-auto bg-white p-4 shadow-2xl animate-in slide-in-from-left duration-200" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-xl font-bold text-ink">Caja</h2>
+              <button type="button" onClick={() => setMenuOpen(false)} aria-label="Cerrar menú" className="flex h-10 w-10 items-center justify-center rounded-xl text-ink-soft hover:bg-ink/5">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <button type="button" disabled={!online} onClick={() => { setMenuOpen(false); setShowDebts(true); }}
+              className="flex h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[15px] font-bold text-ink hover:bg-ink/5 disabled:opacity-40">
+              <HandCoins className="h-5 w-5 text-brand-600" /> Libreta de fiados
+            </button>
+            <div className="mt-auto">
+              <ProfileSection onDone={() => setMenuOpen(false)} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {showDebts && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3" onClick={() => setShowDebts(false)}>

@@ -17,10 +17,12 @@ import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
 import { plural } from '../../lib/text';
 import { CameraScanner } from '../shared/CameraScanner';
+import { MenuButton, ProfileSection } from '../../app/ProfileMenu';
 import { useDialog } from '../../app/DialogProvider';
 import {
   Barcode,
   Trash2,
+  Pencil,
   ShoppingCart,
   Clock,
   RotateCcw,
@@ -387,14 +389,7 @@ export const PreventaScreen: React.FC = () => {
         {/* HEADER LIMPIO: Botón ☰, CATÁLOGO, OFERTAS, CÁMARA, MIS PEDIDOS y ADMIN */}
         <div className="bg-brand-600 text-white px-3 md:px-4 py-2 flex items-center justify-between gap-2 shadow-md z-30">
           <div className="flex items-center gap-2 min-w-0">
-            <button 
-              type="button"
-              onClick={() => setIsDrawerOpen(true)}
-              className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition active:scale-95 text-white cursor-pointer"
-              title="Abrir menú"
-            >
-              <Menu className="w-5 h-5 stroke-[2.5]" />
-            </button>
+            <MenuButton onClick={() => setIsDrawerOpen(true)} className="bg-white/20 text-white hover:bg-white/30" />
 
             {/* Pestañas estilo Pill */}
             <div className="flex items-center bg-white rounded-full p-1 shadow-inner overflow-hidden whitespace-nowrap">
@@ -450,18 +445,17 @@ export const PreventaScreen: React.FC = () => {
 
         {/* DRAWER / MENÚ LATERAL */}
         {isDrawerOpen && (
-          <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-xs flex animate-in fade-in">
+          <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-xs flex animate-in fade-in" onClick={() => setIsDrawerOpen(false)}>
             <div 
-              className="w-72 bg-white h-full shadow-2xl p-4 flex flex-col justify-between animate-in slide-in-from-left duration-200"
+              className="w-[19rem] max-w-[85%] bg-white h-full shadow-2xl p-4 flex flex-col gap-4 overflow-y-auto animate-in slide-in-from-left duration-200"
               onClick={(e) => e.stopPropagation()}
             >
               <div>
                 <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-xl">🍬</span>
                     <div>
-                      <h3 className="font-black text-sm text-ink leading-tight">DULCES & BEBIDAS</h3>
-                      <p className="text-xs text-slate-400">Distribuidora & Pre-Venta</p>
+                      <h3 className="font-display text-lg font-bold text-ink leading-tight">{catalog?.settings.store_name || 'Pre-Venta'}</h3>
+                      <p className="text-sm text-ink-soft">Pre-Venta</p>
                     </div>
                   </div>
                   <button 
@@ -473,18 +467,18 @@ export const PreventaScreen: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="space-y-1 text-xs font-bold text-slate-700">
+                <div className="space-y-1 text-[15px] font-bold text-ink">
                   <button
                     type="button"
                     onClick={() => {
                       setActiveScreenTab('catalogo');
                       setIsDrawerOpen(false);
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-brand-50 text-ink hover:text-brand-800 transition"
+                    className="w-full flex h-12 items-center justify-between px-3 rounded-xl hover:bg-ink/5 text-ink transition"
                   >
-                    <span className="flex items-center gap-2.5">
+                    <span className="flex items-center gap-3">
                       <Package className="w-4 h-4 text-brand-600" />
-                      <span>Catálogo de Productos</span>
+                      <span>Catálogo</span>
                     </span>
                     <span className="text-xs font-display text-slate-400">{products.length}</span>
                   </button>
@@ -495,13 +489,13 @@ export const PreventaScreen: React.FC = () => {
                       setActiveScreenTab('ofertas');
                       setIsDrawerOpen(false);
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-brand-50 text-ink hover:text-brand-800 transition"
+                    className="w-full flex h-12 items-center justify-between px-3 rounded-xl hover:bg-ink/5 text-ink transition"
                   >
-                    <span className="flex items-center gap-2.5">
+                    <span className="flex items-center gap-3">
                       <Flame className="w-4 h-4 text-amber-500" />
-                      <span>Promociones Destacadas</span>
+                      <span>Ofertas</span>
                     </span>
-                    <span className="text-xs bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-black">TOP</span>
+                    <span className="text-sm text-ink-soft">{promos.length}</span>
                   </button>
 
                   <button
@@ -510,11 +504,11 @@ export const PreventaScreen: React.FC = () => {
                       setIsDrawerOpen(false);
                       setIsCartDrawerOpen(true);
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-brand-50 text-ink hover:text-brand-800 transition"
+                    className="w-full flex h-12 items-center justify-between px-3 rounded-xl hover:bg-ink/5 text-ink transition"
                   >
-                    <span className="flex items-center gap-2.5">
+                    <span className="flex items-center gap-3">
                       <ShoppingCart className="w-4 h-4 text-brand-600" />
-                      <span>Ver Carrito Abajo</span>
+                      <span>Ver pedido</span>
                     </span>
                     <span className="text-xs bg-brand-100 text-brand-800 px-1.5 py-0.2 rounded font-black">{cart.length}</span>
                   </button>
@@ -525,11 +519,11 @@ export const PreventaScreen: React.FC = () => {
                       setIsDrawerOpen(false);
                       setIsOrderHistoryOpen(true);
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-brand-50 text-ink hover:text-brand-800 transition"
+                    className="w-full flex h-12 items-center justify-between px-3 rounded-xl hover:bg-ink/5 text-ink transition"
                   >
-                    <span className="flex items-center gap-2.5">
+                    <span className="flex items-center gap-3">
                       <Receipt className="w-4 h-4 text-amber-500" />
-                      <span>Mis Preventas de Hoy</span>
+                      <span>Mis ventas de hoy</span>
                     </span>
                     <span className="text-xs bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded font-black">{todaysOrders.length}</span>
                   </button>
@@ -539,20 +533,18 @@ export const PreventaScreen: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleToggleSound}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-brand-50 text-ink transition"
+                    className="w-full flex h-12 items-center justify-between px-3 rounded-xl hover:bg-ink/5 text-ink transition"
                   >
-                    <span className="flex items-center gap-2.5">
+                    <span className="flex items-center gap-3">
                       {soundEnabled ? <Volume2 className="w-4 h-4 text-brand-600" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
                       <span>Sonido del escáner</span>
                     </span>
-                    <span className="text-xs font-black text-ink-soft">{soundEnabled ? 'ON' : 'OFF'}</span>
+                    <span className="text-sm text-ink-soft">{soundEnabled ? 'Activado' : 'Apagado'}</span>
                   </button>
                 </div>
               </div>
 
-              <div className="border-t border-slate-200 pt-3 text-xs text-slate-400">
-                <div>{catalog?.settings.store_name ?? 'POS Pre-Venta'} · {online ? 'En línea' : 'Modo sin internet'}</div>
-              </div>
+              <ProfileSection onDone={() => setIsDrawerOpen(false)} />
             </div>
           </div>
         )}
@@ -945,11 +937,7 @@ export const PreventaScreen: React.FC = () => {
                   return (
                     <div
                       key={item.cartItemId}
-                      onClick={() => {
-                        setSelectedCartItem(item);
-                        setIsBottomSheetOpen(true);
-                      }}
-                      className="bg-slate-50 rounded-2xl p-3 border border-slate-200 hover:border-brand-600 transition cursor-pointer"
+                      className="bg-white rounded-2xl p-3 border border-ink/10"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -993,9 +981,16 @@ export const PreventaScreen: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="mt-2 pt-1 border-t border-slate-200 text-xs text-brand-700 font-bold flex justify-between">
-                        <span>Cambiar presentación, cantidad o precio</span>
-                        <span>Editar ›</span>
+                      {/* Solo este botón abre la edición: deslizar la lista no debe abrirla por accidente. */}
+                      <div className="mt-2 flex items-center justify-between gap-2 border-t border-ink/10 pt-2">
+                        <span className="text-sm text-ink-soft">Presentación, cantidad o precio</span>
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedCartItem(item); setIsBottomSheetOpen(true); }}
+                          className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-brand-50 px-3 text-sm font-bold text-brand-800 transition active:scale-95"
+                        >
+                          <Pencil className="h-4 w-4" /> Editar
+                        </button>
                       </div>
                     </div>
                   );

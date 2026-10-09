@@ -89,9 +89,9 @@ export const LoginScreen: React.FC = () => {
   const logoTaps = useRef<number[]>([]);
 
   useEffect(() => {
-    setScreenTheme('light');
+    setScreenTheme('paper');
     const id = setInterval(() => setNow(new Date()), 30000);
-    return () => { clearInterval(id); setScreenTheme('dark'); };
+    return () => { clearInterval(id); setScreenTheme('ink'); };
   }, []);
 
   const tapLogo = () => {

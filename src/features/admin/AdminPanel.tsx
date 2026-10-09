@@ -3,9 +3,11 @@ import type { PresentationType, Product, PromoBanner } from '../../types/pos';
 import { PRODUCT_CATEGORIES } from '../../types/pos';
 import { usePos } from '../../state/PosContext';
 import { HeaderButton, ScreenHeader } from '../../app/ScreenHeader';
+import { MenuButton, ProfileSection } from '../../app/ProfileMenu';
 import { useDialog } from '../../app/DialogProvider';
 import { parseAmount } from '../../domain/money';
 import { DashboardTab } from './DashboardTab';
+import { CatalogTab } from './CatalogTab';
 import { OrdersTab } from './OrdersTab';
 import { UsersTab } from './UsersTab';
 import { CustomersTab } from './CustomersTab';
@@ -97,42 +99,9 @@ export const AdminPanel: React.FC = () => {
   // Estados del panel
   const [isMenuOpen, setIsMenuOpen] = React.useState<boolean>(false);
   const [adminTab, setAdminTab] = React.useState<'dashboard' | 'products' | 'new_product' | 'orders' | 'promos' | 'new_promo' | 'deudores' | 'users' | 'customers' | 'settings'>('dashboard');
-  const [searchQuery, setSearchQuery] = React.useState<string>('');
-  const [selectedCategory, setSelectedCategory] = React.useState<string>('Todos');
   const [feedbackMsg, setFeedbackMsg] = React.useState<string | null>(null);
 
   // Formulario de nuevo producto
-  const [formData, setFormData] = React.useState<{
-    name: string;
-    barcode: string;
-    category: Product['category'];
-    baseUnitName: string;
-    stockInBaseUnits: number;
-    packagingType: 'Botella Pet' | 'Display Caja' | 'Bolsa Sellada' | 'Fardo Termocontraíble' | 'Lata' | 'Tira Colgante';
-    flavorNote: string;
-    unitPrice: number;
-    halfFactor: number;
-    halfPrice: number;
-    packFactor: number;
-    packPrice: number;
-    isPromo: boolean;
-    expirationDate: string;
-  }>({
-    name: '',
-    barcode: '',
-    category: 'Golosinas',
-    baseUnitName: 'unidad',
-    stockInBaseUnits: 120,
-    packagingType: 'Display Caja',
-    flavorNote: '',
-    unitPrice: 1.00,
-    halfFactor: 12,
-    halfPrice: 10.50,
-    packFactor: 24,
-    packPrice: 20.00,
-    isPromo: false,
-    expirationDate: '',
-  });
 
   // Formulario de nueva promoción / combo
   const [promoFormData, setPromoFormData] = React.useState<{
@@ -164,94 +133,11 @@ export const AdminPanel: React.FC = () => {
     unitPrice: 0,
   });
 
-  const generateRandomBarcode = () => {
-    const random12 = '775' + Math.floor(100000000 + Math.random() * 900000000).toString();
-    setFormData(prev => ({ ...prev, barcode: random12 }));
+  const openRestock = (p: Product) => {
+    setRestockProduct(p);
+    setRestockData({ addedQuantity: 0, presentationKey: 'unit', newExpirationDate: p.expirationDate || '', unitPrice: p.presentations.unit.price });
   };
 
-  const handleCreateProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim() || !formData.barcode.trim()) {
-      void dialog.alert('Complete el nombre y el código de barras del producto.', { tone: 'warning' });
-      return;
-    }
-
-    const timestamp = Date.now();
-    const productId = `prod_${timestamp}`;
-
-    // El id definitivo lo asigna el servidor.
-    const newProd: Product = {
-      id: '',
-      barcode: formData.barcode.trim(),
-      name: formData.name.trim(),
-      category: formData.category,
-      baseUnitName: formData.baseUnitName.trim() || 'unidad',
-      stockInBaseUnits: Number(formData.stockInBaseUnits) || 0,
-      minStockAlert: 24,
-      accentColor: formData.category === 'Bebidas' ? '#16a34a' :
-                   formData.category === 'Chocolates' ? '#d97706' :
-                   formData.category === 'Galletas' ? '#0284c7' :
-                   formData.category === 'Golosinas' ? '#f43f5e' : '#eab308',
-      gradientBg: 'from-brand-500/10 to-transparent',
-      packagingType: formData.packagingType,
-      flavorNote: formData.flavorNote.trim(),
-      piecesPerPack: Number(formData.packFactor) || 24,
-      isPromo: formData.isPromo,
-      expirationDate: formData.expirationDate || undefined,
-      presentations: {
-        unit: {
-          id: `pres_${timestamp}_u`,
-          productId,
-          type: 'unit',
-          label: `Unidad (1 ${formData.baseUnitName})`,
-          shortLabel: 'UND',
-          conversionFactor: 1,
-          price: Number(formData.unitPrice),
-          isDefault: true,
-        },
-        half: {
-          id: `pres_${timestamp}_h`,
-          productId,
-          type: 'half',
-          label: `Medio paquete (${formData.halfFactor} ${formData.baseUnitName}s)`,
-          shortLabel: `MED (${formData.halfFactor}u)`,
-          conversionFactor: Number(formData.halfFactor),
-          price: Number(formData.halfPrice),
-        },
-        pack: {
-          id: `pres_${timestamp}_p`,
-          productId,
-          type: 'pack',
-          label: `Paquete completo (${formData.packFactor} ${formData.baseUnitName}s)`,
-          shortLabel: `PAQ (${formData.packFactor}u)`,
-          conversionFactor: Number(formData.packFactor),
-          price: Number(formData.packPrice),
-        },
-      },
-    };
-
-    if (!(await onAddProduct({ ...newProd, id: undefined }))) return;
-    setFeedbackMsg(`✓ Producto "${newProd.name}" guardado exitosamente en el catálogo.`);
-    setTimeout(() => setFeedbackMsg(null), 3000);
-    setAdminTab('products');
-    // Reset form
-    setFormData({
-      name: '',
-      barcode: '',
-      category: 'Golosinas',
-      baseUnitName: 'unidad',
-      stockInBaseUnits: 120,
-      packagingType: 'Display Caja',
-      flavorNote: '',
-      unitPrice: 1.00,
-      halfFactor: 12,
-      halfPrice: 10.50,
-      packFactor: 24,
-      packPrice: 20.00,
-      isPromo: false,
-      expirationDate: '',
-    });
-  };
 
   const handleCreatePromo = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -290,13 +176,6 @@ export const AdminPanel: React.FC = () => {
     });
   };
 
-  const filteredProducts = products.filter(p => {
-    if (selectedCategory !== 'Todos' && p.category !== selectedCategory) return false;
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase().trim();
-    return p.name.toLowerCase().includes(q) || p.barcode.includes(q) || p.category.toLowerCase().includes(q);
-  });
-
   return (
     <div className="w-full h-full max-w-5xl mx-auto bg-white md:rounded-3xl md:shadow-2xl md:border md:border-slate-200 flex flex-col overflow-hidden text-ink animate-in fade-in relative">
       {/* Cabecera: muestra la sección actual */}
@@ -305,14 +184,7 @@ export const AdminPanel: React.FC = () => {
         title={ADMIN_SECTION_LABELS[adminTab]}
         subtitle={`Administración · ${products.filter(p => p.isActive !== false).length} productos activos`}
         leading={
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen(true)}
-            aria-label="Abrir menú"
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-ink/10 bg-white text-ink transition active:scale-95 lg:hidden"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+          <MenuButton onClick={() => setIsMenuOpen(true)} className="border border-ink/10 bg-white text-ink lg:hidden" />
         }
         actions={
           <HeaderButton onClick={() => void refreshCatalog()} aria-label="Actualizar datos">
@@ -327,7 +199,7 @@ export const AdminPanel: React.FC = () => {
         
         {/* Drawer / Menú Lateral Hamburguesa */}
         <div 
-          className={`absolute inset-y-0 left-0 z-30 w-64 bg-ink text-white shadow-2xl transform transition-transform duration-300 lg:relative lg:translate-x-0 ${
+          className={`absolute inset-y-0 left-0 z-30 flex w-72 flex-col overflow-y-auto bg-ink text-white shadow-2xl transform transition-transform duration-300 lg:relative lg:translate-x-0 ${
             isMenuOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
@@ -355,13 +227,13 @@ export const AdminPanel: React.FC = () => {
               onClick={() => { setAdminTab('promos'); setIsMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'promos' || adminTab === 'new_promo' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <Star className="w-5 h-5" /> Combos y Promos
+              <Star className="w-5 h-5" /> Combos y promociones
             </button>
             <button
               onClick={() => { setAdminTab('new_product'); setIsMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'new_product' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <Plus className="w-5 h-5 stroke-[3]" /> Nuevo Producto
+              <Plus className="w-5 h-5 stroke-[3]" /> Nuevo producto
             </button>
             <button
               onClick={() => { setAdminTab('orders'); setIsMenuOpen(false); }}
@@ -379,7 +251,7 @@ export const AdminPanel: React.FC = () => {
               onClick={() => { setAdminTab('deudores'); setIsMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'deudores' ? 'bg-brand-600 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
             >
-              <Receipt className="w-5 h-5" /> Libreta de Fiados
+              <Receipt className="w-5 h-5" /> Libreta de fiados
             </button>
             <button
               onClick={() => { setAdminTab('users'); setIsMenuOpen(false); }}
@@ -394,6 +266,9 @@ export const AdminPanel: React.FC = () => {
               <Lock className="w-5 h-5" /> Configuración
             </button>
           </nav>
+          <div className="mt-auto p-4">
+            <ProfileSection tone="dark" onDone={() => setIsMenuOpen(false)} />
+          </div>
         </div>
 
         {/* Backdrop para móvil */}
@@ -418,365 +293,18 @@ export const AdminPanel: React.FC = () => {
         {adminTab === 'dashboard' && <DashboardTab products={products} onRegularize={onRegularize} />}
 
         {/* TAB 1: LISTADO Y GESTIÓN DE PRODUCTOS */}
-        {adminTab === 'products' && (
-          <div className="space-y-4">
-            {/* Buscador & Filtros */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="relative flex-1 min-w-[260px]">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar por nombre, código de barras o categoría..."
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-ink focus:outline-hidden focus:border-brand-600 font-medium"
-                />
-              </div>
-
-              <div className="flex gap-1.5 overflow-x-auto">
-                {['Todos', 'Bebidas', 'Chocolates', 'Galletas', 'Golosinas', 'Snacks'].map(cat => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                      selectedCategory === cat
-                        ? 'bg-brand-600 text-white'
-                        : 'bg-slate-100 text-ink-soft hover:bg-slate-200'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Tabla de Productos */}
-            <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-xs">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 text-slate-700 font-black  text-xs  border-b border-slate-200">
-                  <tr>
-                    <th className="p-3">Código / EAN</th>
-                    <th className="p-3">Producto</th>
-                    <th className="p-3">Categoría</th>
-                    <th className="p-3">P. Unidad</th>
-                    <th className="p-3">P. Medio</th>
-                    <th className="p-3">P. Paquete</th>
-                    <th className="p-3">Stock Base</th>
-                    <th className="p-3">Vencimiento</th>
-                    <th className="p-3 text-right">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
-                  {filteredProducts.map((p) => (
-                    <tr key={p.id} className={`hover:bg-slate-50/80 transition ${p.isActive === false ? 'opacity-50' : ''}`}>
-                      <td className="p-3 font-display text-ink-soft">{p.barcode}</td>
-                      <td className="p-3">
-                        <div className="font-bold text-ink">
-                          {p.name}
-                          {p.isActive === false && <span className="ml-1 text-xs bg-slate-200 text-ink-soft px-1 rounded">Oculto</span>}
-                        </div>
-                        <div className="text-xs text-ink-soft">{p.flavorNote || p.packagingType}</div>
-                      </td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                          {p.category}
-                        </span>
-                      </td>
-                      <td className="p-3 font-display font-bold text-ink">
-                        S/ {p.presentations.unit.price.toFixed(2)}
-                      </td>
-                      <td className="p-3 font-display text-slate-700">
-                        {p.presentations.half ? `S/ ${p.presentations.half.price.toFixed(2)}` : '-'}
-                        <span className="text-xs text-slate-400 block font-normal">
-                          {p.presentations.half ? `(x${p.presentations.half.conversionFactor}u)` : ''}
-                        </span>
-                      </td>
-                      <td className="p-3 font-display text-brand-800 font-bold">
-                        {p.presentations.pack ? `S/ ${p.presentations.pack.price.toFixed(2)}` : '-'}
-                        <span className="text-xs text-slate-400 block font-normal">
-                          {p.presentations.pack ? `(x${p.presentations.pack.conversionFactor}u)` : ''}
-                        </span>
-                      </td>
-                      <td className="p-3 font-display">
-                        <strong className="text-ink">{p.stockInBaseUnits}</strong> {p.baseUnitName}s
-                      </td>
-                      <td className="p-3 font-display text-ink-soft">
-                        {p.expirationDate ? (
-                          <span className={
-                            Math.ceil((new Date(p.expirationDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)) <= 30
-                              ? 'text-red-600 font-bold bg-red-50 px-1 py-0.5 rounded'
-                              : ''
-                          }>
-                            {p.expirationDate}
-                          </span>
-                        ) : '-'}
-                      </td>
-                      <td className="p-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setRestockProduct(p);
-                              setRestockData({
-                                addedQuantity: 0,
-                                presentationKey: 'unit',
-                                newExpirationDate: p.expirationDate || '',
-                                unitPrice: p.presentations.unit.price
-                              });
-                            }}
-                            className="p-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-xs"
-                            title="Ingreso Rápido (Reabastecer)"
-                          >
-                            <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (confirm(`¿Eliminar producto "${p.name}"?`)) {
-                                void onDeleteProduct(p);
-                              }
-                            }}
-                            className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs"
-                            title="Eliminar"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void onToggleActive(p)}
-                            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-ink-soft rounded-lg text-xs font-bold"
-                            title={p.isActive === false ? 'Mostrar en el catálogo de venta' : 'Ocultar del catálogo de venta'}
-                          >
-                            {p.isActive === false ? 'Mostrar' : 'Ocultar'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {(adminTab === 'products' || adminTab === 'new_product') && (
+          <CatalogTab
+            products={products}
+            onSave={onAddProduct}
+            onDelete={onDeleteProduct}
+            onToggleActive={onToggleActive}
+            onRestock={openRestock}
+            startCreating={adminTab === 'new_product'}
+            onCreatingDone={() => { if (adminTab === 'new_product') setAdminTab('products'); }}
+          />
         )}
 
-        {/* TAB 2: FORMULARIO CREAR NUEVO PRODUCTO */}
-        {adminTab === 'new_product' && (
-          <form onSubmit={handleCreateProduct} className="space-y-5 max-w-3xl mx-auto bg-slate-50 p-6 rounded-3xl border border-slate-200">
-            <div className="border-b border-slate-200 pb-3">
-              <h3 className="text-sm font-black text-ink ">
-                Registrar Nuevo Producto para Pre-Venta
-              </h3>
-              <p className="text-xs text-ink-soft">
-                Define el código de barras y los 3 precios independientes de Unidad, Medio y Paquete.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Nombre del Producto *</label>
-                <input
-                  type="text"
-                  placeholder="Ej: Cerveza Cusqueña 330ml / Chicle Bubbaloo..."
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-ink focus:outline-hidden focus:border-brand-600"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Código de Barras (EAN-13) *
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="775018200..."
-                    value={formData.barcode}
-                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                    className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-display font-bold text-ink focus:outline-hidden focus:border-brand-600"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={generateRandomBarcode}
-                    className="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold"
-                  >
-                    Generar EAN
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Categoría</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-ink focus:outline-hidden focus:border-brand-600"
-                >
-                  <option value="Bebidas">Bebidas</option>
-                  <option value="Chocolates">Chocolates</option>
-                  <option value="Galletas">Galletas</option>
-                  <option value="Golosinas">Golosinas</option>
-                  <option value="Snacks">Snacks</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Tipo de Empaque</label>
-                <select
-                  value={formData.packagingType}
-                  onChange={(e) => setFormData({ ...formData, packagingType: e.target.value as any })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-ink focus:outline-hidden focus:border-brand-600"
-                >
-                  <option value="Botella Pet">Botella Pet</option>
-                  <option value="Display Caja">Display Caja</option>
-                  <option value="Bolsa Sellada">Bolsa Sellada</option>
-                  <option value="Fardo Termocontraíble">Fardo Termocontraíble</option>
-                  <option value="Lata">Lata</option>
-                  <option value="Tira Colgante">Tira Colgante</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Unidad Mínima Base</label>
-                <input
-                  type="text"
-                  placeholder="botella, paquetito, barra, chupetín..."
-                  value={formData.baseUnitName}
-                  onChange={(e) => setFormData({ ...formData, baseUnitName: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-ink"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Stock Inicial en Almacén</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.stockInBaseUnits}
-                  onChange={(e) => setFormData({ ...formData, stockInBaseUnits: parseInt(e.target.value) || 0 })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-display font-bold text-ink"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Fecha de Vencimiento</label>
-                <input
-                  type="date"
-                  value={formData.expirationDate}
-                  onChange={(e) => setFormData({ ...formData, expirationDate: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-display text-ink"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="text-xs font-bold text-slate-700 block mb-1">Nota de Sabor o Promoción</label>
-                <input
-                  type="text"
-                  placeholder="Ej: Sabor Dorado Original • Bien Helada / Chocolate con Maní..."
-                  value={formData.flavorNote}
-                  onChange={(e) => setFormData({ ...formData, flavorNote: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-ink"
-                />
-              </div>
-            </div>
-
-            {/* Configuración de Precios Independientes (Unidad, Medio, Paquete) */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 space-y-3">
-              <h4 className="text-xs font-black text-brand-800  ">
-                Configuración de las 3 Presentaciones & Factores de Conversión
-              </h4>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {/* Unidad */}
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="font-bold text-xs text-ink">1. Unidad Individual</div>
-                  <div className="text-xs text-slate-400 mb-2">Factor fijo: x1 base</div>
-                  <label className="text-xs text-ink-soft block">Precio Venta (S/):</label>
-                  <input
-                    type="number"
-                    step="0.10"
-                    min="0"
-                    value={formData.unitPrice}
-                    onChange={(e) => setFormData({ ...formData, unitPrice: parseFloat(e.target.value) || 0 })}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-display font-bold text-ink mt-1"
-                  />
-                </div>
-
-                {/* Medio */}
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="font-bold text-xs text-ink">2. Medio Paquete / Display</div>
-                  <div className="flex gap-2 items-center my-1">
-                    <span className="text-xs text-ink-soft">Factor:</span>
-                    <input
-                      type="number"
-                      min="2"
-                      value={formData.halfFactor}
-                      onChange={(e) => setFormData({ ...formData, halfFactor: parseInt(e.target.value) || 6 })}
-                      className="w-16 bg-white border border-slate-300 rounded px-1.5 py-0.5 text-xs font-display"
-                    />
-                    <span className="text-xs text-ink-soft">unds</span>
-                  </div>
-                  <label className="text-xs text-ink-soft block">Precio Medio (S/):</label>
-                  <input
-                    type="number"
-                    step="0.10"
-                    min="0"
-                    value={formData.halfPrice}
-                    onChange={(e) => setFormData({ ...formData, halfPrice: parseFloat(e.target.value) || 0 })}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-display font-bold text-ink mt-1"
-                  />
-                </div>
-
-                {/* Paquete */}
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="font-bold text-xs text-ink">3. Paquete Cerrado / Fardo</div>
-                  <div className="flex gap-2 items-center my-1">
-                    <span className="text-xs text-ink-soft">Factor:</span>
-                    <input
-                      type="number"
-                      min="2"
-                      value={formData.packFactor}
-                      onChange={(e) => setFormData({ ...formData, packFactor: parseInt(e.target.value) || 12 })}
-                      className="w-16 bg-white border border-slate-300 rounded px-1.5 py-0.5 text-xs font-display"
-                    />
-                    <span className="text-xs text-ink-soft">unds</span>
-                  </div>
-                  <label className="text-xs text-ink-soft block">Precio Mayorista (S/):</label>
-                  <input
-                    type="number"
-                    step="0.10"
-                    min="0"
-                    value={formData.packPrice}
-                    onChange={(e) => setFormData({ ...formData, packPrice: parseFloat(e.target.value) || 0 })}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-display font-bold text-ink mt-1"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setAdminTab('products')}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-ink-soft hover:text-ink"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-black text-xs  rounded-xl shadow-md transition active:scale-95 flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                Guardar Producto en Catálogo
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* TAB 4: HISTORIAL DE BOLETAS */}
         {adminTab === 'orders' && <OrdersTab />}
 
         {/* TAB 5: GESTIÓN DE PROMOCIONES Y COMBOS */}
@@ -1009,123 +537,88 @@ export const AdminPanel: React.FC = () => {
     </div>
 
       {/* MODAL DE INGRESO RÁPIDO (REABASTECER) */}
-      {restockProduct && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="bg-brand-500 p-4 text-white">
-              <h3 className="font-black  text-sm flex items-center gap-2">
-                <Package className="w-4 h-4" />
-                Ingreso Rápido
-              </h3>
-              <p className="text-brand-100 text-xs mt-1 truncate">{restockProduct.name}</p>
-            </div>
+      {restockProduct && (() => {
+        const product = restockProduct;
+        const factor = product.presentations[restockData.presentationKey]?.conversionFactor || 1;
+        const added = restockData.addedQuantity * factor;
+        const PRES = [['unit', 'Unidades'], ['quarter', 'Cuartos'], ['half', 'Medios'], ['pack', 'Paquetes']] as const;
+        return (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4" onClick={() => setRestockProduct(null)}>
             <form
+              onClick={e => e.stopPropagation()}
               onSubmit={async (e) => {
                 e.preventDefault();
-                const product = restockProduct;
-                const conversionFactor = product.presentations[restockData.presentationKey]?.conversionFactor || 1;
-                const totalAddedBaseUnits = restockData.addedQuantity * conversionFactor;
+                if (restockData.addedQuantity < 1) return;
                 // El servidor suma al stock actual (si era negativo, la reposición primero cubre lo vendido sin stock).
                 const ok = await run(() => api!.restockProduct({
                   productId: product.id,
                   presentation: restockData.presentationKey,
                   quantity: restockData.addedQuantity,
                   expiration: restockData.newExpirationDate || null,
-                  unitPrice: restockData.unitPrice !== product.presentations.unit.price ? restockData.unitPrice : null,
+                  unitPrice: null,
                 }));
                 if (!ok) return;
                 setRestockProduct(null);
-                setFeedbackMsg(`✓ Se sumaron ${totalAddedBaseUnits} unidades base a ${product.name}.`);
+                setFeedbackMsg(`Se sumaron ${added} ${product.baseUnitName}s a ${product.name}.`);
                 setTimeout(() => setFeedbackMsg(null), 3000);
               }}
-              className="p-5 space-y-4 text-left"
+              className="w-full max-w-md rounded-t-3xl bg-paper p-5 text-ink shadow-2xl sm:rounded-3xl"
             >
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Cantidad a ingresar
-                  </label>
-                  <input
-                    required
-                    type="number"
-                    min="1"
-                    value={restockData.addedQuantity || ''}
-                    onChange={(e) => setRestockData({ ...restockData, addedQuantity: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-display font-black text-ink focus:outline-hidden focus:border-brand-500"
-                    autoFocus
-                  />
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="font-display text-[22px] font-bold leading-tight">Reponer stock</h2>
+                  <p className="truncate text-[15px] text-ink-soft">{product.name}</p>
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Formato
-                  </label>
-                  <select
-                    value={restockData.presentationKey}
-                    onChange={(e) => setRestockData({ ...restockData, presentationKey: e.target.value as PresentationType })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-ink focus:outline-hidden focus:border-brand-500"
-                  >
-                    <option value="unit">Unidades</option>
-                    {restockProduct.presentations.quarter && (
-                      <option value="quarter">Cuartos (x{restockProduct.presentations.quarter.conversionFactor})</option>
-                    )}
-                    {restockProduct.presentations.half && (
-                      <option value="half">Medios/Tiras (x{restockProduct.presentations.half.conversionFactor})</option>
-                    )}
-                    {restockProduct.presentations.pack && (
-                      <option value="pack">Fardos/Paquetes (x{restockProduct.presentations.pack.conversionFactor})</option>
-                    )}
-                  </select>
+                <button type="button" onClick={() => setRestockProduct(null)} aria-label="Cerrar" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-ink-soft hover:bg-ink/5">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="mt-5">
+                <span className="mb-1.5 block text-sm font-bold">Llegó en</span>
+                <div className="flex flex-wrap gap-2">
+                  {PRES.filter(([k]) => product.presentations[k]).map(([k, name]) => {
+                    const f = product.presentations[k]!.conversionFactor;
+                    return (
+                      <button key={k} type="button" aria-pressed={restockData.presentationKey === k}
+                        onClick={() => setRestockData({ ...restockData, presentationKey: k })}
+                        className={`h-11 rounded-xl px-3.5 text-sm font-bold transition ${restockData.presentationKey === k ? 'bg-ink text-white' : 'border border-ink/15 bg-white'}`}>
+                        {name}{f > 1 ? ` de ${f}` : ''}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Nueva Fecha de Venc.
-                </label>
-                <input
-                  type="date"
-                  value={restockData.newExpirationDate}
-                  onChange={(e) => setRestockData({ ...restockData, newExpirationDate: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-display text-ink focus:outline-hidden focus:border-brand-500"
-                />
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1.5 block text-sm font-bold" htmlFor="rs-qty">Cantidad</label>
+                  <input id="rs-qty" required inputMode="numeric" autoFocus value={restockData.addedQuantity || ''}
+                    onChange={e => setRestockData({ ...restockData, addedQuantity: parseInt(e.target.value.replace(/\D/g, ''), 10) || 0 })}
+                    className="h-12 w-full rounded-xl border border-ink/15 bg-white px-3 font-display text-lg font-bold outline-none focus:border-brand-600 focus:ring-4 focus:ring-brand-600/15" />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-bold" htmlFor="rs-exp">Vence <span className="font-normal text-ink-soft">(opcional)</span></label>
+                  <input id="rs-exp" type="date" value={restockData.newExpirationDate}
+                    onChange={e => setRestockData({ ...restockData, newExpirationDate: e.target.value })}
+                    className="h-12 w-full rounded-xl border border-ink/15 bg-white px-3 text-[15px] outline-none focus:border-brand-600" />
+                </div>
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Precio de Venta (Unidad)
-                </label>
-                <input
-                  required
-                  type="number"
-                  step="0.10"
-                  min="0"
-                  value={restockData.unitPrice}
-                  onChange={(e) => setRestockData({ ...restockData, unitPrice: parseFloat(e.target.value) || 0 })}
-                  className="w-full bg-slate-50 border border-brand-300 rounded-xl px-3 py-2 text-sm font-display font-black text-brand-800 focus:outline-hidden focus:border-brand-500"
-                />
-                <p className="text-xs text-slate-400 mt-1 leading-tight">Este precio se actualizará para todo el stock acumulado.</p>
+              <div className="mt-4 rounded-2xl bg-white p-3 text-[15px]">
+                <div className="flex justify-between"><span className="text-ink-soft">Hay ahora</span><span className="font-display font-bold">{product.stockInBaseUnits} {product.baseUnitName}s</span></div>
+                <div className="flex justify-between"><span className="text-ink-soft">Entran</span><span className="font-display font-bold text-brand-700">+ {added}</span></div>
+                <div className="mt-1 flex justify-between border-t border-ink/10 pt-1"><span className="font-bold">Quedarán</span><span className="font-display text-lg font-bold">{product.stockInBaseUnits + added} {product.baseUnitName}s</span></div>
               </div>
 
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setRestockProduct(null)}
-                  className="flex-1 py-2.5 text-xs font-bold text-ink-soft hover:bg-slate-100 rounded-xl transition"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-black text-xs  rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-1.5"
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  Guardar
-                </button>
-              </div>
+              <button type="submit" disabled={restockData.addedQuantity < 1}
+                className="mt-4 h-14 w-full rounded-2xl bg-brand-600 text-base font-bold text-white transition active:scale-[0.99] disabled:opacity-40">
+                Sumar al stock
+              </button>
             </form>
           </div>
-        </div>
-      )}
+        );
+      })()}
   </div>
   );
 };
