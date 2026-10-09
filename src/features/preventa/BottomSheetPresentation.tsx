@@ -1,12 +1,14 @@
 import React from 'react';
 import type { CartItem, PresentationType } from '../../types/pos';
-import { X, Check, Package, Layers, Sparkles, AlertCircle, TrendingDown } from 'lucide-react';
+import { X, Check, Package, Layers, Sparkles, AlertCircle, TrendingDown, Pencil, RotateCcw } from 'lucide-react';
+import { isValidUnitPrice } from '../../domain/cart';
+import { parseAmount, round2 } from '../../domain/money';
 
 interface Props {
   item: CartItem | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdatePresentation: (cartItemId: string, presentation: PresentationType, quantity: number) => void;
+  onUpdatePresentation: (cartItemId: string, presentation: PresentationType, quantity: number, unitPrice: number) => void;
 }
 
 export const BottomSheetPresentation: React.FC<Props> = ({
@@ -18,11 +20,14 @@ export const BottomSheetPresentation: React.FC<Props> = ({
   // Los hooks deben ejecutarse siempre, antes de cualquier return condicional.
   const [selectedPres, setSelectedPres] = React.useState<PresentationType>(item?.selectedPresentation ?? 'unit');
   const [qty, setQty] = React.useState<number>(item?.quantity ?? 1);
+  // Precio de venta editable: viene pre-cargado con el de catálogo (o el ya editado en la línea).
+  const [priceText, setPriceText] = React.useState<string>(item ? item.unitPrice.toFixed(2) : '');
 
   React.useEffect(() => {
     if (item) {
       setSelectedPres(item.selectedPresentation);
       setQty(item.quantity);
+      setPriceText(item.unitPrice.toFixed(2));
     }
   }, [item]);
 
@@ -33,7 +38,18 @@ export const BottomSheetPresentation: React.FC<Props> = ({
   const currentPresentation = product.presentations[selectedPres] ?? product.presentations.unit;
   const requiredBaseUnits = qty * currentPresentation.conversionFactor;
   const isStockSufficient = requiredBaseUnits <= product.stockInBaseUnits;
-  const subtotal = qty * currentPresentation.price;
+  const listPrice = currentPresentation.price;
+  const unitPrice = parseAmount(priceText);
+  const isPriceValid = isValidUnitPrice(unitPrice);
+  const isPriceEdited = isPriceValid && unitPrice !== listPrice;
+  const subtotal = isPriceValid ? round2(qty * unitPrice) : 0;
+
+  /** Al cambiar de presentación se pre-carga su precio (o el editado, si se vuelve a la de la línea). */
+  const selectPresentation = (type: PresentationType) => {
+    setSelectedPres(type);
+    const price = type === item.selectedPresentation ? item.unitPrice : product.presentations[type]!.price;
+    setPriceText(price.toFixed(2));
+  };
 
   // Cálculo del ahorro mayorista respecto al precio unitario suelto
   const unitPriceIndividual = product.presentations.unit.price;
@@ -42,7 +58,8 @@ export const BottomSheetPresentation: React.FC<Props> = ({
 
   // Sin stock suficiente se permite vender (queda en negativo y el admin lo regulariza).
   const handleConfirm = () => {
-    onUpdatePresentation(item.cartItemId, selectedPres, qty);
+    if (!isPriceValid) return;
+    onUpdatePresentation(item.cartItemId, currentPresentation.type, qty, unitPrice);
     onClose();
   };
 
@@ -132,7 +149,7 @@ export const BottomSheetPresentation: React.FC<Props> = ({
                 <button
                   key={type}
                   type="button"
-                  onClick={() => setSelectedPres(type)}
+                  onClick={() => selectPresentation(type)}
                   className={`relative flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all ${
                     isSelected 
                       ? 'border-[#16a34a] bg-emerald-50/80 ring-2 ring-[#16a34a]/30 shadow-md' 
@@ -263,6 +280,51 @@ export const BottomSheetPresentation: React.FC<Props> = ({
           )}
         </div>
 
+        {/* Precio de venta editable */}
+        <div className={`rounded-2xl p-4 border mb-4 ${isPriceEdited ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200'}`}>
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="sheet-unit-price" className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1">
+              <Pencil className="w-3.5 h-3.5" /> Precio por {currentPresentation.shortLabel}
+            </label>
+            <span className="text-[11px] text-slate-500">
+              Lista: <strong className="font-mono text-slate-700">S/ {listPrice.toFixed(2)}</strong>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex items-center bg-white border border-slate-300 rounded-xl px-3 shadow-xs focus-within:border-emerald-500">
+              <span className="text-slate-500 font-bold mr-1">S/</span>
+              <input
+                id="sheet-unit-price"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                value={priceText}
+                onChange={e => setPriceText(e.target.value.replace(/[^\d.,]/g, ''))}
+                onFocus={e => e.target.select()}
+                className="w-full text-2xl font-black text-slate-900 font-mono focus:outline-hidden py-2 bg-transparent"
+              />
+            </div>
+            {isPriceEdited && (
+              <button
+                type="button"
+                onClick={() => setPriceText(listPrice.toFixed(2))}
+                className="h-12 px-3 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-bold flex items-center gap-1 hover:bg-slate-100"
+                title="Volver al precio de lista"
+              >
+                <RotateCcw className="w-4 h-4" /> Lista
+              </button>
+            )}
+          </div>
+          {!isPriceValid && (
+            <p className="mt-2 text-[11px] font-medium text-red-600">Ingrese un precio mayor a 0 (máximo 2 decimales).</p>
+          )}
+          {isPriceEdited && (
+            <p className="mt-2 text-[11px] font-medium text-amber-800">
+              Precio editado: {unitPrice > listPrice ? '+' : '-'}S/ {Math.abs(round2(unitPrice - listPrice)).toFixed(2)} por {currentPresentation.shortLabel} respecto a la lista.
+            </p>
+          )}
+        </div>
+
         {/* Resumen del Subtotal y Botón de Aplicar */}
         <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-4">
           <div>
@@ -275,7 +337,8 @@ export const BottomSheetPresentation: React.FC<Props> = ({
           <button
             type="button"
             onClick={handleConfirm}
-            className={`flex-1 py-3.5 px-4 rounded-xl font-black flex items-center justify-center gap-2 text-sm uppercase tracking-wider transition-all shadow-md ${
+            disabled={!isPriceValid}
+            className={`disabled:opacity-40 disabled:cursor-not-allowed flex-1 py-3.5 px-4 rounded-xl font-black flex items-center justify-center gap-2 text-sm uppercase tracking-wider transition-all shadow-md ${
               isStockSufficient
                 ? 'bg-[#16a34a] hover:bg-[#15803d] text-white active:scale-98 shadow-emerald-700/20 cursor-pointer'
                 : 'bg-amber-500 hover:bg-amber-600 text-white active:scale-98 shadow-amber-700/20 cursor-pointer'

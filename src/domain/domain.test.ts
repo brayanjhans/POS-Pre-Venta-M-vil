@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildCartItem, computeCartTotals, refreshCartWithCatalog } from './cart';
+import { buildCartItem, computeCartTotals, editedPrice, isValidUnitPrice, refreshCartWithCatalog } from './cart';
 import { checkCredit, initialStatus, orderExposure } from './credit';
 import { parseAmount, round2 } from './money';
 import { generateOrderCode, isValidOrderCode } from './orderCode';
@@ -62,6 +62,37 @@ describe('cart', () => {
     expect(refreshed).toHaveLength(1);
     expect(refreshed[0].cartItemId).toBe('line-1');
     expect(refreshed[0].subtotal).toBe(12);
+  });
+});
+
+describe('precio editable', () => {
+  it('cobra el precio editado y recuerda el de lista', () => {
+    const listPrice = product().presentations.pack!.price;
+    const item = buildCartItem(product(), 'pack', 2, 'l1', listPrice + 1);
+    expect(item.unitPrice).toBe(listPrice + 1);
+    expect(item.listPrice).toBe(listPrice);
+    expect(item.subtotal).toBe(round2((listPrice + 1) * 2));
+    expect(editedPrice(item)).toBe(listPrice + 1);
+    expect(editedPrice(buildCartItem(product(), 'pack', 2))).toBeUndefined();
+  });
+
+  it('ignora precios inválidos y usa el de lista', () => {
+    for (const bad of [0, -5, Number.NaN, 1.234]) {
+      expect(buildCartItem(product(), 'unit', 1, undefined, bad).unitPrice).toBe(product().presentations.unit.price);
+    }
+    expect(isValidUnitPrice(31)).toBe(true);
+    expect(isValidUnitPrice(0.5)).toBe(true);
+  });
+
+  it('al refrescar con el catálogo conserva el precio editado', () => {
+    const edited = buildCartItem(product(), 'unit', 4, 'line-1', 9.9);
+    const updated = product({
+      presentations: { ...product().presentations, unit: { ...product().presentations.unit, price: 3 } },
+    });
+    const [refreshed] = refreshCartWithCatalog([edited], [updated]);
+    expect(refreshed.unitPrice).toBe(9.9);
+    expect(refreshed.listPrice).toBe(3);
+    expect(computeCartTotals([refreshed], 0).total).toBe(39.6);
   });
 });
 

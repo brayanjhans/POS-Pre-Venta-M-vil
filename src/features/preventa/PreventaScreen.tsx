@@ -11,7 +11,7 @@ import {
   isScannerSoundActive,
   setScannerSoundEnabled
 } from '../../lib/audioBeep';
-import { buildCartItem, computeCartTotals, refreshCartWithCatalog } from '../../domain/cart';
+import { buildCartItem, computeCartTotals, editedPrice, refreshCartWithCatalog } from '../../domain/cart';
 import { checkCredit, requiresCustomer } from '../../domain/credit';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
@@ -217,7 +217,9 @@ export const PreventaScreen: React.FC = () => {
 
     playBarcodeBeep();
     setCart(prevCart => existing
-      ? prevCart.map(item => (item.cartItemId === existing.cartItemId ? buildCartItem(product, presentation, newQty, item.cartItemId) : item))
+      ? prevCart.map(item => (item.cartItemId === existing.cartItemId
+          ? buildCartItem(product, presentation, newQty, item.cartItemId, editedPrice(item))
+          : item))
       : [buildCartItem(product, presentation, 1), ...prevCart]);
     triggerCartAnimation(product.name, pres.price);
     showFeedback(`✓ ${product.name} (1 ${pres.shortLabel})`);
@@ -245,9 +247,9 @@ export const PreventaScreen: React.FC = () => {
     handleScanBarcode(product.barcode);
   };
 
-  const handleUpdatePresentation = (cartItemId: string, presentation: PresentationType, quantity: number) => {
+  const handleUpdatePresentation = (cartItemId: string, presentation: PresentationType, quantity: number, unitPrice: number) => {
     setCart(prevCart => prevCart.map(item =>
-      item.cartItemId === cartItemId ? buildCartItem(item.product, presentation, quantity, cartItemId) : item));
+      item.cartItemId === cartItemId ? buildCartItem(item.product, presentation, quantity, cartItemId, unitPrice) : item));
     setIsCartBouncing(true);
     setTimeout(() => setIsCartBouncing(false), 500);
   };
@@ -317,7 +319,7 @@ export const PreventaScreen: React.FC = () => {
     order.items.forEach(item => {
       const product = products.find(p => p.id === item.productId);
       if (product && product.presentations[item.presentationType]) {
-        newCart.push(buildCartItem(product, item.presentationType, item.quantity));
+        newCart.push(buildCartItem(product, item.presentationType, item.quantity, undefined, item.unitPrice));
       }
     });
 
@@ -991,6 +993,11 @@ export const PreventaScreen: React.FC = () => {
                           </h4>
                           <div className="text-[11px] text-slate-500 mt-0.5">
                             Cant: <strong className="text-slate-800">{item.quantity}</strong> × S/ {item.unitPrice.toFixed(2)}
+                            {editedPrice(item) !== undefined && (
+                              <span className="ml-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1">
+                                editado (lista S/ {item.listPrice.toFixed(2)})
+                              </span>
+                            )}
                             <span className="text-emerald-700 ml-1 font-semibold">
                               (Descuenta {item.deductedBaseUnits} unds base)
                             </span>

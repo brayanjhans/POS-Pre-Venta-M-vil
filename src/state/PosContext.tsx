@@ -3,7 +3,7 @@ import { createApi, publicApi, type Api, type LoginResult, type NewOrderPayload 
 import { ApiError, isNetworkError } from '../services/rpc';
 import { KEYS, storage } from '../services/storage';
 import { flushOutbox, makeOp, type OutboxOp } from '../services/outbox';
-import { computeCartTotals } from '../domain/cart';
+import { computeCartTotals, editedPrice } from '../domain/cart';
 import { checkCredit, deductsStockOnCreate, initialStatus, requiresCustomer } from '../domain/credit';
 import { generateOrderCode } from '../domain/orderCode';
 import type { CartItem, Catalog, Customer, Order, PaymentTerm, Session, Shift, User } from '../types/pos';
@@ -348,7 +348,12 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       clientCreatedAt: new Date().toISOString(),
       shiftId: s.openShift?.id ?? null,
       replacesOrderId: input.replacesOrderId ?? null,
-      items: input.cart.map(i => ({ productId: i.product.id, presentationType: i.selectedPresentation, quantity: i.quantity })),
+      items: input.cart.map(i => ({
+        productId: i.product.id,
+        presentationType: i.selectedPresentation,
+        quantity: i.quantity,
+        unitPrice: editedPrice(i),
+      })),
     };
 
     const status = initialStatus(input.paymentTerm);

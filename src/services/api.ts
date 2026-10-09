@@ -26,7 +26,8 @@ export interface NewOrderPayload {
   clientCreatedAt: string;
   shiftId?: string | null;
   replacesOrderId?: string | null;
-  items: { productId: string; presentationType: PresentationType; quantity: number }[];
+  /** unitPrice solo viaja si el vendedor editó el precio; si no, el servidor usa el de catálogo. */
+  items: { productId: string; presentationType: PresentationType; quantity: number; unitPrice?: number }[];
 }
 
 export interface CheckoutResult extends Order {

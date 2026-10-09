@@ -51,7 +51,8 @@ export interface CartItem {
   product: Product;
   selectedPresentation: PresentationType;
   quantity: number; // Cantidad de esa presentación
-  unitPrice: number; // Precio unitario de la presentación seleccionada
+  unitPrice: number; // Precio unitario cobrado (el de catálogo o el editado en la venta)
+  listPrice: number; // Precio de catálogo de la presentación, para saber si se editó
   subtotal: number; // quantity * unitPrice
   deductedBaseUnits: number; // quantity * presentation.conversionFactor
 }
