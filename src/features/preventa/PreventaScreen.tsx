@@ -16,6 +16,7 @@ import { checkCredit, requiresCustomer } from '../../domain/credit';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
 import { plural } from '../../lib/text';
+import { CameraScanner } from '../shared/CameraScanner';
 import { useDialog } from '../../app/DialogProvider';
 import {
   Barcode,
@@ -196,13 +197,14 @@ export const PreventaScreen: React.FC = () => {
     return null;
   };
 
-  const handleScanBarcode = (barcode: string) => {
+  /** Agrega 1 unidad del código escaneado. Devuelve el texto de confirmación, o null si no se pudo. */
+  const handleScanBarcode = (barcode: string): string | null => {
     const cleanBarcode = barcode.trim();
     const found = findByBarcode(cleanBarcode);
 
     if (!found) {
       showFeedback(`Código no registrado: ${cleanBarcode}`, true);
-      return;
+      return null;
     }
 
     const { product, presentation } = found;
@@ -215,7 +217,7 @@ export const PreventaScreen: React.FC = () => {
 
     if (reservedOther + newQty * pres.conversionFactor > product.stockInBaseUnits) {
       showFeedback(`Stock límite alcanzado para ${product.name}`, true);
-      return;
+      return null;
     }
 
     playBarcodeBeep();
@@ -226,6 +228,7 @@ export const PreventaScreen: React.FC = () => {
       : [buildCartItem(product, presentation, 1), ...prevCart]);
     triggerCartAnimation(product.name, pres.price);
     showFeedback(`✓ ${product.name} (1 ${pres.shortLabel})`);
+    return `✓ ${product.name} · ${pres.shortLabel}`;
   };
 
   // Sincronizar ref con la versión más reciente de handleScanBarcode en cada render
@@ -1209,89 +1212,15 @@ export const PreventaScreen: React.FC = () => {
         />
 
         {/* ========================================================================= */}
-        {/* MODAL SIMULADOR DE ESCÁNER POR CÁMARA / LÁSER */}
+        {/* ESCÁNER CON LA CÁMARA DEL CELULAR */}
         {/* ========================================================================= */}
-        {isCameraScannerOpen && (
-          <div 
-            className="absolute inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
-            onClick={() => setIsCameraScannerOpen(false)}
-          >
-            <div 
-              className="w-full max-w-sm bg-zinc-950 text-white rounded-3xl p-5 border border-emerald-500/40 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-emerald-950 text-emerald-400 rounded-xl border border-emerald-500/30">
-                    <Camera className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-black uppercase text-white tracking-wide">
-                      Escáner por Cámara & Láser
-                    </h3>
-                    <p className="text-xs text-zinc-400">Apunta el visor al código de barras</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsCameraScannerOpen(false)}
-                  className="p-1 rounded-full text-zinc-400 hover:text-white bg-zinc-800"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Visor de Cámara con Línea Láser Animada */}
-              <div className="relative h-44 bg-zinc-900 rounded-2xl overflow-hidden border-2 border-emerald-500/50 flex flex-col items-center justify-center shadow-inner">
-                {/* Cuatro esquinas de enfoque */}
-                <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-emerald-400" />
-                <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-emerald-400" />
-                <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-emerald-400" />
-                <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-emerald-400" />
-
-                {/* Haz de Láser Rojo Animado */}
-                <div className="absolute left-6 right-6 h-0.5 bg-red-500 shadow-[0_0_12px_#ef4444] animate-pulse" />
-
-                {/* Ícono central de código de barras */}
-                <Barcode className="w-16 h-16 text-zinc-600 opacity-60" />
-                <span className="text-xs text-emerald-400 font-bold mt-2 tracking-wider">
-                  VISOR ACTIVO · DISPARO ULTRA RÁPIDO
-                </span>
-              </div>
-
-              <p className="text-xs text-zinc-400">
-                Escriba el código o use la pistola lectora (Bluetooth/USB). El escaneo con la cámara del celular se agrega con el plugin nativo de códigos de barras.
-              </p>
-
-              {/* Input manual en el visor */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const form = e.target as HTMLFormElement;
-                  const input = form.elements.namedItem('barcode') as HTMLInputElement;
-                  if (input && input.value) {
-                    handleScanBarcode(input.value);
-                    setIsCameraScannerOpen(false);
-                  }
-                }}
-                className="flex gap-2"
-              >
-                <input
-                  name="barcode"
-                  type="text"
-                  placeholder="Código de barras..."
-                  className="flex-1 bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 font-mono"
-                />
-                <button
-                  type="submit"
-                  className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase rounded-xl transition"
-                >
-                  Disparar
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
+        <CameraScanner
+          open={isCameraScannerOpen}
+          onClose={() => setIsCameraScannerOpen(false)}
+          onDetected={code => handleScanBarcode(code)}
+          kind="barcode"
+          continuous
+        />
 
         {/* ========================================================================= */}
         {/* MODAL HISTORIAL DE PREVENTAS DEL DÍA DEL VENDEDOR */}

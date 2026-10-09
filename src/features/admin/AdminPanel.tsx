@@ -2,6 +2,7 @@ import React from 'react';
 import type { PresentationType, Product, PromoBanner } from '../../types/pos';
 import { PRODUCT_CATEGORIES } from '../../types/pos';
 import { usePos } from '../../state/PosContext';
+import { HeaderButton, ScreenHeader } from '../../app/ScreenHeader';
 import { useDialog } from '../../app/DialogProvider';
 import { parseAmount } from '../../domain/money';
 import { DashboardTab } from './DashboardTab';
@@ -28,6 +29,7 @@ import {
   ArrowLeft,
   Star,
   Menu,
+  RefreshCw,
   LayoutDashboard,
   TrendingUp,
   Calendar,
@@ -36,6 +38,19 @@ import {
   Users,
   Receipt
 } from 'lucide-react';
+
+const ADMIN_SECTION_LABELS = {
+  dashboard: 'Resumen',
+  products: 'Catálogo',
+  new_product: 'Nuevo producto',
+  orders: 'Boletas',
+  promos: 'Combos y promociones',
+  new_promo: 'Nueva promoción',
+  deudores: 'Libreta de fiados',
+  users: 'Usuarios',
+  customers: 'Clientes',
+  settings: 'Configuración',
+} as const;
 
 export const AdminPanel: React.FC = () => {
   const { api, catalog, orders, refreshCatalog, handleError } = usePos();
@@ -283,46 +298,29 @@ export const AdminPanel: React.FC = () => {
   });
 
   return (
-    <div className="w-full h-full max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden text-slate-800 animate-in fade-in relative">
-      {/* Top Header del Panel */}
-      <div className="bg-brand-600 text-white p-4 md:p-6 flex flex-wrap items-center justify-between gap-4 z-20">
-        <div className="flex items-center gap-3">
+    <div className="w-full h-full max-w-5xl mx-auto bg-white md:rounded-3xl md:shadow-2xl md:border md:border-slate-200 flex flex-col overflow-hidden text-slate-800 animate-in fade-in relative">
+      {/* Cabecera: muestra la sección actual */}
+      <ScreenHeader
+        icon={<ShieldCheck className="w-5 h-5" />}
+        title={ADMIN_SECTION_LABELS[adminTab]}
+        subtitle={`Administración · ${products.filter(p => p.isActive !== false).length} productos activos`}
+        leading={
           <button
             type="button"
             onClick={() => setIsMenuOpen(true)}
-            className="p-2 bg-white/20 hover:bg-white/30 rounded-xl text-white transition active:scale-95 lg:hidden"
+            aria-label="Abrir menú"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20 transition hover:bg-white/25 active:scale-95 lg:hidden"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-5 h-5" />
           </button>
-          <div className="w-10 h-10 bg-white/20 rounded-xl hidden md:flex items-center justify-center text-white font-black">
-            <ShieldCheck className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg md:text-xl font-black uppercase tracking-tight">
-                Panel Administrador
-              </h2>
-              <span className="hidden md:inline text-xs bg-white text-emerald-950 font-black px-2 py-0.5 rounded-full">
-                {products.filter(p => p.isActive !== false).length} PRODUCTOS ACTIVOS
-              </span>
-            </div>
-            <p className="text-xs text-white/80 hidden md:block">
-              Gestión centralizada de productos, promociones y reportes
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => void refreshCatalog()}
-            className="px-3.5 py-1.5 bg-white/20 hover:bg-white/30 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Actualizar datos</span>
-          </button>
-        </div>
-      </div>
+        }
+        actions={
+          <HeaderButton onClick={() => void refreshCatalog()} aria-label="Actualizar datos">
+            <RefreshCw className="w-4 h-4" />
+            <span className="hidden sm:inline">Actualizar</span>
+          </HeaderButton>
+        }
+      />
 
       {/* Layout Flex (Menú Lateral + Contenido) */}
       <div className="flex flex-1 overflow-hidden relative">
@@ -345,7 +343,7 @@ export const AdminPanel: React.FC = () => {
               onClick={() => { setAdminTab('dashboard'); setIsMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${adminTab === 'dashboard' ? 'bg-brand-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
             >
-              <LayoutDashboard className="w-5 h-5" /> Dashboard
+              <LayoutDashboard className="w-5 h-5" /> Resumen
             </button>
             <button
               onClick={() => { setAdminTab('products'); setIsMenuOpen(false); }}

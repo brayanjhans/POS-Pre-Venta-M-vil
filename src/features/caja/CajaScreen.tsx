@@ -6,8 +6,11 @@ import { parseAmount, round2 } from '../../domain/money';
 import { usePos } from '../../state/PosContext';
 import { useDialog } from '../../app/DialogProvider';
 import { DebtsPanel } from '../shared/DebtsPanel';
+import { HeaderButton, ScreenHeader } from '../../app/ScreenHeader';
+import { CameraScanner } from '../shared/CameraScanner';
 import {
   QrCode,
+  Camera,
   DollarSign,
   CreditCard,
   Smartphone,
@@ -31,6 +34,8 @@ export const CajaScreen: React.FC = () => {
   const dialog = useDialog();
   const settings = catalog?.settings;
   const [scannedCode, setScannedCode] = React.useState<string>('');
+  const [cameraOpen, setCameraOpen] = React.useState(false);
+  const checkoutRef = React.useRef<HTMLDivElement>(null);
   const [selectedOrderId, setSelectedOrderId] = React.useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = React.useState<CashierMethod>('Efectivo');
   const [amountGiven, setAmountGiven] = React.useState<string>('');
@@ -60,6 +65,8 @@ export const CajaScreen: React.FC = () => {
   /** Prepara el formulario de cobro desde cero para cada pedido (evita arrastrar "fiado" del anterior). */
   const loadOrder = (order: Order) => {
     playBarcodeBeep();
+    // En el celular el cobro está debajo de la lista: llevar la vista hasta allí.
+    setTimeout(() => checkoutRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
     setSelectedOrderId(order.id);
     setIsFiado(false);
     setLastChange(0);
@@ -71,7 +78,11 @@ export const CajaScreen: React.FC = () => {
   // Buscar orden por código escaneado del QR (primero en la cola local, luego en el servidor)
   const handleScanOrSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanCode = scannedCode.trim().toUpperCase();
+    await lookupCode(scannedCode);
+  };
+
+  const lookupCode = async (code: string) => {
+    const cleanCode = code.trim().toUpperCase();
     if (!cleanCode) return;
     let found = orders.find(o => o.code === cleanCode || o.qrPayload === cleanCode);
     if (!found && api) {
@@ -207,44 +218,24 @@ export const CajaScreen: React.FC = () => {
   return (
     <div className="w-full h-full overflow-y-auto bg-slate-50 md:p-6 animate-in fade-in text-slate-800 flex justify-center">
       <div className="w-full h-max max-w-5xl bg-white md:rounded-3xl border-0 md:border border-slate-200 md:shadow-2xl overflow-hidden flex flex-col">
-      {/* Header Caja Mostrador */}
-      <div className="bg-brand-700 text-white p-5 md:p-6 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-white shadow-md">
-            <QrCode className="w-7 h-7" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight">
-                Caja Principal de Cobro
-              </h2>
-              <span className="text-xs bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase">
-                {session?.user.fullName}
+      {/* Cabecera */}
+      <ScreenHeader
+        icon={<QrCode className="w-5 h-5" />}
+        title="Caja"
+        subtitle={online ? `Cobro de pre-ventas · ${session?.user.fullName ?? ''}` : 'Sin internet: el cobro requiere conexión'}
+        actions={
+          <>
+            {!online && (
+              <span className="inline-flex h-10 items-center gap-1 rounded-xl bg-amber-400 px-2.5 text-xs font-black text-slate-950">
+                <CloudOff className="w-4 h-4" />
               </span>
-            </div>
-            <p className="text-xs text-white/80">
-              Escanea el Código QR del ticket de pre-venta traído por el cliente para cobrar y descargar stock
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {!online && (
-            <div className="px-3 py-2 bg-amber-400 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5">
-              <CloudOff className="w-4 h-4" /> SIN INTERNET · el cobro requiere conexión
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={() => setShowDebts(true)}
-            disabled={!online}
-            className="px-4 py-2 bg-white text-emerald-900 hover:bg-slate-100 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-md flex items-center gap-1.5 disabled:opacity-50"
-          >
-            <HandCoins className="w-4 h-4 text-emerald-700" />
-            <span>Fiados / Abonos</span>
-          </button>
-        </div>
-      </div>
+            )}
+            <HeaderButton onClick={() => setShowDebts(true)} disabled={!online}>
+              <HandCoins className="w-4 h-4" /> Fiados
+            </HeaderButton>
+          </>
+        }
+      />
 
       {showDebts && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3" onClick={() => setShowDebts(false)}>
@@ -281,6 +272,19 @@ export const CajaScreen: React.FC = () => {
                 Cargar
               </button>
             </form>
+            <button
+              type="button"
+              onClick={() => setCameraOpen(true)}
+              className="w-full h-12 rounded-xl border-2 border-dashed border-brand-300 bg-brand-50 text-brand-800 font-black text-sm flex items-center justify-center gap-2 hover:bg-brand-100 active:scale-[0.99] transition"
+            >
+              <Camera className="w-5 h-5" /> Escanear QR con la cámara
+            </button>
+            <CameraScanner
+              open={cameraOpen}
+              onClose={() => setCameraOpen(false)}
+              onDetected={code => { void lookupCode(code); }}
+              kind="qr"
+            />
             <p className="text-xs text-slate-500">
               El cliente entrega el papel con el QR que generó el preventista en la app móvil.
             </p>
@@ -381,7 +385,7 @@ export const CajaScreen: React.FC = () => {
         </div>
 
         {/* Columna Derecha: Pantalla de Cobro, Medios de Pago y Emisión de Comprobante */}
-        <div className="lg:col-span-7 p-6 space-y-5 bg-white">
+        <div ref={checkoutRef} className="lg:col-span-7 p-6 space-y-5 bg-white scroll-mt-2">
           {selectedOrder ? (
             <div className="space-y-5">
               {/* Resumen del Pedido Cargado */}

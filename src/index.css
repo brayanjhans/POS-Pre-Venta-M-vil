@@ -74,3 +74,13 @@ body {
   .login-shimmer { animation: none; }
   .login-sheen { display: none; }
 }
+
+/* ---------- Escáner con cámara: línea que recorre el marco ---------- */
+@keyframes scanner-line {
+  0%, 100% { top: 12%; }
+  50% { top: 86%; }
+}
+.scanner-line { animation: scanner-line 2.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .scanner-line { animation: none; top: 50%; }
+}
