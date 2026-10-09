@@ -197,6 +197,7 @@ export interface User {
   lastLoginAt?: string | null;
   createdAt?: string;
   lockedUntil?: string | null;
+  isSupport?: boolean; // cuenta de soporte técnico: protegida y oculta en la pantalla de inicio
 }
 
 export interface LoginUser {

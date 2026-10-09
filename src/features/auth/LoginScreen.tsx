@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
-import { ArrowLeft, ChevronRight, Delete, Loader2, LockKeyhole, RefreshCw, ShieldCheck, Store, WifiOff } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Delete, LifeBuoy, Loader2, LockKeyhole, RefreshCw, ShieldCheck, Store, WifiOff } from 'lucide-react';
 import { publicApi } from '../../services/api';
 import { backendHost, errorMessage, isNetworkError } from '../../services/rpc';
 import { KEYS, storage } from '../../services/storage';
@@ -79,6 +79,20 @@ export const LoginScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [usersError, setUsersError] = useState('');
+  // Acceso de soporte técnico: la cuenta no se lista; se abre tocando 5 veces el logo.
+  const [supportMode, setSupportMode] = useState(false);
+  const [supportUsername, setSupportUsername] = useState('');
+  const logoTaps = useRef<number[]>([]);
+
+  const tapLogo = () => {
+    const now = Date.now();
+    logoTaps.current = [...logoTaps.current.filter(t => now - t < 3000), now];
+    if (logoTaps.current.length >= 5) {
+      logoTaps.current = [];
+      setSupportMode(true);
+      setSupportUsername('');
+    }
+  };
 
   const loadUsers = async () => {
     setLoadingUsers(true);
@@ -137,6 +151,7 @@ export const LoginScreen: React.FC = () => {
   const backspace = () => setPin(p => p.slice(0, -1));
 
   const choose = (u: LoginUser | null) => {
+    setSupportMode(false);
     setSelected(u);
     setPin('');
     setError('');
@@ -170,7 +185,7 @@ export const LoginScreen: React.FC = () => {
           {/* Cabecera de marca */}
           <header className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 shadow-lg shadow-emerald-500/30 ring-1 ring-white/25">
+              <div onClick={tapLogo} className="relative flex h-11 w-11 select-none items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 shadow-lg shadow-emerald-500/30 ring-1 ring-white/25">
                 <Store className="h-5 w-5" strokeWidth={2.4} />
               </div>
               <div className="leading-tight">
@@ -194,7 +209,49 @@ export const LoginScreen: React.FC = () => {
               )}
 
               <AnimatePresence mode="wait" initial={false}>
-                {!selected ? (
+                {supportMode && !selected ? (
+                  <motion.section key="support" {...stepTransition}>
+                    <form onSubmit={e => {
+                      e.preventDefault();
+                      const username = supportUsername.trim().toLowerCase();
+                      if (username) choose({ username, fullName: 'Soporte técnico', role: 'admin' });
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => setSupportMode(false)}
+                        className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white active:scale-95"
+                      >
+                        <ArrowLeft className="h-3.5 w-3.5" /> Volver
+                      </button>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 ring-1 ring-white/20">
+                          <LifeBuoy className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h1 className="text-xl font-black tracking-tight">Acceso de soporte</h1>
+                          <p className="text-xs text-slate-400">Solo para el soporte técnico del sistema.</p>
+                        </div>
+                      </div>
+                      <input
+                        value={supportUsername}
+                        onChange={e => setSupportUsername(e.target.value.replace(/\s/g, ''))}
+                        placeholder="Usuario de soporte"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        autoComplete="off"
+                        autoFocus
+                        className="mt-5 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 font-mono text-white placeholder:text-slate-500 outline-none focus:border-indigo-400/60 focus:ring-2 focus:ring-indigo-400/30"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!supportUsername.trim()}
+                        className="mt-3 w-full rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 py-3 text-sm font-black uppercase tracking-wider shadow-lg shadow-indigo-500/25 transition active:scale-[0.98] disabled:opacity-40"
+                      >
+                        Continuar
+                      </button>
+                    </form>
+                  </motion.section>
+                ) : !selected ? (
                   <motion.section key="users" {...stepTransition}>
                     <h1 className="text-2xl font-black tracking-tight">¿Quién va a trabajar?</h1>
                     <p className="mt-1 text-sm text-slate-400">Seleccione su perfil para continuar.</p>

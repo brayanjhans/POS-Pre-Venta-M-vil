@@ -16,11 +16,30 @@ empaquetada como APK de Android con **Capacitor**. Los datos viven en **Supabase
 1. Abrir el proyecto en Supabase → **SQL Editor** → *New query*.
 2. Pegar todo `supabase/migrations/20261009000000_init.sql` → **Run**.
 3. Nueva query: pegar `supabase/seed.sql` → **Run** (crea el admin, clientes y catálogo de ejemplo).
-   Luego, en orden, cada migración nueva de `supabase/migrations/` (`20261010000000_precio_editable.sql`, `20261010010000_libreta_fiados.sql`, `20261010020000_pin_inmutable.sql`, …) → **Run**.
+   Luego, en orden, cada migración nueva de `supabase/migrations/` (`20261010000000_precio_editable.sql`, `20261010010000_libreta_fiados.sql`, `20261010020000_pin_inmutable.sql`, `20261010030000_admin_soporte.sql`, …) → **Run**.
 4. Ir a **Project Settings → API Keys** y copiar la clave **anon / publishable**.
 
 Primer ingreso: usuario **`admin`**, PIN temporal **`2580`**. La app obliga a cambiarlo (es el único PIN que se puede cambiar).
-Luego, desde **Admin → Usuarios**, crear a los vendedores y cajeros con su PIN. El PIN es definitivo: si alguien lo olvida, desactive ese usuario y cree uno nuevo.
+Luego, desde **Admin → Usuarios**, crear a los vendedores y cajeros con su PIN. Nadie puede cambiar su propio PIN;
+si alguien lo olvida, el admin usa **Restablecer PIN** (conserva la cuenta y su historial).
+
+### Cuenta de soporte técnico (la maneja el desarrollador, no el cliente)
+
+Sirve para recuperar el sistema si el administrador del cliente olvida su PIN. No aparece en la
+pantalla "¿Quién va a trabajar?": se entra **tocando 5 veces el logo** y escribiendo el usuario.
+El cliente la ve en Usuarios como *protegida* y no puede editarla, desactivarla ni cambiar su PIN.
+
+Crearla una sola vez en **SQL Editor**, reemplazando `TU_PIN` por un PIN de 4-6 dígitos que solo usted
+conozca (no lo guarde en este repositorio):
+
+```sql
+insert into pos.users (username, full_name, role, pin_hash, is_support)
+values ('soporte', 'Soporte técnico', 'admin', extensions.crypt('TU_PIN', extensions.gen_salt('bf', 8)), true);
+```
+
+Si el admin del cliente olvida su PIN: entre con la cuenta de soporte → **Admin → Usuarios → Restablecer PIN**.
+Si olvida también el de soporte: en SQL Editor,
+`update pos.users set pin_hash = extensions.crypt('NUEVO_PIN', extensions.gen_salt('bf', 8)), failed_attempts = 0, locked_until = null where username = 'soporte';`
 
 > Nunca ponga la clave `service_role` / `secret` en la app ni en GitHub Actions: la app solo necesita la anon key.
 

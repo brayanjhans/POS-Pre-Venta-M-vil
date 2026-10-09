@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyRound, Lock, Pencil, Plus, ShieldCheck, Unlock, UserX, X } from 'lucide-react';
+import { KeyRound, LifeBuoy, Lock, Pencil, Plus, RotateCcw, ShieldCheck, Unlock, UserX, X } from 'lucide-react';
 import { usePos } from '../../state/PosContext';
 import { ROLE_LABELS, type User, type UserRole } from '../../types/pos';
 
@@ -14,8 +14,9 @@ interface FormState {
 const EMPTY_FORM: FormState = { username: '', fullName: '', role: 'vendedor', sellerCode: '', pin: '' };
 
 /**
- * Gestión de usuarios: crear, editar rol/nombre, bloquear/desbloquear y desactivar.
- * El PIN se asigna solo al crear el usuario y después no se puede cambiar.
+ * Gestión de usuarios: crear, editar rol/nombre, restablecer PIN, bloquear/desbloquear y desactivar.
+ * El PIN se asigna al crear el usuario; después solo el admin puede restablecerlo (nadie el suyo propio).
+ * La cuenta de soporte técnico se muestra protegida: solo la administra soporte.
  */
 export const UsersTab: React.FC = () => {
   const { api, session, handleError } = usePos();
@@ -25,6 +26,12 @@ export const UsersTab: React.FC = () => {
   const [form, setForm] = React.useState<FormState>(EMPTY_FORM);
   const [error, setError] = React.useState('');
   const [saving, setSaving] = React.useState(false);
+  const [resetting, setResetting] = React.useState<User | null>(null);
+  const [newPin, setNewPin] = React.useState('');
+  const [newPin2, setNewPin2] = React.useState('');
+  const [resetError, setResetError] = React.useState('');
+  const [resetDone, setResetDone] = React.useState('');
+  const amSupport = session?.user.isSupport === true;
 
   const load = React.useCallback(async () => {
     if (!api) return;
@@ -93,6 +100,38 @@ export const UsersTab: React.FC = () => {
     }
   };
 
+  const openReset = (u: User) => {
+    setResetting(u);
+    setNewPin('');
+    setNewPin2('');
+    setResetError('');
+  };
+
+  const submitReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!api || !resetting) return;
+    if (!/^\d{4,6}$/.test(newPin)) {
+      setResetError('El PIN debe tener entre 4 y 6 dígitos.');
+      return;
+    }
+    if (newPin !== newPin2) {
+      setResetError('Los dos PIN no coinciden.');
+      return;
+    }
+    setSaving(true);
+    setResetError('');
+    try {
+      await api.resetUserPin(resetting.id, newPin);
+      setResetDone(`✓ PIN de ${resetting.fullName} restablecido. Entrégueselo: ya puede ingresar con el nuevo PIN.`);
+      setResetting(null);
+      await load();
+    } catch (err) {
+      setResetError(handleError(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const field = 'w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm focus:outline-hidden focus:border-[#16a34a]';
 
   return (
@@ -102,7 +141,7 @@ export const UsersTab: React.FC = () => {
           <h3 className="text-lg font-black text-slate-900 uppercase">Usuarios y Accesos</h3>
           <p className="text-xs text-slate-500">
             Cree cuentas para vendedores y cajeros. Cada persona entra con su usuario y el PIN que usted le asigne.
-            El PIN es definitivo: una vez creado el usuario no se puede cambiar.
+            Si alguien olvida su PIN, use <strong>Restablecer PIN</strong>: conserva su cuenta y su historial.
           </p>
         </div>
         <button type="button" onClick={openNew}
@@ -126,9 +165,19 @@ export const UsersTab: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
+            {resetDone && (
+              <tr><td colSpan={6} className="p-3">
+                <div className="flex items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800">
+                  {resetDone}
+                  <button type="button" onClick={() => setResetDone('')} aria-label="Cerrar"><X className="w-4 h-4" /></button>
+                </div>
+              </td></tr>
+            )}
             {loading && <tr><td colSpan={6} className="p-6 text-center text-slate-400">Cargando…</td></tr>}
             {!loading && users.map(u => {
               const isMe = u.id === session?.user.id;
+              // La cuenta de soporte solo la puede tocar soporte.
+              const isProtected = u.isSupport === true && !amSupport;
               return (
                 <tr key={u.id} className={u.isActive ? '' : 'opacity-50'}>
                   <td className="p-3 font-bold text-slate-900">
@@ -136,6 +185,11 @@ export const UsersTab: React.FC = () => {
                     {!u.isActive && <span className="ml-1 text-[10px] bg-slate-200 px-1.5 rounded">INACTIVO</span>}
                     {u.lockedUntil && <span className="ml-1 text-[10px] bg-red-100 text-red-700 px-1.5 rounded">BLOQUEADO</span>}
                     {u.mustChangePin && u.isActive && <span className="ml-1 text-[10px] bg-amber-100 text-amber-800 px-1.5 rounded">PIN TEMPORAL</span>}
+                    {u.isSupport && (
+                      <span className="ml-1 inline-flex items-center gap-0.5 text-[10px] bg-indigo-100 text-indigo-800 px-1.5 rounded">
+                        <LifeBuoy className="w-3 h-3" /> SOPORTE TÉCNICO (PROTEGIDO)
+                      </span>
+                    )}
                   </td>
                   <td className="p-3 font-mono text-slate-600">@{u.username}</td>
                   <td className="p-3">
@@ -146,7 +200,14 @@ export const UsersTab: React.FC = () => {
                   <td className="p-3 font-mono">{u.sellerCode ?? '—'}</td>
                   <td className="p-3 text-xs text-slate-500">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('es-PE') : 'Nunca'}</td>
                   <td className="p-3">
+                    {isProtected ? (
+                      <div className="flex justify-end items-center gap-1 text-[11px] text-slate-400"><Lock className="w-3.5 h-3.5" /> Protegido</div>
+                    ) : (
                     <div className="flex justify-end gap-1.5">
+                      {!isMe && (
+                        <button type="button" title="Restablecer PIN (si lo olvidó)" onClick={() => openReset(u)}
+                          className="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg"><RotateCcw className="w-3.5 h-3.5" /></button>
+                      )}
                       <button type="button" title="Editar datos" onClick={() => openEdit(u)}
                         className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg"><Pencil className="w-3.5 h-3.5" /></button>
                       {u.lockedUntil && (
@@ -162,6 +223,7 @@ export const UsersTab: React.FC = () => {
                           className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg"><ShieldCheck className="w-3.5 h-3.5" /></button>
                       ))}
                     </div>
+                    )}
                   </td>
                 </tr>
               );
@@ -199,7 +261,7 @@ export const UsersTab: React.FC = () => {
                   value={form.pin} required pattern="[0-9]{4,6}"
                   onChange={e => setForm({ ...form, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })} />
                 <span className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-700">
-                  <Lock className="w-3 h-3" /> Anótelo y entrégueselo: después de crear el usuario no se podrá cambiar.
+                  <Lock className="w-3 h-3" /> Anótelo y entrégueselo. El usuario no podrá cambiarlo; solo usted puede restablecerlo.
                 </span>
               </label>
             ) : (
@@ -210,12 +272,37 @@ export const UsersTab: React.FC = () => {
                   <span className="font-mono tracking-[0.3em]">••••</span>
                   <span className="flex items-center gap-1 text-[11px]"><Lock className="w-3 h-3" /> Bloqueado</span>
                 </div>
-                <span className="mt-1 block text-[11px] font-medium">El PIN se asignó al crear el usuario y no se puede modificar.</span>
+                <span className="mt-1 block text-[11px] font-medium">Aquí no se edita el PIN. Si lo olvidó, use el botón «Restablecer PIN» de la lista.</span>
               </div>
             )}
             {error && <p className="text-xs text-red-600">{error}</p>}
             <button type="submit" disabled={saving} className="w-full py-3 bg-[#16a34a] text-white font-black rounded-xl disabled:opacity-50">
               {saving ? 'Guardando…' : 'GUARDAR'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {resetting && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setResetting(null)}>
+          <form onSubmit={submitReset} onClick={e => e.stopPropagation()} className="w-full max-w-sm bg-white rounded-3xl p-6 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black uppercase text-sm flex items-center gap-1.5"><RotateCcw className="w-4 h-4" /> Restablecer PIN</h3>
+              <button type="button" onClick={() => setResetting(null)} aria-label="Cerrar"><X className="w-5 h-5 text-slate-400" /></button>
+            </div>
+            <p className="text-xs text-slate-600">
+              Nuevo PIN para <strong>{resetting.fullName}</strong> (@{resetting.username}). Conserva su cuenta y su historial;
+              se cerrarán sus sesiones abiertas.
+            </p>
+            <input className={`${field} font-mono tracking-[0.3em]`} type="password" inputMode="numeric" autoComplete="new-password"
+              placeholder="Nuevo PIN (4-6 dígitos)" value={newPin} required autoFocus
+              onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+            <input className={`${field} font-mono tracking-[0.3em]`} type="password" inputMode="numeric" autoComplete="new-password"
+              placeholder="Repita el nuevo PIN" value={newPin2} required
+              onChange={e => setNewPin2(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+            {resetError && <p className="text-xs text-red-600">{resetError}</p>}
+            <button type="submit" disabled={saving} className="w-full py-3 bg-indigo-600 text-white font-black rounded-xl disabled:opacity-50">
+              {saving ? 'Guardando…' : 'RESTABLECER PIN'}
             </button>
           </form>
         </div>

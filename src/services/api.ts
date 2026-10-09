@@ -105,6 +105,8 @@ export function createApi(token: string) {
 
     users: () => rpc<User[]>('pos_users_list', t),
     createUser: (user: NewUserPayload) => rpc<User>('pos_user_create', { ...t, p_user: user }),
+    resetUserPin: (userId: string, newPin: string) =>
+      rpc<User>('pos_user_reset_pin', { ...t, p_user_id: userId, p_new_pin: newPin }),
     updateUser: (userId: string, patch: UserPatch) =>
       rpc<User>('pos_user_update', { ...t, p_user_id: userId, p_patch: patch }),
 
