@@ -1,5 +1,7 @@
 import React from 'react';
 import { AndroidPhoneSimulator } from './components/AndroidPhoneSimulator';
+import { LoginScreen } from './components/LoginScreen';
+import { ShiftOpener } from './components/ShiftOpener';
 import { AdminPanel } from './components/AdminPanel';
 import { SchemaInspector } from './components/SchemaInspector';
 import { RoadmapInspector } from './components/RoadmapInspector';
@@ -22,6 +24,16 @@ import {
 } from 'lucide-react';
 
 export default function App() {
+  const MOCK_USERS = [
+    { id: 'usr_1', name: 'Admin Principal', pin: '1111', role: 'admin' },
+    { id: 'usr_2', name: 'Carlos Mendoza', pin: '2222', role: 'simulator' },
+    { id: 'usr_3', name: 'Caja Central', pin: '3333', role: 'cashier' },
+  ];
+
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
+  const [isShiftOpen, setIsShiftOpen] = React.useState<boolean>(false);
+  const [loginError, setLoginError] = React.useState<string>('');
+
   const [products, setProducts] = React.useState<ExtendedProduct[]>(INITIAL_PRODUCTS);
   const [promos, setPromos] = React.useState<PromoBanner[]>(INITIAL_PROMOS);
   const [orders, setOrders] = React.useState<Order[]>([
@@ -178,6 +190,40 @@ export default function App() {
       return o;
     }));
   };
+
+  const handleLogin = (pin: string) => {
+    const user = MOCK_USERS.find(u => u.pin === pin);
+    if (user) {
+      setCurrentUser(user);
+      setLoginError('');
+      // Si es admin, no requiere abrir caja
+      if (user.role === 'admin') {
+        setIsShiftOpen(true);
+        setActiveTab('admin');
+      }
+    } else {
+      setLoginError('PIN incorrecto. Intente nuevamente.');
+    }
+  };
+
+  const handleStartShift = (initialCash: number) => {
+    setIsShiftOpen(true);
+    setActiveTab(currentUser.role as any);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setIsShiftOpen(false);
+    setActiveTab('simulator');
+  };
+
+  if (!currentUser) {
+    return <LoginScreen onLogin={handleLogin} error={loginError} />;
+  }
+
+  if (!isShiftOpen) {
+    return <ShiftOpener userName={currentUser.name} onStartShift={handleStartShift} onLogout={handleLogout} />;
+  }
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-white text-slate-900 flex flex-col font-sans selection:bg-[#16a34a] selection:text-white">
