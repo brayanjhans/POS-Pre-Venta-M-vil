@@ -54,7 +54,6 @@ export type UserPatch = Partial<{
   role: UserRole;
   isActive: boolean;
   sellerCode: string;
-  pin: string;
   unlock: boolean;
 }>;
 

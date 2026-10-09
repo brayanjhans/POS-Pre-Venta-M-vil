@@ -13,7 +13,10 @@ interface FormState {
 
 const EMPTY_FORM: FormState = { username: '', fullName: '', role: 'vendedor', sellerCode: '', pin: '' };
 
-/** Gestión de usuarios: crear, editar rol/nombre, restablecer PIN, bloquear/desbloquear y desactivar. */
+/**
+ * Gestión de usuarios: crear, editar rol/nombre, bloquear/desbloquear y desactivar.
+ * El PIN se asigna solo al crear el usuario y después no se puede cambiar.
+ */
 export const UsersTab: React.FC = () => {
   const { api, session, handleError } = usePos();
   const [users, setUsers] = React.useState<User[]>([]);
@@ -62,14 +65,13 @@ export const UsersTab: React.FC = () => {
           role: form.role,
           pin: form.pin,
           sellerCode: form.sellerCode.trim().toUpperCase() || undefined,
-          mustChangePin: true,
+          mustChangePin: false,
         });
       } else if (editing) {
         await api.updateUser(editing.id, {
           fullName: form.fullName.trim(),
           role: form.role,
           sellerCode: form.sellerCode.trim().toUpperCase(),
-          ...(form.pin ? { pin: form.pin } : {}),
         });
       }
       setEditing(null);
@@ -99,8 +101,8 @@ export const UsersTab: React.FC = () => {
         <div>
           <h3 className="text-lg font-black text-slate-900 uppercase">Usuarios y Accesos</h3>
           <p className="text-xs text-slate-500">
-            Cree cuentas para vendedores y cajeros. Cada persona entra con su usuario y un PIN propio;
-            el PIN inicial que usted asigne deberá cambiarlo en su primer ingreso.
+            Cree cuentas para vendedores y cajeros. Cada persona entra con su usuario y el PIN que usted le asigne.
+            El PIN es definitivo: una vez creado el usuario no se puede cambiar.
           </p>
         </div>
         <button type="button" onClick={openNew}
@@ -145,7 +147,7 @@ export const UsersTab: React.FC = () => {
                   <td className="p-3 text-xs text-slate-500">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('es-PE') : 'Nunca'}</td>
                   <td className="p-3">
                     <div className="flex justify-end gap-1.5">
-                      <button type="button" title="Editar / restablecer PIN" onClick={() => openEdit(u)}
+                      <button type="button" title="Editar datos" onClick={() => openEdit(u)}
                         className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg"><Pencil className="w-3.5 h-3.5" /></button>
                       {u.lockedUntil && (
                         <button type="button" title="Desbloquear" onClick={() => void quickUpdate(u, { unlock: true })}
@@ -190,16 +192,26 @@ export const UsersTab: React.FC = () => {
                 title="Prefijo de los tickets de este vendedor (2-6 letras/números)"
                 onChange={e => setForm({ ...form, sellerCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') })} />
             </div>
-            <label className="block text-xs font-bold text-slate-500">
-              <span className="flex items-center gap-1"><KeyRound className="w-3.5 h-3.5" />
-                {editing === 'new' ? 'PIN inicial (4-6 dígitos) *' : 'Nuevo PIN (dejar vacío para no cambiarlo)'}</span>
-              <input className={`${field} mt-1 font-mono tracking-[0.3em]`} type="password" inputMode="numeric" autoComplete="new-password"
-                value={form.pin} required={editing === 'new'} pattern="[0-9]{4,6}"
-                onChange={e => setForm({ ...form, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })} />
-            </label>
-            {editing !== 'new' && form.pin && (
-              <p className="text-[11px] text-amber-700 flex items-center gap-1"><Lock className="w-3 h-3" />
-                Al restablecer el PIN se cierran sus sesiones y deberá cambiarlo al ingresar.</p>
+            {editing === 'new' ? (
+              <label className="block text-xs font-bold text-slate-500">
+                <span className="flex items-center gap-1"><KeyRound className="w-3.5 h-3.5" /> PIN de acceso (4-6 dígitos) *</span>
+                <input className={`${field} mt-1 font-mono tracking-[0.3em]`} type="password" inputMode="numeric" autoComplete="new-password"
+                  value={form.pin} required pattern="[0-9]{4,6}"
+                  onChange={e => setForm({ ...form, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })} />
+                <span className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-700">
+                  <Lock className="w-3 h-3" /> Anótelo y entrégueselo: después de crear el usuario no se podrá cambiar.
+                </span>
+              </label>
+            ) : (
+              <div className="text-xs font-bold text-slate-500">
+                <span className="flex items-center gap-1"><KeyRound className="w-3.5 h-3.5" /> PIN de acceso</span>
+                <div className="mt-1 flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-100 p-2 text-slate-500"
+                  aria-readonly="true">
+                  <span className="font-mono tracking-[0.3em]">••••</span>
+                  <span className="flex items-center gap-1 text-[11px]"><Lock className="w-3 h-3" /> Bloqueado</span>
+                </div>
+                <span className="mt-1 block text-[11px] font-medium">El PIN se asignó al crear el usuario y no se puede modificar.</span>
+              </div>
             )}
             {error && <p className="text-xs text-red-600">{error}</p>}
             <button type="submit" disabled={saving} className="w-full py-3 bg-[#16a34a] text-white font-black rounded-xl disabled:opacity-50">
