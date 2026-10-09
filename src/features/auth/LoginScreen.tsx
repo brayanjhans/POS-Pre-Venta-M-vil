@@ -71,7 +71,7 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-6">
+    <div className="flex flex-col items-center justify-center min-h-full bg-slate-900 text-white p-6">
       <div className="w-full max-w-sm bg-slate-800 rounded-3xl p-6 shadow-2xl border border-slate-700">
         <div className="flex justify-center mb-4">
           <div className="w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30">
@@ -144,10 +144,10 @@ export const LoginScreen: React.FC = () => {
                 <span key={i} className={`w-4 h-4 rounded-full border-2 ${i < pin.length ? 'bg-emerald-400 border-emerald-400' : 'border-slate-500'}`} />
               ))}
             </div>
-            {/* Campo oculto para poder escribir el PIN con teclado físico. */}
+            {/* Campo oculto para escribir el PIN con teclado físico; inputMode="none" evita que se abra el teclado del celular. */}
             <input
               type="password"
-              inputMode="numeric"
+              inputMode="none"
               autoComplete="off"
               value={pin}
               onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}

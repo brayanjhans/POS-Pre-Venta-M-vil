@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+/*
+ * Android dibuja la app de borde a borde (viewport-fit=cover): el fondo oscuro cubre la zona
+ * de la barra de estado y de navegación, y el padding deja el contenido fuera de ellas.
+ * --safe-area-inset-* los inyecta Capacitor en WebViews antiguos donde env() no funciona.
+ */
+html,
+body,
+#root {
+  height: 100%;
+  background-color: #0f172a;
+}
+
+body {
+  padding-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
+  padding-left: max(env(safe-area-inset-left, 0px), var(--safe-area-inset-left, 0px));
+  padding-right: max(env(safe-area-inset-right, 0px), var(--safe-area-inset-right, 0px));
+}

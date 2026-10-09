@@ -10,7 +10,7 @@ import { AdminPanel } from './features/admin/AdminPanel';
 import { StatusBar, type MainView } from './app/StatusBar';
 
 const FullScreenMessage: React.FC<{ title: string; children?: React.ReactNode }> = ({ title, children }) => (
-  <div className="min-h-screen flex flex-col items-center justify-center bg-slate-900 text-white p-6 text-center gap-3">
+  <div className="min-h-full flex flex-col items-center justify-center bg-slate-900 text-white p-6 text-center gap-3">
     <h1 className="text-xl font-black">{title}</h1>
     {children && <div className="text-sm text-slate-300 max-w-sm">{children}</div>}
   </div>
@@ -24,7 +24,7 @@ const MainShell: React.FC = () => {
   const view: MainView = role === 'admin' ? adminView : role === 'cajero' ? 'caja' : 'preventa';
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-white text-slate-900 flex flex-col font-sans selection:bg-[#16a34a] selection:text-white">
+    <div className="h-full w-full overflow-hidden bg-slate-900 text-slate-900 flex flex-col font-sans selection:bg-[#16a34a] selection:text-white">
       <StatusBar view={view} onChangeView={role === 'admin' ? setAdminView : undefined} />
       <div className="flex-1 overflow-hidden">
         {view === 'preventa' && <PreventaScreen />}

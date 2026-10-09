@@ -13,6 +13,8 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- Fondo oscuro de la app detrás de las barras del sistema (evita bordes blancos). -->
+        <item name="android:windowBackground">@color/appBackground</item>
     </style>
 
 

@@ -46,7 +46,7 @@ export const ChangePinScreen: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-100 p-6">
+    <div className="flex flex-col items-center justify-center min-h-full bg-slate-100 p-6">
       <form onSubmit={submit} className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-xl border border-slate-200 space-y-4">
         <div className="flex justify-center">
           <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center">
