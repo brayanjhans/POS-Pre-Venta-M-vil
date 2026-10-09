@@ -2,6 +2,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { parseAmount } from '../../domain/money';
 import { usePos } from '../../state/PosContext';
+import { isValidPhone } from '../../domain/customer';
 import type { Customer, DocType } from '../../types/pos';
 
 interface Props {
@@ -28,6 +29,11 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!api) return;
+    const phoneDigits = phone.replace(/\D/g, '');
+    if (!isValidPhone(phoneDigits)) {
+      setError('Ingrese un celular válido: 9 dígitos que empiecen con 9.');
+      return;
+    }
     const customLimit = limit.trim() ? parseAmount(limit) : null;
     if (customLimit !== null && Number.isNaN(customLimit)) {
       setError('Límite de crédito inválido.');
@@ -42,7 +48,7 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
         docType,
         docNumber: docType === 'NINGUNO' ? null : docNumber.trim(),
         route: route.trim() || null,
-        phone: phone.trim() || null,
+        phone: phoneDigits,
         address: address.trim() || null,
         customCreditLimit: customLimit,
         isActive,
@@ -80,7 +86,8 @@ export const CustomerForm: React.FC<Props> = ({ customer, onClose, onSaved }) =>
           )}
         </div>
         <input className={field} placeholder="Ruta / zona (ej. Ruta 1 - Centro)" value={route} onChange={e => setRoute(e.target.value)} />
-        <input className={field} placeholder="Teléfono" inputMode="tel" value={phone} onChange={e => setPhone(e.target.value)} />
+        <input className={field} placeholder="Celular * (ej. 987654321)" type="tel" inputMode="tel" autoComplete="tel"
+          value={phone} onChange={e => setPhone(e.target.value.replace(/[^\d ]/g, '').slice(0, 11))} required />
         <input className={field} placeholder="Dirección" value={address} onChange={e => setAddress(e.target.value)} />
         {isAdmin && (
           <>

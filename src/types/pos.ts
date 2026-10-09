@@ -148,6 +148,15 @@ export interface DebtorSummary extends Customer {
   fiadoDebt: number;
   openOrders: number;
   oldestDebtAt: string;
+  orderCodes?: string[]; // números de boleta pendientes, de la más antigua a la más nueva
+}
+
+/** Fiado que el cliente terminó de pagar con abonos (historial de la libreta). */
+export interface PaidFiado extends Order {
+  customerPhone?: string | null;
+  customerDoc?: string | null;
+  abonosCount: number;
+  lastAbonoAt: string;
 }
 
 export interface CustomerPayment {

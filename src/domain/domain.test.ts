@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildCartItem, computeCartTotals, editedPrice, isValidUnitPrice, refreshCartWithCatalog } from './cart';
 import { checkCredit, initialStatus, orderExposure } from './credit';
 import { parseAmount, round2 } from './money';
+import { formatPhone, isValidPhone } from './customer';
 import { generateOrderCode, isValidOrderCode } from './orderCode';
 import type { Customer, Order, Product } from '../types/pos';
 
@@ -134,5 +135,20 @@ describe('orderCode', () => {
       expect(isValidOrderCode(code)).toBe(true);
     }
     expect(generateOrderCode(null)).toMatch(/^P-/);
+  });
+});
+
+describe('celular del cliente', () => {
+  it('acepta solo 9 dígitos que empiezan con 9', () => {
+    expect(isValidPhone('987654321')).toBe(true);
+    expect(isValidPhone('887654321')).toBe(false);
+    expect(isValidPhone('98765432')).toBe(false);
+    expect(isValidPhone('9876543210')).toBe(false);
+    expect(isValidPhone('')).toBe(false);
+  });
+
+  it('formatea el celular para mostrar', () => {
+    expect(formatPhone('987654321')).toBe('987 654 321');
+    expect(formatPhone(null)).toBe('');
   });
 });

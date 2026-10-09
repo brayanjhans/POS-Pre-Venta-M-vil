@@ -16,7 +16,7 @@ empaquetada como APK de Android con **Capacitor**. Los datos viven en **Supabase
 1. Abrir el proyecto en Supabase → **SQL Editor** → *New query*.
 2. Pegar todo `supabase/migrations/20261009000000_init.sql` → **Run**.
 3. Nueva query: pegar `supabase/seed.sql` → **Run** (crea el admin, clientes y catálogo de ejemplo).
-   Luego, en orden, cada migración nueva de `supabase/migrations/` (ej. `20261010000000_precio_editable.sql`) → **Run**.
+   Luego, en orden, cada migración nueva de `supabase/migrations/` (`20261010000000_precio_editable.sql`, `20261010010000_libreta_fiados.sql`, …) → **Run**.
 4. Ir a **Project Settings → API Keys** y copiar la clave **anon / publishable**.
 
 Primer ingreso: usuario **`admin`**, PIN temporal **`2580`**. La app obliga a cambiarlo.
