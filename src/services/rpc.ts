@@ -8,6 +8,9 @@ const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | un
 
 export const isBackendConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
+/** Host del servidor (sin la clave), para mostrar en pantallas de diagnóstico. */
+export const backendHost = SUPABASE_URL.replace(/^https?:\/\//, '');
+
 export class ApiError extends Error {
   constructor(
     public code: string,

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Delete, ShieldCheck, User as UserIcon, WifiOff } from 'lucide-react';
 import { publicApi } from '../../services/api';
-import { errorMessage, isNetworkError } from '../../services/rpc';
+import { backendHost, errorMessage, isNetworkError } from '../../services/rpc';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
 import { ROLE_LABELS, type LoginUser } from '../../types/pos';
@@ -14,26 +14,36 @@ export const LoginScreen: React.FC = () => {
   const [error, setError] = useState('');
   const [offline, setOffline] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [usersError, setUsersError] = useState('');
 
-  useEffect(() => {
-    (async () => {
+  const loadUsers = async () => {
+    setLoadingUsers(true);
+    setUsersError('');
+    setOffline(false);
+    try {
       const [cached, lastUsername] = await Promise.all([
         storage.get<LoginUser[]>(KEYS.loginUsers),
         storage.get<string>(KEYS.lastUsername),
       ]);
       if (cached) setUsers(cached);
-      try {
-        const fresh = await publicApi.loginUsers();
-        setUsers(fresh);
-        setOffline(false);
-        await storage.set(KEYS.loginUsers, fresh);
-        const last = fresh.find(u => u.username === lastUsername);
-        if (last) setSelected(last);
-      } catch (e) {
-        if (isNetworkError(e)) setOffline(true);
-        else setError(errorMessage(e));
-      }
-    })();
+      const fresh = await publicApi.loginUsers();
+      setUsers(fresh);
+      // Un fallo al guardar la caché no debe impedir el login.
+      storage.set(KEYS.loginUsers, fresh).catch(() => {});
+      const last = fresh.find(u => u.username === lastUsername);
+      if (last) setSelected(last);
+      if (fresh.length === 0) setUsersError('No hay usuarios activos registrados en el servidor.');
+    } catch (e) {
+      if (isNetworkError(e)) setOffline(true);
+      else setUsersError(errorMessage(e));
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadUsers();
   }, []);
 
   const submit = async (value: string) => {
@@ -81,8 +91,21 @@ export const LoginScreen: React.FC = () => {
           <>
             <p className="text-slate-400 text-center mb-5 text-sm">¿Quién va a trabajar?</p>
             <div className="space-y-2 max-h-[55vh] overflow-y-auto">
-              {users.length === 0 && !offline && (
+              {loadingUsers && users.length === 0 && (
                 <p className="text-center text-slate-500 text-sm py-6">Cargando usuarios…</p>
+              )}
+              {!loadingUsers && (usersError || (offline && users.length === 0)) && (
+                <div className="p-3 bg-red-500/10 border border-red-500/40 rounded-xl text-center">
+                  {usersError && <p className="text-red-300 text-sm font-medium mb-1">{usersError}</p>}
+                  <p className="text-[11px] text-slate-400 break-all mb-3">Servidor: {backendHost || 'sin configurar'}</p>
+                  <button
+                    type="button"
+                    onClick={() => void loadUsers()}
+                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-bold text-sm transition"
+                  >
+                    Reintentar
+                  </button>
+                </div>
               )}
               {users.map(u => (
                 <button
