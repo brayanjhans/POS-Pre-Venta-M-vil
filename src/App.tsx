@@ -26,7 +26,7 @@ const MainShell: React.FC = () => {
   const view: MainView = role === 'admin' ? adminView : role === 'cajero' ? 'caja' : 'preventa';
 
   // La zona de la hora/batería toma el color de la cabecera de cada pantalla.
-  React.useEffect(() => { setScreenTheme(view === 'preventa' ? 'brand' : 'paper'); }, [view]);
+  React.useEffect(() => { setScreenTheme('paper'); }, [view]);
 
   return (
     <ShellProvider value={{ view, setView: role === 'admin' ? setAdminView : undefined }}>

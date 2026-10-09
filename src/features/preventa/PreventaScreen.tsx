@@ -16,6 +16,7 @@ import { checkCredit, requiresCustomer } from '../../domain/credit';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
 import { plural } from '../../lib/text';
+import { stockStatus } from '../../domain/stock';
 import { CameraScanner } from '../shared/CameraScanner';
 import { MenuButton, ProfileSection } from '../../app/ProfileMenu';
 import { useDialog } from '../../app/DialogProvider';
@@ -51,6 +52,10 @@ const STATUS_BADGE: Record<Order['status'], { label: string; className: string }
   PENDIENTE_PAGO: { label: 'PENDIENTE', className: 'bg-amber-100 text-amber-800' },
   CANCELADO: { label: 'ANULADO', className: 'bg-slate-200 text-ink-soft line-through' },
 };
+
+const categoryEmoji = (category: string) =>
+  category === 'Bebidas' ? '🥤' : category === 'Chocolates' ? '🍫' : category === 'Galletas' ? '🍪'
+    : category === 'Snacks' ? '🍿' : category === 'Licores' ? '🍾' : '🍬';
 
 export const PreventaScreen: React.FC = () => {
   const { session, catalog, orders, createOrder, cancelOrder, online } = usePos();
@@ -388,33 +393,20 @@ export const PreventaScreen: React.FC = () => {
       {/* DISPOSITIVO NATIVO FULL SCREEN */}
       <div className="w-full h-full flex flex-col overflow-hidden select-none bg-white relative">
 
-        {/* Cabecera: menú, Catálogo/Ofertas y lo vendido hoy (la cámara está en el buscador) */}
-        <div className="z-30 flex h-[60px] items-center gap-2 bg-brand-600 px-3 text-white">
-          <MenuButton onClick={() => setIsDrawerOpen(true)} className="bg-white/15 text-white hover:bg-white/25" />
-
-          <div className="flex h-11 min-w-0 flex-1 items-center rounded-xl bg-white/15 p-1" role="tablist" aria-label="Vista">
-            {([['catalogo', 'Catálogo'], ['ofertas', 'Ofertas']] as const).map(([tab, label]) => (
-              <button
-                key={tab}
-                type="button"
-                role="tab"
-                aria-selected={activeScreenTab === tab}
-                onClick={() => setActiveScreenTab(tab)}
-                className={`h-full flex-1 truncate rounded-lg px-2 text-[15px] font-bold transition ${
-                  activeScreenTab === tab ? 'bg-white text-brand-800 shadow-sm' : 'text-white/85'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+        {/* Cabecera clara (mismo estilo que Ventas): menú, título y lo vendido hoy */}
+        <div className="z-30 flex items-center gap-3 bg-paper px-4 pb-2 pt-3 text-ink">
+          <MenuButton onClick={() => setIsDrawerOpen(true)} className="border border-ink/10 bg-white text-ink" />
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate font-display text-[26px] font-bold leading-none tracking-tight">
+              {activeScreenTab === 'ofertas' ? 'Ofertas' : 'Pre-Venta'}
+            </h1>
           </div>
-
           <button
             type="button"
             onClick={() => setIsOrderHistoryOpen(true)}
-            className="flex h-11 shrink-0 flex-col items-end justify-center rounded-xl px-2 text-right leading-tight transition hover:bg-white/10"
+            className="flex h-11 shrink-0 items-center gap-2 rounded-full border border-ink/10 bg-white pl-3 pr-4 transition active:scale-95"
           >
-            <span className="text-xs text-white/75">Mis ventas</span>
+            <span className="text-sm text-ink-soft">Hoy</span>
             <span className="whitespace-nowrap font-display text-base font-bold">S/ {todaysTotal.toFixed(2)}</span>
           </button>
         </div>
@@ -525,120 +517,78 @@ export const PreventaScreen: React.FC = () => {
           </div>
         )}
 
-        {/* BÚSQUEDA Y FILTRADO POTENTE PARA CIENTOS DE PRODUCTOS */}
-        <div className="sticky top-0 bg-white/85 backdrop-blur-xl p-3 border-b border-slate-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-3 z-20 transition-all duration-300">
-          <div className="relative flex items-center">
-            <Search className="w-4 h-4 text-brand-600 absolute left-3.5 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar entre cientos de productos..."
-              className="w-full bg-slate-100/80 border-transparent rounded-2xl pl-10 pr-16 py-2.5 text-sm text-ink placeholder-slate-400 focus:outline-hidden focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 font-semibold shadow-inner transition-all duration-200"
-            />
-            <div className="absolute right-2.5 flex items-center gap-1">
+        {/* Buscador, Catálogo/Ofertas y categorías */}
+        <div className="sticky top-0 z-20 space-y-3 bg-paper px-4 pb-3 pt-1">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-soft" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar producto o código"
+                className="h-12 w-full rounded-full border border-ink/10 bg-white pl-11 pr-10 text-[15px] text-ink outline-none placeholder:text-ink/40 focus:border-brand-600 focus:ring-4 focus:ring-brand-600/15"
+              />
               {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="p-1.5 bg-slate-200 text-ink-soft hover:bg-slate-300 hover:text-slate-700 rounded-full transition"
-                >
-                  <X className="w-3.5 h-3.5" />
+                <button type="button" onClick={() => setSearchQuery('')} aria-label="Borrar búsqueda"
+                  className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-ink/5 text-ink-soft">
+                  <X className="h-4 w-4" />
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => setIsCameraScannerOpen(true)}
-                className="p-1.5 text-brand-600 hover:bg-brand-100 rounded-xl transition"
-                title="Escanear con Cámara"
-              >
-                <Camera className="w-4 h-4" />
-              </button>
             </div>
+            <button type="button" onClick={() => setIsCameraScannerOpen(true)} aria-label="Escanear con la cámara"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ink text-white transition active:scale-95">
+              <Camera className="h-5 w-5" />
+            </button>
           </div>
 
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex gap-2 overflow-x-auto scrollbar-none py-0.5 flex-1 pr-2">
-              {categoriesList.map(cat => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-black  whitespace-nowrap transition-all duration-200 ${
-                    selectedCategory === cat
-                      ? 'bg-brand-600 text-white shadow-[0_4px_12px_rgba(5,150,105,0.3)] scale-105'
-                      : 'bg-white text-ink-soft border border-slate-200 hover:border-brand-300 hover:text-brand-700 hover:bg-brand-50'
-                  }`}
-                >
+          <div className="flex items-center gap-2">
+            <div className="no-scrollbar -mx-1 flex flex-1 gap-2 overflow-x-auto px-1">
+              {(['catalogo', 'ofertas'] as const).map(tab => (
+                <button key={tab} type="button" onClick={() => setActiveScreenTab(tab)} aria-pressed={activeScreenTab === tab}
+                  className={`h-10 shrink-0 rounded-full px-4 text-[15px] font-bold transition ${
+                    activeScreenTab === tab ? 'bg-ink text-white' : 'border border-ink/15 bg-white text-ink'}`}>
+                  {tab === 'catalogo' ? 'Todo' : 'Ofertas'}
+                </button>
+              ))}
+              <span className="my-2 w-px shrink-0 bg-ink/15" aria-hidden />
+              {categoriesList.filter(c => c !== 'Todos').map(cat => (
+                <button key={cat} type="button" aria-pressed={selectedCategory === cat}
+                  onClick={() => { setActiveScreenTab('catalogo'); setSelectedCategory(selectedCategory === cat ? 'Todos' : cat); }}
+                  className={`h-10 shrink-0 rounded-full px-4 text-[15px] font-bold transition ${
+                    selectedCategory === cat ? 'bg-brand-600 text-white' : 'border border-ink/15 bg-white text-ink'}`}>
                   {cat}
                 </button>
               ))}
             </div>
-
-            <div className="flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200/50 shrink-0 shadow-inner">
-              <button
-                type="button"
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-400 hover:text-ink-soft'}`}
-                title="Vista Cuadrícula Kiosk"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-400 hover:text-ink-soft'}`}
-                title="Vista Lista Rápida"
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
+            <button type="button" onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              aria-label={viewMode === 'grid' ? 'Ver como lista' : 'Ver como cuadrícula'}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-ink/15 bg-white text-ink">
+              {viewMode === 'grid' ? <List className="h-5 w-5" /> : <LayoutGrid className="h-5 w-5" />}
+            </button>
           </div>
         </div>
 
-        {/* TOAST FLOTANTE ANIMADO CUANDO SE AÑADE UN ÍTEM */}
-        {recentlyAddedItem && (
-          <div className="absolute top-36 left-4 right-4 z-40 bg-slate-900/90 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] border border-white/10 flex items-center justify-between animate-in slide-in-from-top-6 zoom-in-95 fade-in duration-300">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-500 to-brand-400 flex items-center justify-center animate-bounce text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]">
-                <ShoppingCart className="w-4 h-4 stroke-[2.5]" />
+        {/* Aviso flotante sobre la barra del pedido: producto agregado o error de escaneo */}
+        {(lastScannedFeedback?.error || recentlyAddedItem) && (
+          <div className="pointer-events-none absolute inset-x-4 bottom-[100px] z-40 flex justify-center animate-in slide-in-from-bottom-4 fade-in duration-200" role="status">
+            {lastScannedFeedback?.error ? (
+              <div className="flex max-w-full items-center gap-2.5 rounded-full bg-fresa py-2.5 pl-3 pr-4 text-white shadow-lg">
+                <AlertCircle className="h-5 w-5 shrink-0" />
+                <span className="truncate text-[15px] font-bold">{lastScannedFeedback.text}</span>
               </div>
-              <div className="flex flex-col">
-                <div className="text-xs font-black   flex items-center gap-1.5 text-brand-400">
-                  <span>Añadido al Carrito</span>
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                </div>
-                <div className="text-[13px] font-bold text-white truncate max-w-[180px] leading-tight">
-                  {recentlyAddedItem.name}
-                </div>
+            ) : recentlyAddedItem && (
+              <div className="flex max-w-full items-center gap-2.5 rounded-full bg-ink py-2 pl-2 pr-4 text-white shadow-lg">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-500"><CheckCircle2 className="h-5 w-5" /></span>
+                <span className="truncate text-[15px] font-bold">{recentlyAddedItem.name}</span>
+                <span className="shrink-0 font-display text-[15px] font-bold text-tag">S/ {recentlyAddedItem.price.toFixed(2)}</span>
               </div>
-            </div>
-            <div className="text-right shrink-0">
-              <span className="text-[13px] font-display font-black text-amber-300 bg-amber-400/10 px-2 py-1 rounded-lg">
-                S/ {recentlyAddedItem.price.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Feedback de escaneo de pistola */}
-        {lastScannedFeedback && (
-          <div className={`mx-3 my-1.5 p-2 rounded-xl text-xs flex items-center gap-2 border animate-in slide-in-from-top duration-150 shadow-md ${
-            lastScannedFeedback.error 
-              ? 'bg-red-50 border-red-300 text-red-700' 
-              : 'bg-brand-50 border-brand-300 text-brand-800'
-          }`}>
-            {lastScannedFeedback.error ? (
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4 text-brand-600 shrink-0" />
             )}
-            <span className="truncate font-bold">{lastScannedFeedback.text}</span>
           </div>
         )}
 
         {/* CATÁLOGO DE PRODUCTOS SCROLLABLE */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-paper pb-28">
+        <div className="flex-1 overflow-y-auto px-4 pt-1 space-y-5 bg-paper pb-32">
           {/* SECCIÓN DE PROMOCIONES DINÁMICAS (CARRUSEL O LISTA COMPLETA) */}
           {!searchQuery && promos.length > 0 && (activeScreenTab === 'ofertas' || selectedCategory === 'Todos') && (
             <div ref={carouselRef} className={activeScreenTab === 'ofertas' ? "flex flex-col gap-4" : "flex overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-none pb-2 transition-all"}>
@@ -676,180 +626,121 @@ export const PreventaScreen: React.FC = () => {
             </div>
           )}
 
-          {/* Indicador de Catálogo */}
-          <div className="flex items-center justify-between text-xs text-ink-soft font-semibold px-1">
-            <span>{plural(filteredProducts.length, 'producto')}</span>
-            <span className="inline-flex items-center gap-1 text-xs text-brand-700 font-bold">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-500" /> Lector de códigos listo
-            </span>
+          {/* Título de la sección */}
+          <div className="flex items-baseline justify-between gap-3 px-1 pt-1">
+            <h2 className="font-display text-[22px] font-bold leading-tight text-ink">
+              {searchQuery ? 'Resultados' : selectedCategory !== 'Todos' ? selectedCategory : 'Todos los productos'}
+            </h2>
+            <span className="text-[15px] text-ink-soft">{plural(filteredProducts.length, 'producto')}</span>
           </div>
 
-          {/* GRILLA DE TARJETAS */}
+          {filteredProducts.length === 0 && (
+            <div className="rounded-3xl bg-white p-6 text-center">
+              <p className="font-display text-lg font-bold">No encontramos ese producto</p>
+              <p className="mt-1 text-[15px] text-ink-soft">Pruebe con otro nombre o escanee su código.</p>
+            </div>
+          )}
+
           {viewMode === 'grid' ? (
-            <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            /* Cuadrícula estilo catálogo: imagen grande, nombre y precio protagonista */
+            <div className="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-3 lg:grid-cols-4">
               {filteredProducts.map((product) => {
-                const minPrice = product.presentations.unit.price;
-
+                const status = stockStatus(product);
+                const pack = product.presentations.pack ?? product.presentations.half;
                 return (
-                  <div
-                    key={product.id}
-                    onClick={() => handleProductCardClick(product)}
-                    className="bg-white rounded-[20px] overflow-hidden border border-slate-200 shadow-sm cursor-pointer flex flex-col justify-between group active:scale-[0.98]"
-                  >
-                    {/* Cuerpo de la tarjeta */}
-                    <div className="p-3 space-y-3 flex-1 flex flex-col justify-between">
-                      <div>
-                        <div
-                          className="h-28 w-full rounded-2xl border border-slate-200/70 shadow-inner flex flex-col items-center justify-center p-2 relative"
-                          style={{ background: `radial-gradient(circle at 30% 25%, ${product.accentColor}33, ${product.accentColor}0d 60%, #f8fafc)` }}
-                        >
-                          <span className="absolute left-2 top-2 text-xs font-bold text-ink-soft">{product.category}</span>
-                          {product.isPromo && <span className="absolute right-2 top-2 rounded-md bg-tag px-1.5 py-0.5 text-xs font-bold text-ink">Oferta</span>}
-                          <div className="text-5xl filter drop-shadow-xl mb-1">
-                            {product.category === 'Bebidas' ? '🥤' :
-                             product.category === 'Chocolates' ? '🍫' :
-                             product.category === 'Galletas' ? '🍪' :
-                             product.category === 'Snacks' ? '🍿' : '🍬'}
-                          </div>
-                          <span className="absolute bottom-2 bg-white/90 backdrop-blur-xs border border-white shadow-xs px-2.5 py-0.5 rounded-full text-xs font-black  text-slate-700 ">
-                            {product.packagingType}
-                          </span>
-                        </div>
-
-                        <div className="mt-2 text-center">
-                          <h4 className="text-xs font-black text-ink leading-tight line-clamp-2">
-                            {product.name}
-                          </h4>
-                          {product.flavorNote && (
-                            <p className="text-xs text-ink-soft line-clamp-1 mt-0.5">
-                              {product.flavorNote}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-100">
-                        <div className="flex items-center justify-center gap-1 text-xs font-bold text-ink-soft mb-2">
-                          <span className="border border-slate-200 rounded px-1.5 py-0.5">Unidad</span>
-                          <span className="text-slate-300">|</span>
-                          <span className="text-slate-400">Paq x{product.piecesPerPack}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-1 bg-gradient-to-r from-brand-50/50 to-brand-50/50 rounded-2xl px-3 py-2 border border-brand-100/60 shadow-inner">
-                          <div className="flex flex-col">
-                            <span className="text-xs text-brand-700 font-black  ">Precio</span>
-                            <span className="text-brand-950 text-sm font-black tracking-tight font-display">
-                              S/ {minPrice.toFixed(2)}
-                            </span>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={(e) => handleQuickAddUnit(e, product)}
-                            className="w-9 h-9 bg-brand-600 hover:bg-brand-500 text-white rounded-xl flex items-center justify-center font-black active:scale-90 transition-all duration-200 shadow-[0_4px_12px_rgba(5,150,105,0.4)] cursor-pointer group-hover:scale-110"
-                            title="Añadir 1 Unidad al Carrito"
-                          >
-                            <Plus className="w-5 h-5 stroke-[3]" />
-                          </button>
-                        </div>
-                      </div>
+                  <article key={product.id} onClick={() => handleProductCardClick(product)} className="cursor-pointer">
+                    <div
+                      className="relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl transition active:scale-[0.98]"
+                      style={{ background: `radial-gradient(circle at 50% 40%, #ffffff 0%, ${product.accentColor}1f 70%, ${product.accentColor}33 100%)` }}
+                    >
+                      <span className="text-[64px] drop-shadow-[0_10px_14px_rgba(31,42,48,0.18)]" aria-hidden>
+                        {categoryEmoji(product.category)}
+                      </span>
+                      {product.isPromo && <span className="absolute left-2.5 top-2.5 rounded-full bg-tag px-2.5 py-1 text-xs font-bold text-ink">Oferta</span>}
+                      {status !== 'ok' && (
+                        <span className={`absolute right-2.5 top-2.5 rounded-full px-2.5 py-1 text-xs font-bold ${status === 'out' ? 'bg-fresa text-white' : 'bg-white text-[#9a6a00]'}`}>
+                          {status === 'out' ? 'Agotado' : `Quedan ${product.stockInBaseUnits}`}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => handleQuickAddUnit(e, product)}
+                        aria-label={`Agregar 1 ${product.name}`}
+                        title="Añadir 1 Unidad al Carrito"
+                        className="absolute bottom-2.5 right-2.5 flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white shadow-[0_8px_18px_-8px_rgba(31,42,48,0.8)] transition active:scale-90"
+                      >
+                        <Plus className="h-5 w-5" strokeWidth={2.6} />
+                      </button>
                     </div>
-                  </div>
+                    <div className="mt-2.5 px-1">
+                      <div className="text-sm text-ink-soft">{product.category}</div>
+                      <h4 className="line-clamp-2 font-display text-[15px] font-bold leading-snug text-ink">{product.name}</h4>
+                      <div className="mt-1 font-display text-lg font-bold text-ink">S/ {product.presentations.unit.price.toFixed(2)}</div>
+                      {pack && (
+                        <div className="text-sm text-ink-soft">
+                          {pack.type === 'pack' ? 'Paquete' : 'Medio'} ×{pack.conversionFactor}: S/ {pack.price.toFixed(2)}
+                        </div>
+                      )}
+                    </div>
+                  </article>
                 );
               })}
             </div>
           ) : (
-            /* VISTA LISTA RÁPIDA */
-            <div className="space-y-2">
-              {filteredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  onClick={() => handleProductCardClick(product)}
-                  className="bg-white rounded-xl p-2.5 border border-slate-200 shadow-2xs hover:border-brand-600 transition cursor-pointer flex items-center justify-between gap-2"
-                >
-                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-brand-50 text-brand-700 font-bold flex items-center justify-center text-lg shrink-0">
-                      {product.category === 'Bebidas' ? '🥤' :
-                       product.category === 'Chocolates' ? '🍫' :
-                       product.category === 'Galletas' ? '🍪' :
-                       product.category === 'Snacks' ? '🍿' : '🍬'}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-xs text-slate-400 font-display">{product.barcode}</div>
-                      <h4 className="text-xs font-bold text-ink truncate">{product.name}</h4>
-                      <div className="text-xs text-ink-soft">
-                        Stock: {product.stockInBaseUnits} {product.baseUnitName}s {product.presentations.pack ? `· Paq: S/ ${product.presentations.pack.price.toFixed(2)}` : ''}
+            /* Lista rápida */
+            <ul className="space-y-2">
+              {filteredProducts.map((product) => {
+                const status = stockStatus(product);
+                return (
+                  <li key={product.id} onClick={() => handleProductCardClick(product)}
+                    className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-2.5 pr-3 transition active:scale-[0.99]">
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-3xl"
+                      style={{ background: `${product.accentColor}1f` }} aria-hidden>
+                      {categoryEmoji(product.category)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="truncate font-display text-[15px] font-bold text-ink">{product.name}</h4>
+                      <div className={`text-sm ${status === 'out' ? 'font-bold text-fresa' : status === 'low' ? 'font-bold text-[#9a6a00]' : 'text-ink-soft'}`}>
+                        {status === 'out' ? 'Agotado' : `${product.stockInBaseUnits} ${product.baseUnitName}s`}
                       </div>
                     </div>
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    <span className="bg-[#ea580c] text-white px-2 py-0.5 rounded-md text-xs font-black block">
-                      DESDE S/ {product.presentations.unit.price.toFixed(2)}
-                    </span>
-                    <span className="text-xs text-brand-600 font-bold mt-0.5 block">
-                      Elegir pres. ↗
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                    <div className="shrink-0 text-right font-display text-base font-bold text-ink">S/ {product.presentations.unit.price.toFixed(2)}</div>
+                    <button type="button" onClick={(e) => handleQuickAddUnit(e, product)} aria-label={`Agregar 1 ${product.name}`}
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-white active:scale-90">
+                      <Plus className="h-5 w-5" strokeWidth={2.6} />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
 
         {/* ========================================================================= */}
         {/* EL CARRITO UBICADO ABAJO (ZONA ERGONÓMICA DE PULGAR) CON ANIMACIÓN */}
         {/* ========================================================================= */}
-        <div className="absolute bottom-0 left-0 right-0 z-30 bg-white/80 backdrop-blur-xl shadow-[0_-15px_40px_rgba(0,0,0,0.08)] border-t border-white/60">
-          <div 
+        <div className="absolute inset-x-0 bottom-0 z-30 px-3 pb-3">
+          <div
             onClick={() => setIsCartDrawerOpen(true)}
-            className={`p-4 pb-6 flex items-center justify-between gap-3 cursor-pointer transition-all duration-300 ${
-              isCartBouncing ? 'scale-[1.02] bg-brand-50/80' : 'hover:bg-slate-50/80'
-            }`}
+            className={`flex cursor-pointer items-center gap-3 rounded-[28px] bg-white p-2.5 pl-4 shadow-[0_18px_40px_-18px_rgba(31,42,48,0.55)] ring-1 ring-ink/5 transition ${isCartBouncing ? 'scale-[1.02]' : ''}`}
           >
-            <div className="flex items-center gap-3.5">
-              <div className="relative w-12 h-12 bg-gradient-to-tr from-brand-100 to-brand-50 text-brand-600 rounded-2xl flex items-center justify-center shadow-inner border border-brand-200/50">
-                <ShoppingCart className={`w-5 h-5 ${isCartBouncing ? 'animate-bounce text-brand-500' : ''}`} />
-                <span className="absolute -top-1.5 -right-1.5 bg-slate-800 text-white font-black text-xs w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm transition-transform duration-300">
-                  {cart.length}
-                </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm text-ink-soft">
+                {cart.length === 0 ? 'Pedido vacío' : `${plural(cart.length, 'producto')}, ${plural(totalBaseUnits, 'unidad', 'unidades')}`}
               </div>
-
-              <div className="flex flex-col">
-                <span className="text-sm font-black text-ink leading-tight">
-                  {cart.length === 0 ? 'Carrito vacío' : plural(cart.length, 'producto')}
-                </span>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`w-1.5 h-1.5 rounded-full shadow-xs ${cart.length === 0 ? 'bg-slate-300' : 'bg-brand-500 animate-pulse'}`} />
-                  <span className="text-xs text-ink-soft font-bold">
-                    {cart.length === 0 ? 'Toque o escanee para añadir' : plural(totalBaseUnits, 'unidad', 'unidades')}
-                  </span>
-                </div>
-              </div>
+              <div className="font-display text-[22px] font-bold leading-tight text-ink">S/ {totalAmount.toFixed(2)}</div>
             </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col items-end">
-                <span className="text-xs font-black  text-slate-400 ">
-                  Total
-                </span>
-                <span className="text-lg font-black text-ink font-display leading-none tracking-tight whitespace-nowrap">
-                  S/ {totalAmount.toFixed(2)}
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsCartDrawerOpen(true);
-                }}
-                className="px-4 py-3.5 bg-gradient-to-r from-brand-500 to-brand-500 hover:from-brand-400 hover:to-brand-400 text-white font-black text-xs   rounded-2xl shadow-[0_8px_20px_rgba(16,185,129,0.3)] transition-all active:scale-95 flex items-center gap-1.5 border border-brand-400/30"
-              >
-                <span>Ver Pedido</span>
-                <span className="text-xs font-bold">❯</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setIsCartDrawerOpen(true); }}
+              className="relative flex h-14 shrink-0 items-center gap-2 rounded-full bg-ink px-5 text-[15px] font-bold text-white transition active:scale-95"
+            >
+              <ShoppingCart className={`h-5 w-5 ${isCartBouncing ? 'animate-bounce' : ''}`} />
+              Ver pedido
+              {cart.length > 0 && (
+                <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-tag px-1.5 text-sm font-bold text-ink">{cart.length}</span>
+              )}
+            </button>
           </div>
         </div>
 
@@ -973,22 +864,13 @@ export const PreventaScreen: React.FC = () => {
                 })}
               </div>
 
-              {/* Configuración de Preventa: Bodega / Cliente, Condición y Descuento Mayorista */}
-              <div className="pt-2 border-t border-slate-200 space-y-2 mt-1">
-                {/* Selector de Cliente / Bodega */}
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                    <span className="flex items-center gap-1 text-ink">
-                      <UserCheck className="w-3.5 h-3.5 text-brand-600" />
-                      <span>Cliente / Bodega:</span>
-                    </span>
-                    {selectedCustomer?.route && (
-                      <span className="text-xs text-brand-800 bg-brand-100 px-1.5 py-0.2 rounded font-semibold">
-                        {selectedCustomer.route}
-                      </span>
-                    )}
+              {/* Datos del pedido: cliente, cómo paga, descuento, envases y total */}
+              <div className="mt-2 space-y-5 border-t border-ink/10 pt-4">
+                <section>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h4 className="font-display text-lg font-bold text-ink">Cliente</h4>
+                    {selectedCustomer?.route && <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-sm font-bold text-brand-800">{selectedCustomer.route}</span>}
                   </div>
-
                   <CustomerPicker
                     customers={customers}
                     selected={selectedCustomer}
@@ -997,124 +879,87 @@ export const PreventaScreen: React.FC = () => {
                     onWalkInNameChange={setWalkInName}
                     allowWalkIn={!requiresCustomer(paymentTerm)}
                   />
+                </section>
 
-                  {/* Condición de Pago & Descuento en 2 columnas */}
-                  <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
-                    <div>
-                      <span className="text-xs text-ink-soft font-bold block mb-0.5">Condición:</span>
-                      <select
-                        value={paymentTerm}
-                        onChange={(e) => setPaymentTerm(e.target.value as PaymentTerm)}
-                        className="w-full bg-white border border-slate-300 rounded-lg p-1 text-xs font-bold text-ink"
-                      >
-                        {PAYMENT_TERMS.map(term => <option key={term} value={term}>{term}</option>)}
-                      </select>
-                    </div>
-
-                    <div>
-                      <span className="text-xs text-ink-soft font-bold block mb-0.5">Dscto Mayorista:</span>
-                      <div className="flex gap-1">
-                        {[0, 3, 5, 10].filter(pct => pct <= maxDiscount).map(pct => (
-                          <button
-                            key={pct}
-                            type="button"
-                            onClick={() => setDiscountPercent(pct)}
-                            className={`flex-1 py-1 rounded text-xs font-black transition ${
-                              discountPercent === pct 
-                                ? 'bg-brand-600 text-white shadow-2xs' 
-                                : 'bg-white text-ink-soft border border-slate-200'
-                            }`}
-                          >
-                            {pct}%
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                <section>
+                  <h4 className="mb-2 font-display text-lg font-bold text-ink">Cómo paga</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {PAYMENT_TERMS.map(term => (
+                      <button key={term} type="button" onClick={() => setPaymentTerm(term)} aria-pressed={paymentTerm === term}
+                        className={`h-10 rounded-full px-4 text-[15px] font-bold transition ${paymentTerm === term ? 'bg-ink text-white' : 'border border-ink/15 bg-white text-ink'}`}>
+                        {term === 'Fiado (Libreta)' ? 'Fiado' : term}
+                      </button>
+                    ))}
                   </div>
-                </div>
+                </section>
 
-                {/* Registro rápido de Envases Retornables */}
-                <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-200 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">🍾</span>
-                    <div>
-                      <span className="text-xs font-bold text-amber-900 block">Envases Devueltos</span>
-                      <span className="text-xs text-amber-700 leading-tight block">Si el cliente deja botellas<br/>o cajas vacías, anótalas aquí.</span>
+                {maxDiscount > 0 && (
+                  <section>
+                    <h4 className="mb-2 font-display text-lg font-bold text-ink">Descuento</h4>
+                    <div className="flex gap-2">
+                      {[0, 3, 5, 10].filter(pct => pct <= maxDiscount).map(pct => (
+                        <button key={pct} type="button" onClick={() => setDiscountPercent(pct)} aria-pressed={discountPercent === pct}
+                          className={`h-10 flex-1 rounded-full text-[15px] font-bold transition ${discountPercent === pct ? 'bg-brand-600 text-white' : 'border border-ink/15 bg-white text-ink'}`}>
+                          {pct === 0 ? 'Sin' : `${pct}%`}
+                        </button>
+                      ))}
                     </div>
+                  </section>
+                )}
+
+                <section className="flex items-center justify-between gap-3 rounded-2xl bg-paper p-3">
+                  <div className="min-w-0">
+                    <h4 className="font-display text-base font-bold text-ink">Envases devueltos</h4>
+                    <p className="text-sm text-ink-soft">Botellas o cajas vacías que deja el cliente</p>
                   </div>
-                  <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-amber-300">
-                    <button
-                      type="button"
-                      onClick={() => setReturnedContainers(Math.max(0, returnedContainers - 1))}
-                      className="w-7 h-7 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded font-black text-lg flex items-center justify-center transition cursor-pointer"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min="0"
-                      value={returnedContainers || ''}
+                  <div className="flex shrink-0 items-center gap-1 rounded-full bg-white p-1">
+                    <button type="button" onClick={() => setReturnedContainers(Math.max(0, returnedContainers - 1))} aria-label="Uno menos"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-ink/5 text-lg font-bold text-ink">−</button>
+                    <input type="number" min="0" value={returnedContainers || ''} aria-label="Envases devueltos"
                       onChange={(e) => setReturnedContainers(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-10 text-center font-black text-amber-900 text-base focus:outline-hidden bg-transparent"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setReturnedContainers(returnedContainers + 1)}
-                      className="w-7 h-7 bg-amber-500 hover:bg-amber-600 text-white rounded font-black text-lg flex items-center justify-center transition cursor-pointer"
-                    >
-                      +
-                    </button>
+                      className="w-10 bg-transparent text-center font-display text-lg font-bold text-ink outline-none" placeholder="0" />
+                    <button type="button" onClick={() => setReturnedContainers(returnedContainers + 1)} aria-label="Uno más"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-lg font-bold text-white">+</button>
                   </div>
-                </div>
+                </section>
 
-                {/* Resumen de totales */}
-                <div className="bg-slate-50 p-2 rounded-xl border border-slate-200 space-y-1">
+                <section>
                   {discountPercent > 0 && (
-                    <div className="flex items-center justify-between text-xs text-ink-soft font-medium px-1">
-                      <span>Subtotal bruto:</span>
-                      <span className="font-display">S/ {grossTotal.toFixed(2)}</span>
-                    </div>
+                    <>
+                      <div className="flex justify-between text-[15px] text-ink-soft"><span>Subtotal</span><span className="font-display">S/ {grossTotal.toFixed(2)}</span></div>
+                      <div className="flex justify-between text-[15px] font-bold text-brand-700"><span>Descuento {discountPercent}%</span><span className="font-display">− S/ {discountAmount.toFixed(2)}</span></div>
+                    </>
                   )}
-
-                  {discountPercent > 0 && (
-                    <div className="flex items-center justify-between text-xs text-brand-700 font-bold px-1">
-                      <span>Descuento aplicado ({discountPercent}%):</span>
-                      <span className="font-display">- S/ {discountAmount.toFixed(2)}</span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between px-1 pt-0.5">
+                  <div className="mt-1 flex items-end justify-between gap-3">
                     <div>
-                      <span className="text-xs font-bold text-ink-soft ">Total Pre-Venta:</span>
-                      <div className="text-xs text-slate-400">
-                        {paymentTerm === 'Contado' ? 'Cobrado por el vendedor' : paymentTerm === 'Fiado (Libreta)' ? 'Queda como deuda del cliente' : 'Pendiente de pago en caja'}
+                      <div className="font-display text-lg font-bold text-ink">Total</div>
+                      <div className="text-sm text-ink-soft">
+                        {paymentTerm === 'Contado' ? 'Lo cobra usted al entregar' : paymentTerm === 'Fiado (Libreta)' ? 'Queda como deuda del cliente' : 'Se paga en caja'}
                       </div>
                     </div>
-                    <div className="text-2xl font-black text-ink font-display">
-                      S/ {totalAmount.toFixed(2)}
-                    </div>
+                    <div className="font-display text-[34px] font-bold leading-none text-ink">S/ {totalAmount.toFixed(2)}</div>
                   </div>
-                </div>
+                </section>
 
                 {replacingOrderId && (
-                  <div className="text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded-lg p-2">
-                    Modificando un ticket anulado: el nuevo ticket quedará enlazado al anterior.
+                  <div className="rounded-2xl bg-[#e3eefb] p-3 text-sm text-[#1d4f8f]">
+                    Está modificando un ticket anulado: el nuevo quedará enlazado al anterior.
                   </div>
                 )}
                 {!online && (
-                  <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 flex items-center gap-1.5">
-                    <CloudOff className="w-3.5 h-3.5 shrink-0" />
+                  <div className="flex items-center gap-2 rounded-2xl bg-[#fff3d6] p-3 text-sm text-[#7a5200]">
+                    <CloudOff className="h-4 w-4 shrink-0" />
                     Sin internet: el ticket se guarda en el celular y se envía al reconectar.
                   </div>
                 )}
                 <button
                   type="button"
                   onClick={() => void handleGeneratePreSale()}
-                  disabled={isSubmitting}
-                  className="w-full disabled:opacity-60 py-3.5 px-4 bg-brand-600 hover:bg-brand-700 text-white font-black text-sm   rounded-xl shadow-lg shadow-brand-700/30 transition active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+                  disabled={isSubmitting || cart.length === 0}
+                  className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-brand-600 text-base font-bold text-white transition active:scale-[0.99] disabled:opacity-50"
                 >
-                  <Barcode className="w-4 h-4 stroke-[2.5]" />
-                  <span>Emitir ticket</span>
+                  <Barcode className="h-5 w-5" />
+                  Emitir ticket
                 </button>
               </div>
             </div>

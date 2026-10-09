@@ -72,16 +72,16 @@ export const CustomerPicker: React.FC<Props> = ({ customers, selected, onSelect,
   }
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <div className="relative">
-        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-soft" />
         <input
           type="text"
           placeholder="Buscar o escribir el nombre del cliente…"
           value={query}
           onFocus={() => setOpen(true)}
           onChange={e => { setQuery(e.target.value); setOpen(true); }}
-          className="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-2 py-2 text-xs font-bold text-ink focus:outline-hidden focus:border-brand-600"
+          className="h-12 w-full rounded-full border border-ink/15 bg-white pl-11 pr-4 text-[15px] text-ink outline-none placeholder:text-ink/40 focus:border-brand-600 focus:ring-4 focus:ring-brand-600/15"
         />
         {open && (
           <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -114,16 +114,16 @@ export const CustomerPicker: React.FC<Props> = ({ customers, selected, onSelect,
         {allowWalkIn && (
           <input
             type="text"
-            placeholder="o nombre de cliente ocasional"
+            placeholder="O nombre sin registrar"
             value={walkInName}
             onChange={e => onWalkInNameChange(e.target.value)}
-            className="flex-1 bg-white border border-slate-300 rounded-lg p-2 text-xs text-ink focus:outline-hidden focus:border-brand-600"
+            className="h-11 min-w-0 flex-1 rounded-full border border-ink/15 bg-white px-4 text-[15px] text-ink outline-none placeholder:text-ink/40 focus:border-brand-600"
           />
         )}
         <button type="button" onClick={() => setCreating(true)} disabled={!online}
           title={online ? 'Registrar cliente nuevo' : 'Se necesita internet para registrar clientes'}
-          className="px-2.5 py-2 bg-brand-50 text-brand-800 border border-brand-200 rounded-lg text-xs font-black flex items-center gap-1 disabled:opacity-40">
-          <UserPlus className="w-3.5 h-3.5" /> NUEVO
+          className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 text-sm font-bold text-white disabled:opacity-40">
+          <UserPlus className="h-4 w-4" /> Nuevo
         </button>
       </div>
 
