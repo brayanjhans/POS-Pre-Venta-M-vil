@@ -45,7 +45,8 @@ import {
   Package,
   Clock,
   Users,
-  Receipt
+  Receipt,
+  Pencil
 } from 'lucide-react';
 
 /** Ícono de cada sección en la cabecera (el mismo del menú). */
@@ -150,6 +151,25 @@ export const AdminPanel: React.FC = () => {
     savingText: '¡Ahorras S/ 0.00!',
     associatedBarcodes: '',
   });
+  // Promoción que se está editando (null = se está creando una nueva).
+  const [editingPromo, setEditingPromo] = React.useState<PromoBanner | null>(null);
+  const startNewPromo = () => {
+    setEditingPromo(null);
+    setPromoFormData({
+      title: '', subtitle: '', badgeText: 'PROMOCIÓN DESTACADA', tag: 'OFERTA MAYORISTA', discountBadge: '',
+      originalPrice: 0, offerPrice: 0, savingText: '¡Ahorras S/ 0.00!', associatedBarcodes: '',
+    });
+    setAdminTab('new_promo');
+  };
+  const startEditPromo = (promo: PromoBanner) => {
+    setEditingPromo(promo);
+    setPromoFormData({
+      title: promo.title, subtitle: promo.subtitle, badgeText: promo.badgeText, tag: promo.tag,
+      discountBadge: promo.discountBadge, originalPrice: promo.originalPrice, offerPrice: promo.offerPrice,
+      savingText: promo.savingText, associatedBarcodes: promo.associatedBarcodes.join(', '),
+    });
+    setAdminTab('new_promo');
+  };
   const [restockProduct, setRestockProduct] = React.useState<Product | null>(null);
   const [restockData, setRestockData] = React.useState({
     addedQuantity: 0,
@@ -187,8 +207,9 @@ export const AdminPanel: React.FC = () => {
       associatedBarcodes: promoFormData.associatedBarcodes.split(',').map(bc => bc.trim()).filter(bc => bc !== ''),
     };
 
-    if (!(await onAddPromo({ ...newPromo, id: undefined }))) return;
-    setFeedbackMsg(`✓ Promoción "${newPromo.title}" creada exitosamente.`);
+    if (!(await onAddPromo({ ...newPromo, id: editingPromo?.id, isActive: editingPromo?.isActive ?? true }))) return;
+    setFeedbackMsg(`✓ Promoción "${newPromo.title}" ${editingPromo ? 'actualizada' : 'creada'}.`);
+    setEditingPromo(null);
     setTimeout(() => setFeedbackMsg(null), 3000);
     setAdminTab('promos');
     setPromoFormData({
@@ -210,7 +231,7 @@ export const AdminPanel: React.FC = () => {
       <ScreenHeader
         tone={SECTION_TONE[adminTab] ?? 'mint'}
         icon={SECTION_ICON[adminTab] ?? <ShieldCheck className="w-5 h-5" />}
-        title={ADMIN_SECTION_LABELS[adminTab]}
+        title={adminTab === 'new_promo' && editingPromo ? 'Editar promoción' : ADMIN_SECTION_LABELS[adminTab]}
         subtitle={`Administración · ${products.filter(p => p.isActive !== false).length} productos activos`}
         leading={
           <MenuButton onClick={() => setIsMenuOpen(true)} className="border border-ink/10 bg-white text-ink lg:hidden" />
@@ -363,11 +384,11 @@ export const AdminPanel: React.FC = () => {
             <PageTitle
               title="Combos activos"
               subtitle="Aparecen arriba en el catálogo de Pre-Venta y en Ofertas."
-              action={<PillButton onClick={() => setAdminTab('new_promo')}><Plus className="h-5 w-5" /> Nueva</PillButton>}
+              action={<PillButton onClick={startNewPromo}><Plus className="h-5 w-5" /> Nueva</PillButton>}
             />
             {promos.length === 0 ? (
               <EmptyState icon={<Star className="h-6 w-6" />} tone="pink" title="No hay promociones"
-                hint="Cree un combo para que los vendedores lo ofrezcan." action={<PillButton onClick={() => setAdminTab('new_promo')}><Plus className="h-5 w-5" /> Nueva promoción</PillButton>} />
+                hint="Cree un combo para que los vendedores lo ofrezcan." action={<PillButton onClick={startNewPromo}><Plus className="h-5 w-5" /> Nueva promoción</PillButton>} />
             ) : (
               <ul className="grid gap-3 md:grid-cols-2">
                 {promos.map((promo, i) => (
@@ -386,6 +407,11 @@ export const AdminPanel: React.FC = () => {
                         <div className="text-sm text-ink/60 line-through">Antes {formatSoles(promo.originalPrice)}</div>
                         <div className="font-display text-[30px] font-bold leading-none">{formatSoles(promo.offerPrice)}</div>
                       </div>
+                      <div className="flex gap-2">
+                      <button type="button" onClick={() => startEditPromo(promo)}
+                        className="squish inline-flex h-11 items-center gap-1.5 rounded-full bg-white/80 px-4 text-[15px] font-bold text-ink">
+                        <Pencil className="h-4 w-4" /> Editar
+                      </button>
                       <button type="button" aria-label="Eliminar promoción"
                         onClick={async () => {
                           if (await dialog.confirm(`Se quitará del catálogo de los vendedores.`, { title: `¿Eliminar «${promo.title}»?`, tone: 'danger', confirmText: 'Eliminar' })) {
@@ -395,6 +421,7 @@ export const AdminPanel: React.FC = () => {
                         className="squish flex h-11 w-11 items-center justify-center rounded-full bg-white/70 text-fresa">
                         <Trash2 className="h-5 w-5" />
                       </button>
+                      </div>
                     </div>
                   </li>
                 ))}
@@ -406,7 +433,7 @@ export const AdminPanel: React.FC = () => {
         {/* TAB 6: CREAR NUEVA PROMOCIÓN */}
         {adminTab === 'new_promo' && (
           <form onSubmit={handleCreatePromo} className="mx-auto max-w-2xl space-y-4 rounded-3xl bg-white p-5">
-            <h3 className="font-display text-[26px] font-bold leading-tight">Nueva promoción</h3>
+            <h3 className="font-display text-[26px] font-bold leading-tight">{editingPromo ? 'Editar promoción' : 'Nueva promoción'}</h3>
 
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
@@ -527,8 +554,8 @@ export const AdminPanel: React.FC = () => {
             <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => setAdminTab('promos')}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-ink-soft hover:text-ink"
+                onClick={() => { setEditingPromo(null); setAdminTab('promos'); }}
+                className="h-12 rounded-full px-4 text-[15px] font-bold text-ink-soft hover:text-ink"
               >
                 Cancelar
               </button>
@@ -537,7 +564,7 @@ export const AdminPanel: React.FC = () => {
                 className="squish flex h-12 items-center gap-2 rounded-full bg-ink px-6 text-[15px] font-bold text-white"
               >
                 <Save className="w-4 h-4" />
-                Guardar Promoción
+                {editingPromo ? 'Guardar cambios' : 'Crear promoción'}
               </button>
             </div>
           </form>
