@@ -2,7 +2,10 @@ import React from 'react';
 import { EyeOff, MoreHorizontal, PackagePlus, Pencil, Plus, Search, Trash2, Eye } from 'lucide-react';
 import { useDialog } from '../../app/DialogProvider';
 import { formatSoles } from '../../domain/money';
-import { PRODUCT_CATEGORIES, type PresentationType, type Product } from '../../types/pos';
+import type { PresentationType, Product } from '../../types/pos';
+import { ProductArt, resolveArt } from '../../app/ProductArt';
+import { categoryArtOf, useCategories } from '../../app/categories';
+import { TONE, categoryTone } from '../../app/tones';
 import { ProductForm } from './ProductForm';
 
 interface Props {
@@ -25,6 +28,7 @@ export const CatalogTab: React.FC<Props> = ({ products, onSave, onDelete, onTogg
   const dialog = useDialog();
   const [query, setQuery] = React.useState('');
   const [category, setCategory] = React.useState<string>('Todos');
+  const categoryInfo = useCategories();
   const [editing, setEditing] = React.useState<Product | 'new' | null>(startCreating ? 'new' : null);
   const [menuFor, setMenuFor] = React.useState<string | null>(null);
 
@@ -66,7 +70,7 @@ export const CatalogTab: React.FC<Props> = ({ products, onSave, onDelete, onTogg
       </div>
 
       <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-        {['Todos', ...PRODUCT_CATEGORIES].map(c => (
+        {['Todos', ...categoryInfo.filter(c => products.some(p => p.category === c.name)).map(c => c.name)].map(c => (
           <button key={c} type="button" onClick={() => setCategory(c)} aria-pressed={category === c}
             className={`h-10 shrink-0 rounded-xl px-3.5 text-sm font-bold transition ${category === c ? 'bg-ink text-white' : 'border border-ink/15 bg-white text-ink'}`}>
             {c}
@@ -95,7 +99,9 @@ export const CatalogTab: React.FC<Props> = ({ products, onSave, onDelete, onTogg
           return (
             <li key={p.id} className={`rounded-2xl border border-ink/10 bg-white p-4 ${off ? 'opacity-60' : ''}`}>
               <div className="flex items-start gap-3">
-                <span className="mt-1 h-10 w-1.5 shrink-0 rounded-full" style={{ background: p.accentColor }} aria-hidden />
+                <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${TONE[categoryTone(p.category)].soft}`} aria-hidden>
+                  <ProductArt art={resolveArt(p, categoryArtOf(categoryInfo, p.category))} color={p.accentColor} className="h-11 w-11" />
+                </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <h3 className="font-display text-[17px] font-bold leading-tight">{p.name}</h3>

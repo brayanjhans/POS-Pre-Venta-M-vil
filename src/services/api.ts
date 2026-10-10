@@ -1,6 +1,6 @@
 import { rpc } from './rpc';
 import type {
-  Catalog, Customer, CustomerStatement, Dashboard, DebtorSummary, Order, PaidFiado, SalesReport, PaymentMethod,
+  Catalog, CategoryInfo, Customer, CustomerStatement, Dashboard, DebtorSummary, Order, PaidFiado, ProductTemplate, SalesReport, PaymentMethod,
   PaymentTerm, PresentationType, Product, PromoBanner, Shift, StoreSettings, User, UserRole,
 } from '../types/pos';
 
@@ -73,6 +73,10 @@ export function createApi(token: string) {
       rpc<User>('pos_change_pin', { ...t, p_current_pin: currentPin, p_new_pin: newPin }),
 
     catalog: (includeInactive = false) => rpc<Catalog>('pos_catalog', { ...t, p_include_inactive: includeInactive }),
+    saveCategory: (category: { name: string; art?: string; color?: string }) =>
+      rpc<CategoryInfo>('pos_category_save', { ...t, p_category: category }),
+    productTemplates: (query: string) =>
+      rpc<ProductTemplate[]>('pos_product_templates', { ...t, p_query: query.trim() || null, p_limit: 30 }),
     saveProduct: (product: Partial<Product>) => rpc<Product>('pos_product_save', { ...t, p_product: product }),
     deleteProduct: (productId: string) =>
       rpc<{ deleted: boolean; deactivated: boolean }>('pos_product_delete', { ...t, p_product_id: productId }),

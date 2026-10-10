@@ -1,8 +1,13 @@
 import React from 'react';
-import { Camera, X } from 'lucide-react';
+import { Camera, Plus, Search, X } from 'lucide-react';
 import { CameraScanner } from '../shared/CameraScanner';
 import { parseAmount, round2 } from '../../domain/money';
-import { PRODUCT_CATEGORIES, type PackagingType, type PresentationType, type Product, type ProductCategory, type ProductPresentation } from '../../types/pos';
+import type { PackagingType, PresentationType, Product, ProductCategory, ProductPresentation, ProductTemplate } from '../../types/pos';
+import { usePos } from '../../state/PosContext';
+import { useDialog } from '../../app/DialogProvider';
+import { ProductArt, resolveArt } from '../../app/ProductArt';
+import { categoryArtOf, useCategories } from '../../app/categories';
+import { TONE, categoryTone } from '../../app/tones';
 
 /*
  * Alta y edición de productos en un solo formulario, por secciones:
@@ -19,9 +24,8 @@ interface Props {
 }
 
 const PACKAGING: PackagingType[] = ['Botella Pet', 'Lata', 'Bolsa Sellada', 'Display Caja', 'Tira Colgante', 'Fardo Termocontraíble'];
-const ACCENT: Record<ProductCategory, string> = {
-  Bebidas: '#0b7a63', Chocolates: '#a16207', Galletas: '#0369a1', Golosinas: '#d93a55', Snacks: '#ca8a04', Licores: '#6d28d9',
-};
+/** Color por defecto de un producto nuevo según su categoría (si no viene de un producto conocido). */
+const DEFAULT_COLOR = '#e5484d';
 
 type Extra = Exclude<PresentationType, 'unit'>;
 const EXTRA: { type: Extra; name: string; short: string }[] = [
@@ -39,6 +43,16 @@ export const ProductForm: React.FC<Props> = ({ product, existingBarcodes, onSave
   const [name, setName] = React.useState(product?.name ?? '');
   const [barcode, setBarcode] = React.useState(product?.barcode ?? '');
   const [category, setCategory] = React.useState<ProductCategory>(product?.category ?? 'Golosinas');
+  // Ilustración y color de marca (llegan de un producto conocido o se conservan al editar).
+  const [art, setArt] = React.useState<string | null>(product?.imageUrl?.startsWith('art:') ? product.imageUrl.slice(4) : null);
+  const [color, setColor] = React.useState<string>(product?.accentColor ?? DEFAULT_COLOR);
+  const categories = useCategories();
+  const { api, refreshCatalog, handleError } = usePos();
+  const dialog = useDialog();
+  const [tplQuery, setTplQuery] = React.useState('');
+  const [tplResults, setTplResults] = React.useState<ProductTemplate[]>([]);
+  const [tplLoading, setTplLoading] = React.useState(false);
+  const [tplError, setTplError] = React.useState('');
   const [baseUnit, setBaseUnit] = React.useState(product?.baseUnitName ?? 'unidad');
   const [packaging, setPackaging] = React.useState<string>(product?.packagingType ?? 'Display Caja');
   const [note, setNote] = React.useState(product?.flavorNote ?? '');
@@ -58,6 +72,56 @@ export const ProductForm: React.FC<Props> = ({ product, existingBarcodes, onSave
   const [error, setError] = React.useState('');
   const [saving, setSaving] = React.useState(false);
   const [scanning, setScanning] = React.useState(false);
+
+  // Búsqueda en el catálogo maestro (con una pequeña espera para no consultar en cada letra).
+  React.useEffect(() => {
+    if (editing || !api) return;
+    const q = tplQuery.trim();
+    if (q.length < 2) { setTplResults([]); setTplError(''); return; }
+    setTplLoading(true);
+    const id = window.setTimeout(() => {
+      api.productTemplates(q)
+        .then(r => { setTplResults(r); setTplError(''); })
+        .catch(e => setTplError(/pos_product_templates|PGRST202/i.test(String((e as Error)?.message ?? e))
+          ? 'Falta activar el catálogo maestro: ejecute la migración 20261010060000_catalogo_maestro.sql.'
+          : handleError(e)))
+        .finally(() => setTplLoading(false));
+    }, 250);
+    return () => window.clearTimeout(id);
+  }, [tplQuery, api, editing, handleError]);
+
+  /** Llena el formulario con un producto conocido; la tienda solo agrega código, precio y stock. */
+  const applyTemplate = (t: ProductTemplate) => {
+    setName(t.name);
+    setCategory(t.category);
+    setBaseUnit(t.baseUnitName);
+    if (t.packagingType) setPackaging(t.packagingType);
+    setArt(t.art);
+    setColor(t.color);
+    setExtras(prev => ({
+      quarter: { ...prev.quarter, on: false },
+      half: { ...prev.half, on: !!t.halfFactor, factor: t.halfFactor ? String(t.halfFactor) : prev.half.factor },
+      pack: { ...prev.pack, on: !!t.packFactor, factor: t.packFactor ? String(t.packFactor) : prev.pack.factor },
+    }));
+    setTplQuery('');
+    setTplResults([]);
+  };
+
+  const createCategory = async () => {
+    if (!api) return;
+    const value = await dialog.prompt('Por ejemplo: Turrones, Cigarrillos, Útiles escolares.', {
+      title: 'Nueva categoría', placeholder: 'Nombre de la categoría', confirmText: 'Crear',
+      validate: v => (v.trim().length < 2 ? 'Escriba al menos 2 letras.' : v.trim().length > 40 ? 'Máximo 40 letras.' : null),
+    });
+    if (!value) return;
+    try {
+      const saved = await api.saveCategory({ name: value.trim() });
+      await refreshCatalog();
+      setCategory(saved.name);
+    } catch (e) {
+      void dialog.alert(handleError(e), { tone: 'danger', title: 'No se pudo crear la categoría' });
+    }
+  };
 
   const setExtra = (t: Extra, patch: Partial<PresDraft>) => setExtras(prev => ({ ...prev, [t]: { ...prev[t], ...patch } }));
   const unitPriceNum = parseAmount(unitPrice);
@@ -110,7 +174,8 @@ export const ProductForm: React.FC<Props> = ({ product, existingBarcodes, onSave
       expirationDate: expiration || null,
       isPromo,
       minStockAlert: Math.max(0, Number(minStock) || 0),
-      accentColor: product?.accentColor ?? ACCENT[category],
+      accentColor: color,
+      imageUrl: art ? `art:${art}` : (product?.imageUrl ?? null),
       gradientBg: product?.gradientBg ?? 'from-brand-500/10 to-transparent',
       piecesPerPack: (pres.pack?.conversionFactor ?? pres.half?.conversionFactor ?? 1),
       presentations: pres,
@@ -137,12 +202,60 @@ export const ProductForm: React.FC<Props> = ({ product, existingBarcodes, onSave
         </div>
 
         <div className="space-y-7 overflow-y-auto px-5 py-5">
+          {!editing && (
+            <section className="rounded-3xl bg-sun/45 p-4">
+              <label htmlFor="pf-tpl" className="font-display text-lg font-bold">Buscar en productos conocidos</label>
+              <p className="text-sm text-ink/75">Escriba la marca o el nombre (ej. «sayon», «inca kola», «oreo») y se llena solo.</p>
+              <div className="relative mt-2">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-soft" />
+                <input id="pf-tpl" value={tplQuery} onChange={e => setTplQuery(e.target.value)} autoFocus autoComplete="off"
+                  placeholder="Marca o producto"
+                  className="h-12 w-full rounded-full border border-ink/10 bg-white pl-11 pr-4 text-[15px] outline-none focus:border-brand-600" />
+              </div>
+              {tplLoading && <p className="mt-2 text-sm text-ink-soft">Buscando…</p>}
+              {tplError && <p className="mt-2 text-sm font-bold text-fresa">{tplError}</p>}
+              {tplResults.length > 0 && (
+                <ul className="mt-2 max-h-72 space-y-1.5 overflow-y-auto">
+                  {tplResults.map(t => (
+                    <li key={t.id}>
+                      <button type="button" onClick={() => applyTemplate(t)}
+                        className="squish flex w-full items-center gap-3 rounded-2xl bg-white p-2 text-left">
+                        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${TONE[categoryTone(t.category)].soft}`}>
+                          <ProductArt art={t.art} color={t.color} className="h-10 w-10" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-[15px] font-bold">{t.name}</span>
+                          <span className="block text-sm text-ink-soft">{t.brand}, {t.category}{t.packFactor ? `, paquete ×${t.packFactor}` : ''}</span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {!tplLoading && !tplError && tplQuery.trim().length >= 2 && tplResults.length === 0 && (
+                <p className="mt-2 text-sm text-ink/75">No está en la lista: llene los datos abajo.</p>
+              )}
+            </section>
+          )}
+
           {/* Qué es */}
           <fieldset className="space-y-4">
             <legend className="font-display text-lg font-bold">El producto</legend>
+            <div className="flex items-center gap-3 rounded-2xl bg-white p-3">
+              <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl ${TONE[categoryTone(category)].soft}`}>
+                <ProductArt art={resolveArt({ imageUrl: art ? `art:${art}` : null, name, category }, categoryArtOf(categories, category))} color={color} className="h-14 w-14" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-bold">Imagen del producto</div>
+                <div className="text-sm text-ink-soft">Se elige sola según el nombre y la categoría.</div>
+                <label className="mt-1 inline-flex items-center gap-2 text-sm font-bold">
+                  Color <input type="color" value={color} onChange={e => setColor(e.target.value)} className="h-7 w-10 cursor-pointer rounded border-0 bg-transparent p-0" />
+                </label>
+              </div>
+            </div>
             <div>
               <label className={label} htmlFor="pf-name">Nombre</label>
-              <input id="pf-name" className={field} value={name} onChange={e => setName(e.target.value)} placeholder="Ej. Inca Kola 500 ml" autoFocus={!editing} />
+              <input id="pf-name" className={field} value={name} onChange={e => setName(e.target.value)}   placeholder="Ej. Inca Kola 500 ml" />
             </div>
             <div>
               <label className={label} htmlFor="pf-code">Código de barras</label>
@@ -157,13 +270,17 @@ export const ProductForm: React.FC<Props> = ({ product, existingBarcodes, onSave
             </div>
             <div>
               <span className={label}>Categoría</span>
-              <div className="flex flex-wrap gap-2">
-                {PRODUCT_CATEGORIES.map(c => (
+              <div className="flex max-h-44 flex-wrap gap-2 overflow-y-auto">
+                {categories.map(({ name: c }) => (
                   <button key={c} type="button" onClick={() => setCategory(c)} aria-pressed={category === c}
-                    className={`h-10 rounded-xl px-3 text-sm font-bold transition ${category === c ? 'bg-ink text-white' : 'border border-ink/15 bg-white text-ink'}`}>
+                    className={`h-10 rounded-full px-3.5 text-sm font-bold transition ${category === c ? 'bg-ink text-white' : 'border border-ink/15 bg-white text-ink'}`}>
                     {c}
                   </button>
                 ))}
+                <button type="button" onClick={() => void createCategory()}
+                  className="inline-flex h-10 items-center gap-1 rounded-full border-2 border-dashed border-ink/25 px-3.5 text-sm font-bold text-ink-soft">
+                  <Plus className="h-4 w-4" /> Nueva
+                </button>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">

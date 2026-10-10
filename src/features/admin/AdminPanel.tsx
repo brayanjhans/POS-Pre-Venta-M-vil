@@ -1,6 +1,5 @@
 import React from 'react';
 import type { PresentationType, Product, PromoBanner } from '../../types/pos';
-import { PRODUCT_CATEGORIES } from '../../types/pos';
 import { usePos } from '../../state/PosContext';
 import { HeaderButton, ScreenHeader } from '../../app/ScreenHeader';
 import { MenuButton, ProfileSection } from '../../app/ProfileMenu';

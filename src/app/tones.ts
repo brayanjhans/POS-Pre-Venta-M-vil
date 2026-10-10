@@ -23,8 +23,29 @@ export const CATEGORY_TONE: Record<string, Tone> = {
   Golosinas: 'pink',
   Snacks: 'lilac',
   Licores: 'mint',
+  Caramelos: 'pink',
+  Chupetines: 'pink',
+  Chicles: 'sky',
+  'Gomitas y marshmallows': 'peach',
+  Wafers: 'sun',
+  'Frutos secos': 'sun',
+  Gaseosas: 'peach',
+  Aguas: 'sky',
+  'Jugos y néctares': 'sun',
+  Energizantes: 'lilac',
+  Rehidratantes: 'sky',
+  'Lácteos y yogures': 'pink',
+  'Kekes y panes': 'peach',
+  Helados: 'mint',
+  Cervezas: 'sun',
 };
-export const categoryTone = (category: string): Tone => CATEGORY_TONE[category] ?? 'cream';
+/** Tono de la categoría; las categorías creadas por el admin reciben uno fijo según su nombre. */
+export const categoryTone = (category: string): Tone => {
+  if (CATEGORY_TONE[category]) return CATEGORY_TONE[category];
+  let h = 0;
+  for (const ch of category) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return ROTATION[h % ROTATION.length];
+};
 
 /** Tono de cada sección del administrador (y de Caja). */
 export const SECTION_TONE: Record<string, Tone> = {

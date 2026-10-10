@@ -6,8 +6,30 @@
 
 export type PresentationType = 'unit' | 'quarter' | 'half' | 'pack';
 
-export type ProductCategory = 'Golosinas' | 'Bebidas' | 'Chocolates' | 'Snacks' | 'Galletas' | 'Licores';
+/** Las categorías vienen del servidor (tabla pos.categories); el admin puede crear nuevas. */
+export type ProductCategory = string;
 
+export interface CategoryInfo {
+  name: string;
+  art: string;   // ilustración por defecto de la categoría
+  color: string;
+}
+
+/** Producto conocido del catálogo maestro: sirve para llenar el formulario al crear un producto. */
+export interface ProductTemplate {
+  id: number;
+  brand: string;
+  name: string;
+  category: string;
+  art: string;
+  color: string;
+  baseUnitName: string;
+  packFactor: number | null;
+  halfFactor: number | null;
+  packagingType: string | null;
+}
+
+/** Categorías base, por si el servidor todavía no envía la lista (antes de la migración del catálogo maestro). */
 export const PRODUCT_CATEGORIES: ProductCategory[] = ['Bebidas', 'Chocolates', 'Galletas', 'Golosinas', 'Snacks', 'Licores'];
 
 export interface ProductPresentation {
@@ -243,6 +265,8 @@ export interface Catalog {
   products: Product[];
   promos: PromoBanner[];
   customers: Customer[];
+  /** Categorías activas (desde la migración del catálogo maestro). */
+  categories?: CategoryInfo[];
   settings: StoreSettings;
 }
 

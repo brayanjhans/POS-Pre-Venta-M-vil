@@ -1,6 +1,6 @@
 import React from 'react';
 import type { CartItem, Customer, Order, PaymentTerm, PresentationType, Product } from '../../types/pos';
-import { PAYMENT_TERMS, PRODUCT_CATEGORIES } from '../../types/pos';
+import { PAYMENT_TERMS } from '../../types/pos';
 import { BottomSheetPresentation } from './BottomSheetPresentation';
 import { TicketModal } from './TicketModal';
 import { CustomerPicker } from './CustomerPicker';
@@ -20,6 +20,8 @@ import { looksLikeOrderCode } from '../../domain/orderCode';
 import { stockStatus } from '../../domain/stock';
 import { ROTATION, TONE, categoryTone } from '../../app/tones';
 import { Starburst } from '../../app/Starburst';
+import { ProductArt, resolveArt } from '../../app/ProductArt';
+import { categoryArtOf, useCategories } from '../../app/categories';
 import { CameraScanner } from '../shared/CameraScanner';
 import { MenuButton, ProfileSection } from '../../app/ProfileMenu';
 import { useDialog } from '../../app/DialogProvider';
@@ -56,13 +58,10 @@ const STATUS_BADGE: Record<Order['status'], { label: string; className: string }
   CANCELADO: { label: 'ANULADO', className: 'bg-ink/10 text-ink-soft line-through' },
 };
 
-const categoryEmoji = (category: string) =>
-  category === 'Bebidas' ? '🥤' : category === 'Chocolates' ? '🍫' : category === 'Galletas' ? '🍪'
-    : category === 'Snacks' ? '🍿' : category === 'Licores' ? '🍾' : '🍬';
-
 export const PreventaScreen: React.FC = () => {
   const { session, catalog, orders, createOrder, cancelOrder, online, api, upsertOrder, handleError } = usePos();
   const dialog = useDialog();
+  const categoryInfo = useCategories();
   const userId = session!.user.id;
   const products = React.useMemo(() => (catalog?.products ?? []).filter(p => p.isActive !== false), [catalog]);
   const promos = catalog?.promos ?? [];
@@ -418,7 +417,8 @@ export const PreventaScreen: React.FC = () => {
     );
   });
 
-  const categoriesList = ['Todos', ...PRODUCT_CATEGORIES];
+  // Solo las categorías que tienen productos (el catálogo puede tener muchas categorías vacías).
+  const categoriesList = ['Todos', ...categoryInfo.map(c => c.name).filter(name => products.some(p => p.category === name))];
 
   return (
     <div className="w-full h-full flex flex-col items-center bg-white">
@@ -684,9 +684,8 @@ export const PreventaScreen: React.FC = () => {
                     <div className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl transition active:scale-[0.98] ${TONE[categoryTone(product.category)].soft}`}>
                       {/* círculo claro detrás del producto, como el "spot" de las fotos de catálogo */}
                       <span className="absolute h-[62%] w-[62%] rounded-full bg-white/55" aria-hidden />
-                      <span className="relative text-[64px] drop-shadow-[0_10px_14px_rgba(20,67,61,0.22)]" aria-hidden>
-                        {categoryEmoji(product.category)}
-                      </span>
+                      <ProductArt art={resolveArt(product, categoryArtOf(categoryInfo, product.category))} color={product.accentColor}
+                        className="relative h-[70%] w-[70%] drop-shadow-[0_10px_12px_rgba(20,67,61,0.18)]" />
                       {product.isPromo && <Starburst className="absolute left-2 top-2 rotate-[-12deg]" size={54} spin>Oferta</Starburst>}
                       {status !== 'ok' && (
                         <span className={`absolute right-2.5 top-2.5 rounded-full px-2.5 py-1 text-xs font-bold ${status === 'out' ? 'bg-fresa text-white' : 'bg-white text-[#9a6a00]'}`}>
@@ -725,8 +724,8 @@ export const PreventaScreen: React.FC = () => {
                 return (
                   <li key={product.id} onClick={() => handleProductCardClick(product)}
                     className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-2.5 pr-3 transition active:scale-[0.99]">
-                    <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-3xl ${TONE[categoryTone(product.category)].soft}`} aria-hidden>
-                      {categoryEmoji(product.category)}
+                    <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${TONE[categoryTone(product.category)].soft}`}>
+                      <ProductArt art={resolveArt(product, categoryArtOf(categoryInfo, product.category))} color={product.accentColor} className="h-11 w-11" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <h4 className="truncate font-display text-[15px] font-bold text-ink">{product.name}</h4>
