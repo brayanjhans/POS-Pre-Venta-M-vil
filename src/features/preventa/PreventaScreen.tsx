@@ -16,6 +16,7 @@ import { checkCredit, requiresCustomer } from '../../domain/credit';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
 import { plural } from '../../lib/text';
+import { looksLikeOrderCode } from '../../domain/orderCode';
 import { stockStatus } from '../../domain/stock';
 import { ROTATION, TONE, categoryTone } from '../../app/tones';
 import { Starburst } from '../../app/Starburst';
@@ -60,7 +61,7 @@ const categoryEmoji = (category: string) =>
     : category === 'Snacks' ? '🍿' : category === 'Licores' ? '🍾' : '🍬';
 
 export const PreventaScreen: React.FC = () => {
-  const { session, catalog, orders, createOrder, cancelOrder, online } = usePos();
+  const { session, catalog, orders, createOrder, cancelOrder, online, api, upsertOrder, handleError } = usePos();
   const dialog = useDialog();
   const userId = session!.user.id;
   const products = React.useMemo(() => (catalog?.products ?? []).filter(p => p.isActive !== false), [catalog]);
@@ -243,7 +244,36 @@ export const PreventaScreen: React.FC = () => {
   };
 
   // Sincronizar ref con la versión más reciente de handleScanBarcode en cada render
-  handleScanBarcodeRef.current = handleScanBarcode;
+  /**
+   * Abre un ticket ya emitido a partir de su código o QR (para revisarlo o reimprimirlo).
+   * Primero busca en los pedidos del celular; si no está, lo pide al servidor.
+   */
+  const openTicketByCode = async (raw: string) => {
+    const code = raw.trim().toUpperCase();
+    let order = orders.find(o => o.code === code || o.qrPayload === code);
+    if (!order && api) {
+      try {
+        order = await api.getOrder(code);
+        upsertOrder(order);
+      } catch (e) {
+        void dialog.alert(handleError(e), { tone: 'danger', title: 'No se encontró el ticket' });
+        return;
+      }
+    }
+    if (!order) {
+      void dialog.alert(`No hay un ticket con el código ${code} en este celular. Conéctese a internet para buscarlo.`, { tone: 'warning', title: 'Ticket no encontrado' });
+      return;
+    }
+    playBarcodeBeep();
+    setActiveOrderId(order.id);
+    setIsTicketModalOpen(true);
+  };
+
+  // La pistola lectora puede leer tanto productos como el QR de un ticket.
+  handleScanBarcodeRef.current = (code: string) => {
+    if (looksLikeOrderCode(code)) void openTicketByCode(code);
+    else handleScanBarcode(code);
+  };
 
   const handleProductCardClick = (product: Product) => {
     const existing = cart.find(i => i.product.id === product.id);
@@ -990,13 +1020,20 @@ export const PreventaScreen: React.FC = () => {
           open={isCameraScannerOpen}
           onClose={() => setIsCameraScannerOpen(false)}
           onDetected={code => {
+            // QR de un ticket: se abre el ticket con sus productos para reimprimirlo.
+            if (looksLikeOrderCode(code)) {
+              setIsCameraScannerOpen(false);
+              void openTicketByCode(code);
+              return `Ticket ${code.toUpperCase()}`;
+            }
             const added = handleScanBarcode(code);
             if (added) return added;
             return findByBarcode(code)
               ? { error: 'No hay stock suficiente de este producto' }
               : { error: `El código ${code} no está en el catálogo` };
           }}
-          kind="barcode"
+          kind="any"
+          title="Escanear producto o ticket"
           continuous
         />
 

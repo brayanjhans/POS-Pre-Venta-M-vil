@@ -5,7 +5,7 @@ import { parseAmount, round2 } from './money';
 import { findSameName, formatPhone, isValidPhone, missingContact } from './customer';
 import { stockAlerts, stockStatus } from './stock';
 import { periodRange } from './period';
-import { generateOrderCode, isValidOrderCode } from './orderCode';
+import { generateOrderCode, isValidOrderCode, looksLikeOrderCode } from './orderCode';
 import type { Customer, Order, Product } from '../types/pos';
 
 const product = (overrides: Partial<Product> = {}): Product => ({
@@ -195,5 +195,14 @@ describe('períodos de reporte', () => {
     expect(periodRange('week', now)).toEqual({ from: '2026-10-03', to: '2026-10-09' });
     expect(periodRange('month', now)).toEqual({ from: '2026-10-01', to: '2026-10-09' });
     expect(periodRange('lastMonth', now)).toEqual({ from: '2026-09-01', to: '2026-09-30' });
+  });
+});
+
+describe('código de ticket escaneado', () => {
+  it('distingue el QR de un ticket de un código de barras de producto', () => {
+    expect(looksLikeOrderCode('V01-7K3QM')).toBe(true);
+    expect(looksLikeOrderCode('adm-sgvk3')).toBe(true);
+    expect(looksLikeOrderCode('7750182002346')).toBe(false);
+    expect(looksLikeOrderCode('V01-7K3')).toBe(false);
   });
 });

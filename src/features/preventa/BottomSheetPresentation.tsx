@@ -2,6 +2,7 @@ import React from 'react';
 import type { CartItem, PresentationType } from '../../types/pos';
 import { X, Check, Package, Layers, Sparkles, AlertCircle, TrendingDown, Pencil, RotateCcw } from 'lucide-react';
 import { isValidUnitPrice } from '../../domain/cart';
+import { playBarcodeBeep } from '../../lib/audioBeep';
 import { parseAmount, round2 } from '../../domain/money';
 
 interface Props {
@@ -46,6 +47,8 @@ export const BottomSheetPresentation: React.FC<Props> = ({
 
   /** Al cambiar de presentación se pre-carga su precio (o el editado, si se vuelve a la de la línea). */
   const selectPresentation = (type: PresentationType) => {
+    // Mismo "bip" que el botón + del catálogo (respeta el interruptor de sonido del menú).
+    playBarcodeBeep();
     setSelectedPres(type);
     const price = type === item.selectedPresentation ? item.unitPrice : product.presentations[type]!.price;
     setPriceText(price.toFixed(2));

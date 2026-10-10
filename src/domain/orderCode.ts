@@ -15,3 +15,6 @@ export function generateOrderCode(prefix: string | null | undefined): string {
 }
 
 export const isValidOrderCode = (code: string): boolean => /^[A-Z0-9-]{4,24}$/.test(code);
+
+/** ¿El texto escaneado es el código/QR de un ticket (ej. "V01-7K3QM") y no un código de barras de producto? */
+export const looksLikeOrderCode = (code: string): boolean => /^[A-Z0-9]{1,6}-[A-Z0-9]{5}$/.test(code.trim().toUpperCase());
