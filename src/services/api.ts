@@ -78,6 +78,10 @@ export function createApi(token: string) {
     productTemplates: (query: string) =>
       rpc<ProductTemplate[]>('pos_product_templates', { ...t, p_query: query.trim() || null, p_limit: 30 }),
     saveProduct: (product: Partial<Product>) => rpc<Product>('pos_product_save', { ...t, p_product: product }),
+    /** Sube una foto ya reducida (data URL WebP/JPEG). Devuelve la referencia "img:<id>". */
+    uploadProductImage: (dataUrl: string) => rpc<string>('pos_product_image_upload', { ...t, p_data: dataUrl }),
+    /** Fotos de productos por id: {id: dataUrl}. */
+    productImages: (ids: string[]) => rpc<Record<string, string>>('pos_product_images', { ...t, p_ids: ids }),
     deleteProduct: (productId: string) =>
       rpc<{ deleted: boolean; deactivated: boolean }>('pos_product_delete', { ...t, p_product_id: productId }),
     setProductActive: (productId: string, active: boolean) =>

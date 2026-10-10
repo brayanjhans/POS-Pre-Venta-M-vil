@@ -13,16 +13,14 @@ import {
 } from '../../lib/audioBeep';
 import { buildCartItem, computeCartTotals, editedPrice, refreshCartWithCatalog } from '../../domain/cart';
 import { buildComboItems } from '../../domain/combo';
+import { ProductCard } from './ProductCard';
 import { checkCredit, requiresCustomer } from '../../domain/credit';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
 import { plural } from '../../lib/text';
 import { looksLikeOrderCode } from '../../domain/orderCode';
 import { stockStatus } from '../../domain/stock';
-import { ROTATION, TONE } from '../../app/tones';
-import { Starburst } from '../../app/Starburst';
-import { ProductArt, artSpot, resolveArt } from '../../app/ProductArt';
-import { categoryArtOf, useCategories } from '../../app/categories';
+import { useCategories } from '../../app/categories';
 import { CameraScanner } from '../shared/CameraScanner';
 import { MenuButton, ProfileSection } from '../../app/ProfileMenu';
 import { useDialog } from '../../app/DialogProvider';
@@ -209,18 +207,10 @@ export const PreventaScreen: React.FC = () => {
     return null;
   };
 
-  /** Agrega 1 unidad del código escaneado. Devuelve el texto de confirmación, o null si no se pudo. */
-  const handleScanBarcode = (barcode: string): string | null => {
-    const cleanBarcode = barcode.trim();
-    const found = findByBarcode(cleanBarcode);
-
-    if (!found) {
-      showFeedback(`Código no registrado: ${cleanBarcode}`, true);
-      return null;
-    }
-
-    const { product, presentation } = found;
-    const pres = product.presentations[presentation]!;
+  /** Agrega 1 de la presentación indicada. Devuelve el texto de confirmación, o null si no se pudo. */
+  const addOne = (product: Product, presentation: PresentationType): string | null => {
+    const pres = product.presentations[presentation];
+    if (!pres) return null;
     // Las líneas de un combo tienen su propio precio: un producto suelto va en otra línea.
     const existing = cart.find(item => item.product.id === product.id && item.selectedPresentation === presentation && !item.promoId);
     const reservedOther = cart
@@ -242,6 +232,51 @@ export const PreventaScreen: React.FC = () => {
     triggerCartAnimation(product.name, pres.price);
     showFeedback(`✓ ${product.name} (1 ${pres.shortLabel})`);
     return `✓ ${product.name} · ${pres.shortLabel}`;
+  };
+
+  /** Quita 1 de la presentación (sin tocar las líneas de combos). */
+  const removeOne = (product: Product, presentation: PresentationType) => {
+    const line = cart.find(item => item.product.id === product.id && item.selectedPresentation === presentation && !item.promoId);
+    if (!line) return;
+    playBarcodeBeep();
+    setCart(prev => line.quantity <= 1
+      ? prev.filter(i => i.cartItemId !== line.cartItemId)
+      : prev.map(i => (i.cartItemId === line.cartItemId
+          ? buildCartItem(product, presentation, line.quantity - 1, line.cartItemId, editedPrice(line))
+          : i)));
+  };
+
+  /** Cantidad suelta (sin combos) de una presentación en el pedido. */
+  const qtyInCart = (productId: string, presentation: PresentationType) =>
+    cart.find(i => i.product.id === productId && i.selectedPresentation === presentation && !i.promoId)?.quantity ?? 0;
+
+  /** Agrega 1 unidad del código escaneado. Devuelve el texto de confirmación, o null si no se pudo. */
+  const handleScanBarcode = (barcode: string): string | null => {
+    const cleanBarcode = barcode.trim();
+    const found = findByBarcode(cleanBarcode);
+    if (!found) {
+      showFeedback(`Código no registrado: ${cleanBarcode}`, true);
+      return null;
+    }
+    return addOne(found.product, found.presentation);
+  };
+
+  const renderCard = (product: Product, layout: 'grid' | 'list') => {
+    const packType: PresentationType | null = product.presentations.pack ? 'pack' : product.presentations.half ? 'half' : null;
+    return (
+      <ProductCard
+        key={product.id}
+        product={product}
+        layout={layout}
+        status={stockStatus(product)}
+        unitQty={qtyInCart(product.id, 'unit')}
+        packQty={packType ? qtyInCart(product.id, packType) : 0}
+        onOpen={() => handleProductCardClick(product)}
+        onAddUnit={() => { addOne(product, 'unit'); }}
+        onRemoveUnit={() => removeOne(product, 'unit')}
+        onAddPack={() => { if (packType) addOne(product, packType); }}
+      />
+    );
   };
 
   /** Agrega un combo completo cobrando su precio de oferta. */
@@ -301,12 +336,6 @@ export const PreventaScreen: React.FC = () => {
       triggerCartAnimation(product.name, tempItem.unitPrice);
     }
     setIsBottomSheetOpen(true);
-  };
-
-  // Botón directo rápido "+" en la tarjeta
-  const handleQuickAddUnit = (e: React.MouseEvent, product: Product) => {
-    e.stopPropagation();
-    handleScanBarcode(product.barcode);
   };
 
   const handleUpdatePresentation = (cartItemId: string, presentation: PresentationType, quantity: number, unitPrice: number) => {
@@ -640,30 +669,30 @@ export const PreventaScreen: React.FC = () => {
           {/* SECCIÓN DE PROMOCIONES DINÁMICAS (CARRUSEL O LISTA COMPLETA) */}
           {!searchQuery && promos.length > 0 && (activeScreenTab === 'ofertas' || selectedCategory === 'Todos') && (
             <div ref={carouselRef} className={activeScreenTab === 'ofertas' ? "flex flex-col gap-4" : "flex overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-none pb-2 transition-all"}>
-              {promos.map((promo, promoIdx) => (
-                <div key={promo.id} className={`relative overflow-hidden rounded-3xl text-ink ${TONE[ROTATION[promoIdx % ROTATION.length]].bg} shadow-[0_1px_0_rgba(31,42,48,0.08),0_12px_24px_-18px_rgba(31,42,48,0.6)] ${activeScreenTab === 'ofertas' ? 'w-full' : 'w-[85%] max-w-[340px] sm:w-[320px] snap-center shrink-0'}`}>
+              {promos.map(promo => (
+                <div key={promo.id} className={`relative overflow-hidden rounded-3xl bg-ink text-white shadow-[0_14px_28px_-18px_rgba(20,67,61,0.9)] ${activeScreenTab === 'ofertas' ? 'w-full' : 'w-[85%] max-w-[340px] sm:w-[320px] snap-center shrink-0'}`}>
                   {/* Perforación de la etiqueta de precio */}
-                  <span className="absolute right-4 top-4 h-3.5 w-3.5 rounded-full bg-paper ring-2 ring-ink/10" />
+                  <span className="absolute right-4 top-4 h-3.5 w-3.5 rounded-full bg-paper" />
                   <div className="flex h-full flex-col justify-between p-4 pr-10">
                     <div>
                       <div className="flex flex-wrap items-center gap-1.5 text-sm font-bold">
-                        <span>{promo.badgeText}</span>
-                        {promo.tag && <span className="rounded-md bg-ink/10 px-1.5">{promo.tag}</span>}
+                        <span className="text-tag">{promo.badgeText}</span>
+                        {promo.tag && <span className="rounded-md bg-white/12 px-1.5 text-white/85">{promo.tag}</span>}
                         {promo.discountBadge && <span className="rounded-md bg-fresa px-1.5 text-white">{promo.discountBadge}</span>}
                       </div>
                       <h3 className="mt-1.5 font-display text-lg font-bold leading-tight line-clamp-2">{promo.title}</h3>
-                      <p className="mt-1 text-sm leading-snug text-ink/75 line-clamp-2">{promo.subtitle}</p>
+                      <p className="mt-1 text-sm leading-snug text-white/70 line-clamp-2">{promo.subtitle}</p>
                     </div>
                     <div className="mt-3 flex items-end justify-between gap-3">
                       <div>
-                        <div className="text-sm font-bold">{promo.savingText}</div>
-                        <div className="text-sm text-ink/60 line-through">Antes S/ {promo.originalPrice.toFixed(2)}</div>
+                        <div className="text-sm font-bold text-tag">{promo.savingText}</div>
+                        <div className="text-sm text-white/55 line-through">Antes S/ {promo.originalPrice.toFixed(2)}</div>
                         <div className="font-display text-[32px] font-bold leading-none [font-stretch:85%]">S/ {promo.offerPrice.toFixed(2)}</div>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleAddCombo(promo)}
-                        className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-ink px-4 text-sm font-bold text-white transition active:scale-95"
+                        className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-tag px-4 text-sm font-bold text-ink transition active:scale-95"
                       >
                         <Plus className="h-4 w-4" /> Agregar
                       </button>
@@ -690,73 +719,14 @@ export const PreventaScreen: React.FC = () => {
           )}
 
           {viewMode === 'grid' ? (
-            /* Cuadrícula estilo catálogo: imagen grande, nombre y precio protagonista */
-            <div className="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-3 lg:grid-cols-4">
-              {filteredProducts.map((product) => {
-                const status = stockStatus(product);
-                const pack = product.presentations.pack ?? product.presentations.half;
-                return (
-                  <article key={product.id} onClick={() => handleProductCardClick(product)} className="cursor-pointer">
-                    <div className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl bg-white ring-1 ring-ink/[0.07] transition active:scale-[0.98]`}>
-                      {/* círculo muy suave con el color de la marca, como el "spot" de las fotos de catálogo */}
-                      <span className="absolute h-[64%] w-[64%] rounded-full" style={{ background: artSpot(product.accentColor) }} aria-hidden />
-                      <ProductArt art={resolveArt(product, categoryArtOf(categoryInfo, product.category))} color={product.accentColor}
-                        className="relative h-[70%] w-[70%] drop-shadow-[0_10px_12px_rgba(20,67,61,0.18)]" />
-                      {product.isPromo && <Starburst className="absolute left-2 top-2 rotate-[-12deg]" size={54} spin>Oferta</Starburst>}
-                      {status !== 'ok' && (
-                        <span className={`absolute right-2.5 top-2.5 rounded-full px-2.5 py-1 text-xs font-bold ${status === 'out' ? 'bg-fresa text-white' : 'bg-white text-[#9a6a00]'}`}>
-                          {status === 'out' ? 'Agotado' : `Quedan ${product.stockInBaseUnits}`}
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={(e) => handleQuickAddUnit(e, product)}
-                        aria-label={`Agregar 1 ${product.name}`}
-                        title="Añadir 1 Unidad al Carrito"
-                        className="squish absolute bottom-2.5 right-2.5 flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white shadow-[0_8px_18px_-8px_rgba(20,67,61,0.8)]"
-                      >
-                        <Plus className="h-5 w-5" strokeWidth={2.6} />
-                      </button>
-                    </div>
-                    <div className="mt-2.5 px-1">
-                      <div className="text-sm text-ink-soft">{product.category}</div>
-                      <h4 className="line-clamp-2 font-display text-[15px] font-bold leading-snug text-ink">{product.name}</h4>
-                      <div className="mt-1 font-display text-lg font-bold text-ink">S/ {product.presentations.unit.price.toFixed(2)}</div>
-                      {pack && (
-                        <div className="text-sm text-ink-soft">
-                          {pack.type === 'pack' ? 'Paquete' : 'Medio'} ×{pack.conversionFactor}: S/ {pack.price.toFixed(2)}
-                        </div>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
+            /* Cuadrícula: imagen, precio y cantidad en la misma tarjeta */
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+              {filteredProducts.map(product => renderCard(product, 'grid'))}
             </div>
           ) : (
             /* Lista rápida */
             <ul className="space-y-2">
-              {filteredProducts.map((product) => {
-                const status = stockStatus(product);
-                return (
-                  <li key={product.id} onClick={() => handleProductCardClick(product)}
-                    className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-2.5 pr-3 transition active:scale-[0.99]">
-                    <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white ring-1 ring-ink/[0.07]`} style={{ background: artSpot(product.accentColor) }}>
-                      <ProductArt art={resolveArt(product, categoryArtOf(categoryInfo, product.category))} color={product.accentColor} className="h-11 w-11" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="truncate font-display text-[15px] font-bold text-ink">{product.name}</h4>
-                      <div className={`text-sm ${status === 'out' ? 'font-bold text-fresa' : status === 'low' ? 'font-bold text-[#9a6a00]' : 'text-ink-soft'}`}>
-                        {status === 'out' ? 'Agotado' : `${product.stockInBaseUnits} ${product.baseUnitName}s`}
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right font-display text-base font-bold text-ink">S/ {product.presentations.unit.price.toFixed(2)}</div>
-                    <button type="button" onClick={(e) => handleQuickAddUnit(e, product)} aria-label={`Agregar 1 ${product.name}`}
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-white active:scale-90">
-                      <Plus className="h-5 w-5" strokeWidth={2.6} />
-                    </button>
-                  </li>
-                );
-              })}
+              {filteredProducts.map(product => renderCard(product, 'list'))}
             </ul>
           )}
         </div>

@@ -1,12 +1,15 @@
 import React from 'react';
-import { Camera, Plus, Search, X } from 'lucide-react';
+import { Camera, ImagePlus, Plus, Search, Trash2, X } from 'lucide-react';
 import { CameraScanner } from '../shared/CameraScanner';
 import { parseAmount, round2 } from '../../domain/money';
 import type { PackagingType, PresentationType, Product, ProductCategory, ProductPresentation, ProductTemplate } from '../../types/pos';
 import { usePos } from '../../state/PosContext';
 import { useDialog } from '../../app/DialogProvider';
-import { ProductArt, artSpot, resolveArt } from '../../app/ProductArt';
-import { categoryArtOf, useCategories } from '../../app/categories';
+import { ProductArt, artSpot } from '../../app/ProductArt';
+import { ProductThumb } from '../../app/ProductThumb';
+import { compressProductPhoto, dataUrlBytes } from '../../lib/imageCompress';
+import { photoId, rememberPhoto } from '../../lib/productImages';
+import { useCategories } from '../../app/categories';
 
 /*
  * Alta y edición de productos en un solo formulario, por secciones:
@@ -45,6 +48,11 @@ export const ProductForm: React.FC<Props> = ({ product, existingBarcodes, onSave
   // Ilustración y color de marca (llegan de un producto conocido o se conservan al editar).
   const [art, setArt] = React.useState<string | null>(product?.imageUrl?.startsWith('art:') ? product.imageUrl.slice(4) : null);
   const [color, setColor] = React.useState<string>(product?.accentColor ?? DEFAULT_COLOR);
+  // Foto: la nueva (ya reducida, aún sin subir) o si se quitó la que tenía.
+  const [photo, setPhoto] = React.useState<string | null>(null);
+  const [photoRemoved, setPhotoRemoved] = React.useState(false);
+  const [photoBusy, setPhotoBusy] = React.useState(false);
+  const hasSavedPhoto = !!photoId(product?.imageUrl) && !photoRemoved;
   const categories = useCategories();
   const { api, refreshCatalog, handleError } = usePos();
   const dialog = useDialog();
@@ -104,6 +112,22 @@ export const ProductForm: React.FC<Props> = ({ product, existingBarcodes, onSave
     }));
     setTplQuery('');
     setTplResults([]);
+  };
+
+  /** Reduce la foto en el celular (WebP, ~12 KB) antes de subirla. */
+  const pickPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setPhotoBusy(true);
+    try {
+      setPhoto(await compressProductPhoto(file));
+      setPhotoRemoved(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo usar la foto.');
+    } finally {
+      setPhotoBusy(false);
+    }
   };
 
   const createCategory = async () => {
@@ -174,13 +198,23 @@ export const ProductForm: React.FC<Props> = ({ product, existingBarcodes, onSave
       isPromo,
       minStockAlert: Math.max(0, Number(minStock) || 0),
       accentColor: color,
-      imageUrl: art ? `art:${art}` : (product?.imageUrl ?? null),
+      imageUrl: hasSavedPhoto ? product!.imageUrl : art ? `art:${art}` : (photoId(product?.imageUrl) ? null : product?.imageUrl ?? null),
       gradientBg: product?.gradientBg ?? 'from-brand-500/10 to-transparent',
       piecesPerPack: (pres.pack?.conversionFactor ?? pres.half?.conversionFactor ?? 1),
       presentations: pres,
       ...(editing ? {} : { stockInBaseUnits: Math.max(0, Number(stock) || 0) }),
     };
     setSaving(true);
+    if (photo && api) {
+      try {
+        const ref = await api.uploadProductImage(photo);
+        rememberPhoto(ref, photo);
+        payload.imageUrl = ref;
+      } catch (err) {
+        setSaving(false);
+        return setError(`No se pudo subir la foto: ${handleError(err)}`);
+      }
+    }
     const ok = await onSave(payload);
     setSaving(false);
     if (ok) onClose();
@@ -241,15 +275,39 @@ export const ProductForm: React.FC<Props> = ({ product, existingBarcodes, onSave
           <fieldset className="space-y-4">
             <legend className="font-display text-lg font-bold">El producto</legend>
             <div className="flex items-center gap-3 rounded-2xl bg-white p-3">
-              <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white ring-1 ring-ink/[0.07]`} style={{ background: artSpot(color) }}>
-                <ProductArt art={resolveArt({ imageUrl: art ? `art:${art}` : null, name, category }, categoryArtOf(categories, category))} color={color} className="h-14 w-14" />
+              <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl ring-1 ring-ink/[0.07]" style={{ background: photo || hasSavedPhoto ? '#fff' : artSpot(color) }}>
+                <ProductThumb
+                  product={{ name, category, accentColor: color, imageUrl: hasSavedPhoto ? product!.imageUrl : art ? `art:${art}` : null }}
+                  previewUrl={photo} artClassName="h-[80%] w-[80%]" />
               </span>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-bold">Imagen del producto</div>
-                <div className="text-sm text-ink-soft">Se elige sola según el nombre y la categoría.</div>
-                <label className="mt-1 inline-flex items-center gap-2 text-sm font-bold">
-                  Color <input type="color" value={color} onChange={e => setColor(e.target.value)} className="h-7 w-10 cursor-pointer rounded border-0 bg-transparent p-0" />
-                </label>
+              <div className="min-w-0 flex-1 space-y-2">
+                <div>
+                  <div className="text-sm font-bold">Foto del producto</div>
+                  <div className="text-sm text-ink-soft">
+                    {photo ? `Lista para guardar (${Math.max(1, Math.round(dataUrlBytes(photo) / 1024))} KB)` : hasSavedPhoto ? 'Con foto' : 'Sin foto: se muestra un dibujo.'}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <label className={`squish inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-3.5 text-sm font-bold text-white ${photoBusy ? 'opacity-60' : ''}`}>
+                    <Camera className="h-4 w-4" /> {photoBusy ? 'Procesando…' : 'Tomar foto'}
+                    <input type="file" accept="image/*" capture="environment" className="sr-only" disabled={photoBusy} onChange={e => void pickPhoto(e)} />
+                  </label>
+                  <label className="squish inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full border border-ink/15 bg-white px-3.5 text-sm font-bold">
+                    <ImagePlus className="h-4 w-4" /> Galería
+                    <input type="file" accept="image/*" className="sr-only" disabled={photoBusy} onChange={e => void pickPhoto(e)} />
+                  </label>
+                  {(photo || hasSavedPhoto) && (
+                    <button type="button" onClick={() => { setPhoto(null); setPhotoRemoved(true); }} aria-label="Quitar foto"
+                      className="squish inline-flex h-10 w-10 items-center justify-center rounded-full text-fresa hover:bg-fresa/10">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                {!photo && !hasSavedPhoto && (
+                  <label className="inline-flex items-center gap-2 text-sm font-bold">
+                    Color del dibujo <input type="color" value={color} onChange={e => setColor(e.target.value)} className="h-7 w-10 cursor-pointer rounded border-0 bg-transparent p-0" />
+                  </label>
+                )}
               </div>
             </div>
             <div>
