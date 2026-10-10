@@ -150,6 +150,7 @@ export interface PromoBanner {
   savingText: string;
   associatedBarcodes: string[]; // Barcodes of the products to add to cart when "AÑADIR COMBO" is clicked
   isActive?: boolean;
+  imageUrl?: string | null; // "img:<id>" (foto en pos.product_images)
 }
 
 export type DocType = 'DNI' | 'RUC' | 'OTRO' | 'NINGUNO';

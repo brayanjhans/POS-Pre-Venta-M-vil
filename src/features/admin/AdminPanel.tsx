@@ -18,6 +18,9 @@ import { UsersTab } from './UsersTab';
 import { CustomersTab } from './CustomersTab';
 import { SettingsTab } from './SettingsTab';
 import { DebtsPanel } from '../shared/DebtsPanel';
+import { StoredPhoto } from '../../app/ProductThumb';
+import { compressComboPhoto, dataUrlBytes } from '../../lib/imageCompress';
+import { rememberPhoto } from '../../lib/productImages';
 import { 
   ShieldCheck, 
   Lock, 
@@ -46,7 +49,9 @@ import {
   Clock,
   Users,
   Receipt,
-  Pencil
+  Pencil,
+  Camera,
+  ImagePlus
 } from 'lucide-react';
 
 /** Ícono de cada sección en la cabecera (el mismo del menú). */
@@ -153,8 +158,29 @@ export const AdminPanel: React.FC = () => {
   });
   // Promoción que se está editando (null = se está creando una nueva).
   const [editingPromo, setEditingPromo] = React.useState<PromoBanner | null>(null);
+  // Foto del combo: la nueva (ya reducida, sin subir) o si se quitó la que tenía.
+  const [promoPhoto, setPromoPhoto] = React.useState<string | null>(null);
+  const [promoPhotoRemoved, setPromoPhotoRemoved] = React.useState(false);
+  const [promoPhotoBusy, setPromoPhotoBusy] = React.useState(false);
+  const savedPromoPhoto = !promoPhotoRemoved ? editingPromo?.imageUrl ?? null : null;
+  const pickPromoPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setPromoPhotoBusy(true);
+    try {
+      setPromoPhoto(await compressComboPhoto(file));
+      setPromoPhotoRemoved(false);
+    } catch (err) {
+      void dialog.alert(err instanceof Error ? err.message : 'No se pudo usar la foto.', { tone: 'danger' });
+    } finally {
+      setPromoPhotoBusy(false);
+    }
+  };
   const startNewPromo = () => {
     setEditingPromo(null);
+    setPromoPhoto(null);
+    setPromoPhotoRemoved(false);
     setPromoFormData({
       title: '', subtitle: '', badgeText: 'PROMOCIÓN DESTACADA', tag: 'OFERTA MAYORISTA', discountBadge: '',
       originalPrice: 0, offerPrice: 0, savingText: '¡Ahorras S/ 0.00!', associatedBarcodes: '',
@@ -163,6 +189,8 @@ export const AdminPanel: React.FC = () => {
   };
   const startEditPromo = (promo: PromoBanner) => {
     setEditingPromo(promo);
+    setPromoPhoto(null);
+    setPromoPhotoRemoved(false);
     setPromoFormData({
       title: promo.title, subtitle: promo.subtitle, badgeText: promo.badgeText, tag: promo.tag,
       discountBadge: promo.discountBadge, originalPrice: promo.originalPrice, offerPrice: promo.offerPrice,
@@ -207,7 +235,18 @@ export const AdminPanel: React.FC = () => {
       associatedBarcodes: promoFormData.associatedBarcodes.split(',').map(bc => bc.trim()).filter(bc => bc !== ''),
     };
 
-    if (!(await onAddPromo({ ...newPromo, id: editingPromo?.id, isActive: editingPromo?.isActive ?? true }))) return;
+    let imageUrl = savedPromoPhoto;
+    if (promoPhoto && api) {
+      try {
+        imageUrl = await api.uploadProductImage(promoPhoto);
+        rememberPhoto(imageUrl, promoPhoto);
+      } catch (err) {
+        void dialog.alert(handleError(err), { tone: 'danger', title: 'No se pudo subir la foto' });
+        return;
+      }
+    }
+    if (!(await onAddPromo({ ...newPromo, imageUrl, id: editingPromo?.id, isActive: editingPromo?.isActive ?? true }))) return;
+    setPromoPhoto(null);
     setFeedbackMsg(`✓ Promoción "${newPromo.title}" ${editingPromo ? 'actualizada' : 'creada'}.`);
     setEditingPromo(null);
     setTimeout(() => setFeedbackMsg(null), 3000);
@@ -393,6 +432,11 @@ export const AdminPanel: React.FC = () => {
               <ul className="grid gap-3 md:grid-cols-2">
                 {promos.map((promo, i) => (
                   <li key={promo.id} className={`relative flex flex-col justify-between overflow-hidden rounded-3xl p-5 text-ink ${TONE[ROTATION[i % ROTATION.length]].bg}`}>
+                    {promo.imageUrl && (
+                      <div className="-mx-5 -mt-5 mb-4 aspect-[16/10] overflow-hidden bg-white/60">
+                        <StoredPhoto imageUrl={promo.imageUrl} alt={promo.title} />
+                      </div>
+                    )}
                     <div>
                       <div className="flex flex-wrap items-center gap-1.5 text-sm font-bold">
                         <span>{promo.badgeText}</span>
@@ -527,6 +571,36 @@ export const AdminPanel: React.FC = () => {
                     onChange={(e) => setPromoFormData({...promoFormData, savingText: e.target.value})}
                     className="h-11 w-full rounded-2xl border-2 border-ink/10 bg-white px-3 text-[15px] outline-none focus:border-brand-600"
                   />
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-2xl bg-white p-4 ring-1 ring-ink/10">
+                <div>
+                  <h4 className="font-display text-lg font-bold text-ink">Foto del combo</h4>
+                  <p className="text-sm text-ink-soft">
+                    {promoPhoto ? `Lista para guardar (${Math.max(1, Math.round(dataUrlBytes(promoPhoto) / 1024))} KB)` : savedPromoPhoto ? 'Con foto' : 'Opcional: una foto con los productos del combo juntos.'}
+                  </p>
+                </div>
+                {(promoPhoto || savedPromoPhoto) && (
+                  <div className="aspect-[16/10] w-full max-w-sm overflow-hidden rounded-2xl bg-paper">
+                    <StoredPhoto imageUrl={savedPromoPhoto} previewUrl={promoPhoto} alt="Foto del combo" />
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <label className={`squish inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-sm font-bold text-white ${promoPhotoBusy ? 'opacity-60' : ''}`}>
+                    <Camera className="h-4 w-4" /> {promoPhotoBusy ? 'Procesando…' : 'Tomar foto'}
+                    <input type="file" accept="image/*" capture="environment" className="sr-only" disabled={promoPhotoBusy} onChange={e => void pickPromoPhoto(e)} />
+                  </label>
+                  <label className="squish inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-full border border-ink/15 bg-white px-4 text-sm font-bold text-ink">
+                    <ImagePlus className="h-4 w-4" /> Galería
+                    <input type="file" accept="image/*" className="sr-only" disabled={promoPhotoBusy} onChange={e => void pickPromoPhoto(e)} />
+                  </label>
+                  {(promoPhoto || savedPromoPhoto) && (
+                    <button type="button" onClick={() => { setPromoPhoto(null); setPromoPhotoRemoved(true); }}
+                      className="squish inline-flex h-11 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-fresa hover:bg-fresa/10">
+                      <Trash2 className="h-4 w-4" /> Quitar
+                    </button>
+                  )}
                 </div>
               </div>
 

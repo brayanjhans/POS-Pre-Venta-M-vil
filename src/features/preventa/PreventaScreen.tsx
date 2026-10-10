@@ -14,6 +14,7 @@ import {
 import { buildCartItem, computeCartTotals, editedPrice, refreshCartWithCatalog } from '../../domain/cart';
 import { buildComboItems } from '../../domain/combo';
 import { ProductCard } from './ProductCard';
+import { StoredPhoto } from '../../app/ProductThumb';
 import { checkCredit, requiresCustomer } from '../../domain/credit';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
@@ -672,13 +673,22 @@ export const PreventaScreen: React.FC = () => {
               {promos.map(promo => (
                 <div key={promo.id} className={`relative overflow-hidden rounded-3xl bg-ink text-white shadow-[0_14px_28px_-18px_rgba(20,67,61,0.9)] ${activeScreenTab === 'ofertas' ? 'w-full' : 'w-[85%] max-w-[340px] sm:w-[320px] snap-center shrink-0'}`}>
                   {/* Perforación de la etiqueta de precio */}
-                  <span className="absolute right-4 top-4 h-3.5 w-3.5 rounded-full bg-paper" />
-                  <div className="flex h-full flex-col justify-between p-4 pr-10">
+                  {promo.imageUrl ? (
+                    <div className="relative aspect-[16/9] w-full overflow-hidden bg-white/10">
+                      <StoredPhoto imageUrl={promo.imageUrl} alt={promo.title} />
+                      {promo.discountBadge && (
+                        <span className="absolute left-3 top-3 rounded-md bg-fresa px-2 py-0.5 text-sm font-extrabold text-white">{promo.discountBadge}</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="absolute right-4 top-4 h-3.5 w-3.5 rounded-full bg-paper" />
+                  )}
+                  <div className={`flex flex-col justify-between p-4 ${promo.imageUrl ? '' : 'h-full pr-10'}`}>
                     <div>
                       <div className="flex flex-wrap items-center gap-1.5 text-sm font-bold">
                         <span className="text-tag">{promo.badgeText}</span>
                         {promo.tag && <span className="rounded-md bg-white/12 px-1.5 text-white/85">{promo.tag}</span>}
-                        {promo.discountBadge && <span className="rounded-md bg-fresa px-1.5 text-white">{promo.discountBadge}</span>}
+                        {promo.discountBadge && !promo.imageUrl && <span className="rounded-md bg-fresa px-1.5 text-white">{promo.discountBadge}</span>}
                       </div>
                       <h3 className="mt-1.5 font-display text-lg font-bold leading-tight line-clamp-2">{promo.title}</h3>
                       <p className="mt-1 text-sm leading-snug text-white/70 line-clamp-2">{promo.subtitle}</p>

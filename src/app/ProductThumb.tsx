@@ -32,3 +32,12 @@ export const ProductThumb: React.FC<Props> = ({ product, artClassName = 'h-[72%]
     />
   );
 };
+
+/** Foto guardada ("img:<id>") o vista previa local; no muestra nada si no hay foto. */
+export const StoredPhoto: React.FC<{ imageUrl?: string | null; previewUrl?: string | null; alt: string; className?: string }> =
+  ({ imageUrl, previewUrl, alt, className = 'h-full w-full object-cover' }) => {
+    const { api } = usePos();
+    const photo = useProductPhoto(previewUrl ? null : imageUrl, api);
+    const src = previewUrl ?? photo;
+    return src ? <img src={src} alt={alt} loading="lazy" decoding="async" draggable={false} className={className} /> : null;
+  };
