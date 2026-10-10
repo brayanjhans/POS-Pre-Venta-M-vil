@@ -1,9 +1,10 @@
 import React from 'react';
 import type { Order, PaymentMethod } from '../../types/pos';
-import { playBarcodeBeep, playSuccessChime } from '../../lib/audioBeep';
+import { playBarcodeBeep, playErrorBuzz, playSuccessChime } from '../../lib/audioBeep';
 import { escapeHtml } from '../../lib/html';
 import { formatSoles, parseAmount, round2 } from '../../domain/money';
 import { usePos } from '../../state/PosContext';
+import { isNetworkError } from '../../services/rpc';
 import { useDialog } from '../../app/DialogProvider';
 import { DebtsPanel } from '../shared/DebtsPanel';
 import { HeaderButton, ScreenHeader } from '../../app/ScreenHeader';
@@ -88,21 +89,36 @@ export const CajaScreen: React.FC = () => {
     const cleanCode = code.trim().toUpperCase();
     if (!cleanCode) return;
     let found = orders.find(o => o.code === cleanCode || o.qrPayload === cleanCode);
-    if (!found && api) {
+    // Con internet se consulta el estado real: el ticket pudo cobrarse en otro celular.
+    if (api) {
       try {
         found = await api.getOrder(cleanCode);
         upsertOrder(found);
       } catch (err) {
-        void dialog.alert(handleError(err), { tone: 'danger', title: 'Pedido no encontrado' });
-        return;
+        if (!found || !isNetworkError(err)) {
+          void dialog.alert(handleError(err), { tone: 'danger', title: 'Pedido no encontrado' });
+          return;
+        }
       }
     }
-    if (found) {
-      loadOrder(found);
-      setScannedCode('');
-    } else {
+    if (!found) {
       void dialog.alert(`No se encontró ningún pedido con el código ${cleanCode}.`, { tone: 'warning', title: 'Pedido no encontrado' });
+      return;
     }
+    setScannedCode('');
+    if (found.status !== 'PENDIENTE_PAGO') {
+      playErrorBuzz();
+      const when = found.paidAt ? new Date(found.paidAt).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' }) : null;
+      const who = found.settledByName ? `Lo cobró ${found.settledByName}` : 'Ya fue cobrado';
+      void dialog.alert(
+        found.status === 'CANCELADO'
+          ? `El ticket ${found.code} fue anulado. No se puede cobrar.`
+          : `${who}${when ? ` el ${when}` : ''} por ${formatSoles(found.totalAmount)}${found.status === 'FIADO' ? `, con ${formatSoles(found.debtAmount)} a fiado` : ''}. No se puede cobrar otra vez.`,
+        { tone: 'warning', title: found.status === 'CANCELADO' ? 'Ticket anulado' : `Ticket ${found.code} ya pagado` },
+      );
+      return;
+    }
+    loadOrder(found);
   };
 
   const handleSelectOrder = (order: Order) => loadOrder(order);

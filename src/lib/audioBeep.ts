@@ -86,3 +86,33 @@ export function playSuccessChime() {
     osc2.stop(now + 0.3);
   } catch (e) {}
 }
+
+/** Doble tono grave: el código leído no se puede usar (ej. ticket ya pagado). */
+export function playErrorBuzz() {
+  if (!isSoundEnabled) return;
+
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+
+    if (!audioContext) {
+      audioContext = new AudioCtx();
+    } else if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    const now = audioContext.currentTime;
+    for (const start of [0, 0.16]) {
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(220, now + start);
+      gain.gain.setValueAtTime(0.08, now + start);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + start + 0.13);
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      osc.start(now + start);
+      osc.stop(now + start + 0.14);
+    }
+  } catch (e) {}
+}

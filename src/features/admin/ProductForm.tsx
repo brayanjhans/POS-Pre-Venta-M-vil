@@ -5,9 +5,8 @@ import { parseAmount, round2 } from '../../domain/money';
 import type { PackagingType, PresentationType, Product, ProductCategory, ProductPresentation, ProductTemplate } from '../../types/pos';
 import { usePos } from '../../state/PosContext';
 import { useDialog } from '../../app/DialogProvider';
-import { ProductArt, resolveArt } from '../../app/ProductArt';
+import { ProductArt, artSpot, resolveArt } from '../../app/ProductArt';
 import { categoryArtOf, useCategories } from '../../app/categories';
-import { TONE, categoryTone } from '../../app/tones';
 
 /*
  * Alta y edición de productos en un solo formulario, por secciones:
@@ -220,7 +219,7 @@ export const ProductForm: React.FC<Props> = ({ product, existingBarcodes, onSave
                     <li key={t.id}>
                       <button type="button" onClick={() => applyTemplate(t)}
                         className="squish flex w-full items-center gap-3 rounded-2xl bg-white p-2 text-left">
-                        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${TONE[categoryTone(t.category)].soft}`}>
+                        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-ink/[0.07]`} style={{ background: artSpot(t.color) }}>
                           <ProductArt art={t.art} color={t.color} className="h-10 w-10" />
                         </span>
                         <span className="min-w-0">
@@ -242,7 +241,7 @@ export const ProductForm: React.FC<Props> = ({ product, existingBarcodes, onSave
           <fieldset className="space-y-4">
             <legend className="font-display text-lg font-bold">El producto</legend>
             <div className="flex items-center gap-3 rounded-2xl bg-white p-3">
-              <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl ${TONE[categoryTone(category)].soft}`}>
+              <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white ring-1 ring-ink/[0.07]`} style={{ background: artSpot(color) }}>
                 <ProductArt art={resolveArt({ imageUrl: art ? `art:${art}` : null, name, category }, categoryArtOf(categories, category))} color={color} className="h-14 w-14" />
               </span>
               <div className="min-w-0 flex-1">

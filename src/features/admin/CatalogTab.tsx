@@ -3,9 +3,8 @@ import { EyeOff, MoreHorizontal, PackagePlus, Pencil, Plus, Search, Trash2, Eye 
 import { useDialog } from '../../app/DialogProvider';
 import { formatSoles } from '../../domain/money';
 import type { PresentationType, Product } from '../../types/pos';
-import { ProductArt, resolveArt } from '../../app/ProductArt';
+import { ProductArt, artSpot, resolveArt } from '../../app/ProductArt';
 import { categoryArtOf, useCategories } from '../../app/categories';
-import { TONE, categoryTone } from '../../app/tones';
 import { ProductForm } from './ProductForm';
 
 interface Props {
@@ -99,7 +98,7 @@ export const CatalogTab: React.FC<Props> = ({ products, onSave, onDelete, onTogg
           return (
             <li key={p.id} className={`rounded-2xl border border-ink/10 bg-white p-4 ${off ? 'opacity-60' : ''}`}>
               <div className="flex items-start gap-3">
-                <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${TONE[categoryTone(p.category)].soft}`} aria-hidden>
+                <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white ring-1 ring-ink/[0.07]`} style={{ background: artSpot(p.accentColor) }} aria-hidden>
                   <ProductArt art={resolveArt(p, categoryArtOf(categoryInfo, p.category))} color={p.accentColor} className="h-11 w-11" />
                 </span>
                 <div className="min-w-0 flex-1">

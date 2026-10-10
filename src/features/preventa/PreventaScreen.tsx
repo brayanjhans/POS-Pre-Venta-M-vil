@@ -19,9 +19,9 @@ import { usePos } from '../../state/PosContext';
 import { plural } from '../../lib/text';
 import { looksLikeOrderCode } from '../../domain/orderCode';
 import { stockStatus } from '../../domain/stock';
-import { ROTATION, TONE, categoryTone } from '../../app/tones';
+import { ROTATION, TONE } from '../../app/tones';
 import { Starburst } from '../../app/Starburst';
-import { ProductArt, resolveArt } from '../../app/ProductArt';
+import { ProductArt, artSpot, resolveArt } from '../../app/ProductArt';
 import { categoryArtOf, useCategories } from '../../app/categories';
 import { CameraScanner } from '../shared/CameraScanner';
 import { MenuButton, ProfileSection } from '../../app/ProfileMenu';
@@ -697,9 +697,9 @@ export const PreventaScreen: React.FC = () => {
                 const pack = product.presentations.pack ?? product.presentations.half;
                 return (
                   <article key={product.id} onClick={() => handleProductCardClick(product)} className="cursor-pointer">
-                    <div className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl transition active:scale-[0.98] ${TONE[categoryTone(product.category)].soft}`}>
-                      {/* círculo claro detrás del producto, como el "spot" de las fotos de catálogo */}
-                      <span className="absolute h-[62%] w-[62%] rounded-full bg-white/55" aria-hidden />
+                    <div className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl bg-white ring-1 ring-ink/[0.07] transition active:scale-[0.98]`}>
+                      {/* círculo muy suave con el color de la marca, como el "spot" de las fotos de catálogo */}
+                      <span className="absolute h-[64%] w-[64%] rounded-full" style={{ background: artSpot(product.accentColor) }} aria-hidden />
                       <ProductArt art={resolveArt(product, categoryArtOf(categoryInfo, product.category))} color={product.accentColor}
                         className="relative h-[70%] w-[70%] drop-shadow-[0_10px_12px_rgba(20,67,61,0.18)]" />
                       {product.isPromo && <Starburst className="absolute left-2 top-2 rotate-[-12deg]" size={54} spin>Oferta</Starburst>}
@@ -740,7 +740,7 @@ export const PreventaScreen: React.FC = () => {
                 return (
                   <li key={product.id} onClick={() => handleProductCardClick(product)}
                     className="flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-2.5 pr-3 transition active:scale-[0.99]">
-                    <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${TONE[categoryTone(product.category)].soft}`}>
+                    <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white ring-1 ring-ink/[0.07]`} style={{ background: artSpot(product.accentColor) }}>
                       <ProductArt art={resolveArt(product, categoryArtOf(categoryInfo, product.category))} color={product.accentColor} className="h-11 w-11" />
                     </span>
                     <div className="min-w-0 flex-1">

@@ -240,3 +240,12 @@ export const ProductArt: React.FC<{ art: string; color?: string; className?: str
     {(ART[art] ?? ART.caja)(color)}
   </svg>
 );
+
+/** Fondo muy suave con el color de la marca (9 % sobre blanco), para el "spot" detrás de la ilustración. */
+export function artSpot(color?: string | null, amount = 0.09): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(color ?? '');
+  if (!m) return '#f6f4f0';
+  const n = parseInt(m[1], 16);
+  const mix = (c: number) => Math.round(255 - (255 - c) * amount);
+  return `rgb(${mix(n >> 16)}, ${mix((n >> 8) & 255)}, ${mix(n & 255)})`;
+}
