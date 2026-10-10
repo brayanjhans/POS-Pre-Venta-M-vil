@@ -1,5 +1,5 @@
 import React from 'react';
-import type { CartItem, Customer, Order, PaymentTerm, PresentationType, Product } from '../../types/pos';
+import type { CartItem, Customer, Order, PaymentTerm, PresentationType, Product, PromoBanner } from '../../types/pos';
 import { PAYMENT_TERMS } from '../../types/pos';
 import { BottomSheetPresentation } from './BottomSheetPresentation';
 import { TicketModal } from './TicketModal';
@@ -12,6 +12,7 @@ import {
   setScannerSoundEnabled
 } from '../../lib/audioBeep';
 import { buildCartItem, computeCartTotals, editedPrice, refreshCartWithCatalog } from '../../domain/cart';
+import { buildComboItems } from '../../domain/combo';
 import { checkCredit, requiresCustomer } from '../../domain/credit';
 import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
@@ -220,7 +221,8 @@ export const PreventaScreen: React.FC = () => {
 
     const { product, presentation } = found;
     const pres = product.presentations[presentation]!;
-    const existing = cart.find(item => item.product.id === product.id && item.selectedPresentation === presentation);
+    // Las líneas de un combo tienen su propio precio: un producto suelto va en otra línea.
+    const existing = cart.find(item => item.product.id === product.id && item.selectedPresentation === presentation && !item.promoId);
     const reservedOther = cart
       .filter(item => item.product.id === product.id && item !== existing)
       .reduce((acc, item) => acc + item.deductedBaseUnits, 0);
@@ -240,6 +242,20 @@ export const PreventaScreen: React.FC = () => {
     triggerCartAnimation(product.name, pres.price);
     showFeedback(`✓ ${product.name} (1 ${pres.shortLabel})`);
     return `✓ ${product.name} · ${pres.shortLabel}`;
+  };
+
+  /** Agrega un combo completo cobrando su precio de oferta. */
+  const handleAddCombo = (promo: PromoBanner) => {
+    const result = buildComboItems(promo, findByBarcode, productId =>
+      cart.filter(i => i.product.id === productId).reduce((acc, i) => acc + i.deductedBaseUnits, 0));
+    if (!result.ok) {
+      showFeedback(result.error, true);
+      return;
+    }
+    playBarcodeBeep();
+    setCart(prev => [...result.items, ...prev]);
+    triggerCartAnimation(promo.title, promo.offerPrice);
+    showFeedback(`✓ ${promo.title}`);
   };
 
   // Sincronizar ref con la versión más reciente de handleScanBarcode en cada render
@@ -646,7 +662,7 @@ export const PreventaScreen: React.FC = () => {
                       </div>
                       <button
                         type="button"
-                        onClick={() => { promo.associatedBarcodes.forEach(bc => handleScanBarcode(bc)); }}
+                        onClick={() => handleAddCombo(promo)}
                         className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-ink px-4 text-sm font-bold text-white transition active:scale-95"
                       >
                         <Plus className="h-4 w-4" /> Agregar
@@ -782,7 +798,7 @@ export const PreventaScreen: React.FC = () => {
             onClick={() => setIsCartDrawerOpen(false)}
           >
             <div 
-              className="w-full bg-white rounded-t-3xl max-h-[85vh] flex flex-col shadow-2xl p-4 animate-in slide-in-from-bottom duration-200"
+              className="w-full bg-white rounded-t-3xl max-h-[92dvh] flex flex-col shadow-2xl px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom duration-200"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Handle bar superior */}
@@ -826,8 +842,10 @@ export const PreventaScreen: React.FC = () => {
                 </div>
               </div>
 
+              {/* Todo el contenido se desliza; el botón de emitir queda fijo abajo */}
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2">
               {/* Lista de productos en el carrito */}
-              <div className="flex-1 overflow-y-auto space-y-2 py-1 pr-1 max-h-[46vh]">
+              <div className="space-y-2 py-1">
                 {cart.map((item) => {
                   const pres = item.product.presentations[item.selectedPresentation]!;
                   return (
@@ -841,6 +859,11 @@ export const PreventaScreen: React.FC = () => {
                             <span className="text-xs font-black  px-2 py-0.5 rounded bg-brand-100 text-brand-800">
                               {pres.shortLabel}
                             </span>
+                            {item.promoId && (
+                              <span className="text-xs font-black px-2 py-0.5 rounded bg-fresa text-white truncate max-w-[160px]" title={item.promoTitle}>
+                                Combo{item.promoTitle ? `: ${item.promoTitle}` : ''}
+                              </span>
+                            )}
                             <span className="text-xs text-ink/45 font-display">
                               {item.product.barcode}
                             </span>
@@ -850,7 +873,7 @@ export const PreventaScreen: React.FC = () => {
                           </h4>
                           <div className="text-xs text-ink-soft mt-0.5">
                             Cant: <strong className="text-ink">{item.quantity}</strong> × S/ {item.unitPrice.toFixed(2)}
-                            {editedPrice(item) !== undefined && (
+                            {editedPrice(item) !== undefined && !item.promoId && (
                               <span className="ml-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1">
                                 editado (lista S/ {item.listPrice.toFixed(2)})
                               </span>
@@ -981,6 +1004,9 @@ export const PreventaScreen: React.FC = () => {
                     Sin internet: el ticket se guarda en el celular y se envía al reconectar.
                   </div>
                 )}
+              </div>
+              </div>
+              <div className="shrink-0 border-t border-ink/10 pt-3">
                 <button
                   type="button"
                   onClick={() => void handleGeneratePreSale()}

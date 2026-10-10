@@ -512,13 +512,13 @@ export const AdminPanel: React.FC = () => {
                   <textarea
                     required
                     rows={3}
-                    placeholder="Ej: 7750182001011, 7750885002012"
+                    placeholder="Ej: 7750182001011 x 12, 7750885002012"
                     value={promoFormData.associatedBarcodes}
                     onChange={(e) => setPromoFormData({...promoFormData, associatedBarcodes: e.target.value})}
                     className="w-full resize-none rounded-2xl border-2 border-ink/10 bg-white px-3 py-2 font-display text-[15px] outline-none focus:border-brand-600"
                   />
                   <p className="mt-1 text-sm text-ink-soft">
-                    Al tocar "Añadir Combo", estos códigos se escanearán y añadirán al carrito de forma automática.
+                    Ponga "x" y la cantidad después del código (ej. 7750182001011 x 12); sin cantidad se agrega 1. Para el paquete use el código del paquete. Al tocar "Agregar" en Pre-Venta se cobra el precio de la oferta, repartido entre los productos.
                   </p>
                 </div>
               </div>

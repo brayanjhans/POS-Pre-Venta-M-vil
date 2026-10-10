@@ -77,6 +77,8 @@ export interface CartItem {
   listPrice: number; // Precio de catálogo de la presentación, para saber si se editó
   subtotal: number; // quantity * unitPrice
   deductedBaseUnits: number; // quantity * presentation.conversionFactor
+  promoId?: string; // Línea agregada como parte de un combo (cobra el precio de la oferta)
+  promoTitle?: string;
 }
 
 export type OrderStatus = 'PENDIENTE_PAGO' | 'PAGADO' | 'CANCELADO' | 'FIADO';

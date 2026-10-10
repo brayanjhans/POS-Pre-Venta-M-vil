@@ -64,7 +64,8 @@ export function refreshCartWithCatalog(cart: CartItem[], products: Product[]): C
   for (const item of cart) {
     const product = byId.get(item.product.id);
     if (!product || !product.presentations[item.selectedPresentation]) continue;
-    result.push(buildCartItem(product, item.selectedPresentation, item.quantity, item.cartItemId, editedPrice(item)));
+    const rebuilt = buildCartItem(product, item.selectedPresentation, item.quantity, item.cartItemId, editedPrice(item));
+    result.push(item.promoId ? { ...rebuilt, promoId: item.promoId, promoTitle: item.promoTitle } : rebuilt);
   }
   return result;
 }

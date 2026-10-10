@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildCartItem, computeCartTotals, editedPrice, isValidUnitPrice, refreshCartWithCatalog } from './cart';
+import { buildComboItems, parseComboEntry } from './combo';
 import { checkCredit, initialStatus, orderExposure } from './credit';
 import { parseAmount, round2 } from './money';
 import { findSameName, formatPhone, isValidPhone, missingContact } from './customer';
@@ -204,5 +205,36 @@ describe('código de ticket escaneado', () => {
     expect(looksLikeOrderCode('adm-sgvk3')).toBe(true);
     expect(looksLikeOrderCode('7750182002346')).toBe(false);
     expect(looksLikeOrderCode('V01-7K3')).toBe(false);
+  });
+});
+
+describe('combos', () => {
+  const promo = (barcodes: string[], offerPrice: number) => ({
+    id: 'pr1', badgeText: '', tag: '', discountBadge: '', title: 'Combo', subtitle: '',
+    originalPrice: 0, offerPrice, savingText: '', associatedBarcodes: barcodes,
+  });
+  const a = product();
+  const b = { ...product(), id: 'p2', barcode: '222' };
+  const find = (code: string) => (code === a.barcode ? { product: a, presentation: 'unit' as const } : code === '222' ? { product: b, presentation: 'unit' as const } : null);
+
+  it('lee la cantidad del código', () => {
+    expect(parseComboEntry('775 x 12')).toEqual({ barcode: '775', quantity: 12 });
+    expect(parseComboEntry('775*3')).toEqual({ barcode: '775', quantity: 3 });
+    expect(parseComboEntry('775')).toEqual({ barcode: '775', quantity: 1 });
+  });
+
+  it('cobra exactamente el precio de la oferta', () => {
+    for (const [codes, offer] of [[[`${a.barcode} x 3`, '222'], 7.33], [[`${a.barcode} x 4`, '222 x 6'], 9.99], [[a.barcode, '222'], 62]] as const) {
+      const r = buildComboItems(promo([...codes], offer), find, () => 0);
+      expect(r.ok).toBe(true);
+      if (r.ok) {
+        expect(computeCartTotals(r.items, 0).total).toBe(offer);
+        expect(r.items.every(i => i.promoId === 'pr1')).toBe(true);
+      }
+    }
+  });
+
+  it('avisa si un código no existe', () => {
+    expect(buildComboItems(promo(['999'], 5), find, () => 0).ok).toBe(false);
   });
 });

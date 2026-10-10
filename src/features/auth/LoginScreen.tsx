@@ -6,6 +6,7 @@ import { KEYS, storage } from '../../services/storage';
 import { usePos } from '../../state/PosContext';
 import { setScreenTheme } from '../../lib/screenTheme';
 import type { Catalog } from '../../types/pos';
+import loginImage from '../../assets/login-golosinas.jpg';
 
 /*
  * Inicio de sesión con usuario y PIN (diseño de referencia: carpeta /login).
@@ -81,7 +82,7 @@ export const LoginScreen: React.FC = () => {
                 WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)'
               }}>
               <img
-                src="https://lh3.googleusercontent.com/aida/AEtjO1UraVjZS-xvMEy1j1kS2xW5LyomRM2fc3i5fB2Mk3u4yhAQy-vvBtRLEIbLemCiuDMss5PpQUAGVYPefkAARlo22qNpJFVJ4__zNZmr2aosA0lCL5yLMoKAKvkvv0tuRn_UryqxCYsTo8pJO3XuNd4vXfrWO-wxBn80B_o6v70IL-f5ffcEsgPN5KMOjBCmthWTsEyQg7Uv7A5byT-QviUAeHIi0DCVwCnGPaIWnc03Smiq1RqCRb0nEA"
+                src={loginImage}
                 alt="Variedad de golosinas"
                 className="h-full w-full scale-105 object-cover object-center"
               />
